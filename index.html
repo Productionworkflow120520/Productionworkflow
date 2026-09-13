@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Portal - Workspace & Quality Hub</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        /* AUTH & SETUP OVERLAYS */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .auth-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 32px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 12px;
+        }
+
+        .step-indicator {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .step-indicator.active { color: #38bdf8; }
+
+        /* DASHBOARD LAYOUT */
+        .dashboard-layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #38bdf8;
+            border-bottom: 1px solid #334155;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 15px 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #94a3b8;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: #0284c7;
+            color: #ffffff;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .top-bar {
+            background-color: #1e293b;
+            padding: 16px 32px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0f172a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #0284c7;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            right: 0;
+            top: 48px;
+            width: 280px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .profile-dropdown.show { display: block; }
+
+        .profile-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 6px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .profile-info-row span:first-child { color: #94a3b8; }
+        .profile-info-row span:last-child { color: #f8fafc; font-weight: 500; }
+
+        .profile-actions {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .content-body {
+            padding: 32px;
+            flex: 1;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            margin-bottom: 24px;
+        }
+
+        .lookup-preview-box {
+            background-color: #0f172a;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .lookup-preview-box.not-found {
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .metric-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            padding: 8px 12px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #f8fafc;
+            font-size: 13px;
+            outline: none;
+            width: 100%;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input:disabled, select:disabled, textarea:disabled {
+            background-color: #1e293b;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        input:focus, select:focus, textarea:focus { border-color: #0284c7; }
+
+        /* BUTTONS */
+        .btn {
+            padding: 8px 16px;
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover { background-color: #0369a1; }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        .btn-warning { background-color: #d97706; }
+        .btn-warning:hover { background-color: #b45309; }
+        .btn-success { background-color: #16a34a; }
+        .btn-success:hover { background-color: #15803d; }
+        .btn-export { background-color: #059669; }
+        .btn-export:hover { background-color: #047857; }
+        .btn-secondary { background-color: #475569; }
+        .btn-secondary:hover { background-color: #334155; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        /* TABLES */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; white-space: nowrap; }
+        th, td { padding: 12px; border-bottom: 1px solid #334155; }
+        th { background-color: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        tr:hover { background-color: #334155; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge-active { background-color: #064e3b; color: #a7f3d0; }
+        .badge-inactive { background-color: #450a0a; color: #fca5a5; }
+        .badge-status { background-color: #0369a1; color: #e0f2fe; }
+        .badge-yes { background-color: #7f1d1d; color: #fecaca; }
+        .badge-no { background-color: #064e3b; color: #a7f3d0; }
+        .badge-pending { background-color: #78350f; color: #fde68a; }
+
+        .action-btns { display: flex; gap: 6px; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 24px;
+            border-radius: 8px;
+            width: 480px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. FIRST TIME SETUP WIZARD OVERLAY -->
+    <div id="setupWizardOverlay" class="auth-overlay hidden">
+        <div class="auth-card">
+            <div class="auth-title">First Time Setup Wizard</div>
+            <div class="auth-subtitle">Initialize System Admin Credentials</div>
+            
+            <div class="wizard-steps">
+                <span id="stepInd1" class="step-indicator active">1. Admin Account</span>
+                <span id="stepInd2" class="step-indicator">2. Initial Organization</span>
+            </div>
+
+            <form id="wizardStep1Form" onsubmit="handleWizardStep1(event)">
+                <div class="form-group">
+                    <label>Admin EMP ID</label>
+                    <input type="text" id="wizEmpId" value="EMP101" required>
+                </div>
+                <div class="form-group">
+                    <label>Admin Full Name</label>
+                    <input type="text" id="wizEmpName" value="System Administrator" required>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="wizUsername" value="admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="wizPassword" required placeholder="Set Admin Password">
+                </div>
+                <button type="submit" class="btn btn-success" style="width:100%; margin-top: 10px;">Next: System Setup &rarr;</button>
+            </form>
+
+            <form id="wizardStep2Form" class="hidden" onsubmit="handleWizardStep2(event)">
+                <div class="form-group">
+                    <label>Initial Project Name</label>
+                    <input type="text" id="wizProjName" value="Aetna" required>
+                </div>
+                <div class="form-group">
+                    <label>Initial Sub-Project Name</label>
+                    <input type="text" id="wizSubProjName" value="Aetna MRA" required>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button type="button" class="btn btn-warning" onclick="prevWizardStep()">Back</button>
+                    <button type="submit" class="btn btn-success" style="flex:1;">Complete Setup & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. LOGIN SCREEN -->
+    <div id="loginOverlay" class="auth-overlay hidden">
+        <div class="auth-card">
+            <div class="auth-title">Enterprise Portal</div>
+            <div class="auth-subtitle">Sign in with your credentials</div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUser" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn" style="width:100%; margin-top: 10px;">Sign In</button>
+            </form>
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn btn-danger" style="font-size: 11px;" onclick="resetSystemState()">Reset App (Re-enable Setup Wizard)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MAIN DASHBOARD UI -->
+    <div id="dashboardLayout" class="dashboard-layout hidden">
+        <div class="sidebar">
+            <div class="sidebar-header" id="portalHeader">⚡ Portal</div>
+            <ul class="nav-list" id="navList"></ul>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <h1 id="tabTitle" class="page-title">Dashboard</h1>
+
+                <div class="profile-container" onclick="toggleProfileDropdown(event)">
+                    <div class="profile-btn">
+                        <div class="avatar-circle" id="profAvatar">AD</div>
+                        <span id="profShortName" style="font-size: 13px; font-weight: 600;">User</span>
+                    </div>
+
+                    <div id="profileDropdown" class="profile-dropdown" onclick="event.stopPropagation()">
+                        <h4 style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 6px;">Profile Info</h4>
+                        <div class="profile-info-row"><span>EMP ID:</span><span id="profEmpId">EMP101</span></div>
+                        <div class="profile-info-row"><span>EMP Name:</span><span id="profEmpName">User Name</span></div>
+                        <div class="profile-info-row"><span>Designation:</span><span id="profDesig">Role</span></div>
+                        <div class="profile-info-row"><span>Reporting TL:</span><span id="profTl">Nill</span></div>
+                        <div class="profile-info-row"><span>Reporting Mgr:</span><span id="profMgr">Nill</span></div>
+                        
+                        <div class="profile-actions">
+                            <button class="btn btn-warning" style="width: 100%;" onclick="openPassChangeModal()">Password Change</button>
+                            <button class="btn btn-danger" style="width: 100%;" onclick="handleLogout()">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-body">
+
+                <!-- ADMIN: USER MANAGEMENT -->
+                <div id="userMgmt" class="tab-content hidden">
+                    <div class="card">
+                        <div class="control-header">
+                            <h3 id="userFormTitle">New User Create Option</h3>
+                        </div>
+                        <form id="userForm" onsubmit="handleUserSubmit(event)">
+                            <input type="hidden" id="editIndex" value="-1">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>User Name (Login Name)</label>
+                                    <input type="text" id="uName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>EMP ID</label>
+                                    <input type="text" id="uEmpId" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>EMP Name</label>
+                                    <input type="text" id="uEmpName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Role</label>
+                                    <select id="uRole" onchange="handleRoleChange()"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Designation</label>
+                                    <select id="uDesignation"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Reporting TL</label>
+                                    <select id="uTl"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Reporting Manager</label>
+                                    <select id="uMgr"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Default Password</label>
+                                    <input type="text" id="uDefaultPassword" value="Temp@123" placeholder="Default: Temp@123">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="submit" id="userSubmitBtn" class="btn btn-success">+ Create User</button>
+                                <button type="button" class="btn btn-secondary" onclick="forceFormDefaultPassword()">Set Default Password (Temp@123)</button>
+                                <button type="button" id="userCancelBtn" class="btn btn-danger hidden" onclick="resetUserForm()">Cancel Edit</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>System Users</h3>
+                        <div class="table-responsive" style="margin-top: 16px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>EMP ID</th>
+                                        <th>User Name</th>
+                                        <th>EMP Name</th>
+                                        <th>Role</th>
+                                        <th>Designation</th>
+                                        <th>Reporting TL</th>
+                                        <th>Reporting Mgr</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN: PROJECT MANAGEMENT -->
+                <div id="projMgmt" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Project Management Option</h3>
+                        <form onsubmit="handleAddProject(event)" style="margin-top: 16px;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Project Name (e.g. Aetna, Oscar)</label>
+                                    <input type="text" id="pName" placeholder="e.g. Aetna" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Sub - Project Name (e.g. Aetna MRA, Aetna CRA)</label>
+                                    <input type="text" id="subPName" placeholder="e.g. Aetna MRA" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">+ Add New Project Name</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Projects List</h3>
+                        <div class="table-responsive" style="margin-top: 16px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Project ID</th>
+                                        <th>Project Name</th>
+                                        <th>Sub-Project Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN: DESIGNATION MANAGEMENT -->
+                <div id="desigMgmt" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Add New Designation Option</h3>
+                        <form onsubmit="handleAddDesignation(event)" style="margin-top: 16px;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Designation Title</label>
+                                    <input type="text" id="dTitle" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">+ Add Designation</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Designation Options</h3>
+                        <div class="table-responsive" style="margin-top: 16px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Designation Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="desigTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN: ROLE MANAGEMENT -->
+                <div id="roleMgmt" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Added New Role Option</h3>
+                        <form onsubmit="handleAddRole(event)" style="margin-top: 16px;">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Role Title</label>
+                                    <input type="text" id="rTitle" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">+ Add Role</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Role Management Options</h3>
+                        <div class="table-responsive" style="margin-top: 16px;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Role Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roleTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN: REPORTS (USER MGMT & SYSTEM PROD) -->
+                <div id="reports" class="tab-content hidden">
+                    <div class="card">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Report Option</label>
+                                <select id="reportTypeSelect" onchange="renderAdminReports()">
+                                    <option value="userMgmtReport">User Management Report</option>
+                                    <option value="prodReport">System Production Report</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="adminRepEndDate" onchange="renderAdminReports()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="control-header">
+                            <h3 id="adminReportHeading">User Management Report</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <button id="adminMassDeleteBtn" class="btn btn-danger hidden" onclick="deleteSelectedAdminProduction()">Delete Selected</button>
+                                <button class="btn btn-export" onclick="exportAdminReportToCSV()">📥 Export Report (CSV)</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead id="adminReportTableHead"></thead>
+                                <tbody id="adminReportTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD -->
+                <div id="auditorDashboard" class="tab-content hidden">
+                    <div class="card">
+                        <h3 id="dashTitle">Workflow Analytics Dashboard</h3>
+                        <p style="color: #94a3b8; margin-top: 4px; font-size: 13px;">Real-time throughput metrics showcasing production counts and quality percentages.</p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-title" id="dashDayCountLabel">Day-wise Production + Audit Count</span>
+                            <span class="metric-value" id="audDashDayCount">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Day-wise Quality %</span>
+                            <span class="metric-value" id="audDashDayQual">100%</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title" id="dashMonthCountLabel">Monthly Production + Audit Total Count</span>
+                            <span class="metric-value" id="audDashMonthCount">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Monthly Quality %</span>
+                            <span class="metric-value" id="audDashMonthQual">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENTRY PRODUCTION -->
+                <div id="entryProdTab" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Entry Production</h3>
+                        <p style="color: #94a3b8; font-size: 12px; margin-top: 4px; margin-bottom: 16px;">
+                            Enter chart details below. Unique Chart ID validation is enforced automatically.
+                        </p>
+                        <form id="entryProdForm" onsubmit="handleUniversalAddEntry(event)">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Date (No Edit)</label>
+                                    <input type="date" id="entryDate" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Project Name</label>
+                                    <select id="entryProjSelect" required onchange="handleEntryProjectChange()">
+                                        <option value="">Select Project</option>
+                                        <option value="Aetna">Aetna</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Sub Project Name</label>
+                                    <select id="entrySubProjSelect" required>
+                                        <option value="">Select Sub Project</option>
+                                        <option value="Aetna MRA">Aetna MRA</option>
+                                        <option value="Aetna CRA">Aetna CRA</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Login Name (Enabled)</label>
+                                    <input type="text" id="entryLoginNameEdit" required placeholder="Enter Login Name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Chart ID (Unique Tracking)</label>
+                                    <input type="text" id="entryChartId" required placeholder="Enter Unique Chart ID">
+                                </div>
+                                <div class="form-group">
+                                    <label>Page No</label>
+                                    <input type="number" id="entryPageNo" required min="1" placeholder="e.g. 15">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total No ICD</label>
+                                    <input type="number" id="entryTotalIcd" required min="0" placeholder="e.g. 8">
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select id="entryStatus" required>
+                                        <option value="">Select</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="SAR">SAR</option>
+                                        <option value="Inprogress">Inprogress</option>
+                                        <option value="Reject">Reject</option>
+                                    </select>
+                                </div>
+                                <div class="form-group form-group-full">
+                                    <label>Comment (Required Detailed Notes)</label>
+                                    <textarea id="entryComment" required placeholder="Provide your detailed production comment or clinical documentation notes here..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">+ Submitted</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- QUALITY REVIEW -->
+                <div id="qualityReviewTab" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Quality Review Entry (Completed Charts Only)</h3>
+                        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">
+                            Enter a Completed Chart ID. The system will automatically identify and display matching production metadata.
+                        </p>
+
+                        <div class="form-grid">
+                            <div class="form-group form-group-full">
+                                <label>Enter Chart ID Directly</label>
+                                <input type="text" id="audManualChartInput" placeholder="e.g. 1234 or CHART-1001" oninput="handleManualChartLookup(this.value)">
+                            </div>
+                        </div>
+
+                        <div id="chartLookupDetailsBox" class="lookup-preview-box">
+                            Chart ID: <span id="prevChartId">-</span><br>
+                            Project Name: <span id="prevProjName">-</span><br>
+                            Sub Project Name: <span id="prevSubProjName">-</span><br>
+                            Completed By: <span id="prevCoderName">-</span>
+                        </div>
+
+                        <form onsubmit="handleAuditorAddAuditEntry(event)">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>QA Login ID (Editable)</label>
+                                    <input type="text" id="audAuditQaLoginId" required placeholder="Enter QA Login ID">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Charts Pages</label>
+                                    <input type="number" id="audAuditTotalPages" required min="1" placeholder="Enter Total Charts Pages">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Codes Audited</label>
+                                    <input type="number" id="audAuditTotalAudited" required min="1" placeholder="Enter Total Codes Audited">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Error</label>
+                                    <input type="number" id="audAuditTotalError" required min="0" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Error Status</label>
+                                    <select id="audAuditErrorStatus" required onchange="toggleAudErrorParams()">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Error Parameter</label>
+                                    <select id="audAuditErrorParam" disabled>
+                                        <option value="">Select Parameter</option>
+                                        <option value="Missed">Missed</option>
+                                        <option value="Deleted">Deleted</option>
+                                        <option value="Updated">Updated</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <select id="audAuditLocation" disabled>
+                                        <option value="">Select Location</option>
+                                        <option value="HPI">HPI</option>
+                                        <option value="PMH">PMH</option>
+                                        <option value="PL">PL</option>
+                                        <option value="PE">PE</option>
+                                        <option value="Assessment/Plan">Assessment/Plan</option>
+                                    </select>
+                                </div>
+                                <div class="form-group form-group-full">
+                                    <label>Auditor Quality Comments & Observation</label>
+                                    <textarea id="audAuditComment" required placeholder="Provide your detailed quality audit comment and observations..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">+ Submit Quality Audit</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MY PRODUCTION REPORTS -->
+                <div id="prodReportTab" class="tab-content hidden">
+                    <div class="card">
+                        <h3>My Production Reports Filter</h3>
+                        <div class="form-grid" style="margin-top: 16px;">
+                            <div class="form-group">
+                                <label>Search EMP ID</label>
+                                <input type="text" id="prodFilterEmpId" placeholder="Enter EMP ID">
+                            </div>
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="prodFilterStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="prodFilterEndDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Project Name</label>
+                                <select id="prodFilterProject" onchange="updateSubProjectFilterOptions()">
+                                    <option value="">All Project</option>
+                                    <option value="Aetna">Aetna</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sub Project Name</label>
+                                <select id="prodFilterSubProject">
+                                    <option value="">All Sub Project</option>
+                                    <option value="Aetna MRA">Aetna MRA</option>
+                                    <option value="Aetna CRA">Aetna CRA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="btn" onclick="renderUniversalProdReport()">Search</button>
+                            <button class="btn btn-warning" onclick="clearProdFilter()">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="control-header">
+                            <h3>My Production Reports</h3>
+                            <button class="btn btn-export" onclick="exportUniversalProdReportToCSV()">📥 Export Report (CSV)</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Date</th>
+                                        <th>Project Name</th>
+                                        <th>Sub Project Name</th>
+                                        <th>Login Name</th>
+                                        <th>Chart ID</th>
+                                        <th>Page No</th>
+                                        <th>Total No ICD</th>
+                                        <th>Status</th>
+                                        <th>EMP ID</th>
+                                        <th>EMP Name</th>
+                                        <th>Reporting Team Lead</th>
+                                        <th>Reporting Manager</th>
+                                        <th>Edit</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="universalProdTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUALITY REPORT: STRICT LOGIN-BASED MY QUALITY -->
+                <div id="qualityReportTab" class="tab-content hidden">
+                    <div class="card">
+                        <h3>My Quality Reports Filter</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="myQualFilterStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="myQualFilterEndDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Project Name</label>
+                                <select id="myQualFilterProject" onchange="updateMyQualSubProjectFilterOptions()">
+                                    <option value="">All Project</option>
+                                    <option value="Aetna">Aetna</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sub Project Name</label>
+                                <select id="myQualFilterSubProject">
+                                    <option value="">All Sub Project</option>
+                                    <option value="Aetna MRA">Aetna MRA</option>
+                                    <option value="Aetna CRA">Aetna CRA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="btn" onclick="renderUniversalQualityReport()">Search</button>
+                            <button class="btn btn-warning" onclick="clearMyQualFilter()">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="control-header">
+                            <h3>My Quality</h3>
+                            <button class="btn btn-export" onclick="exportMyQualityToCSV()">📥 Export Report (CSV)</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Chart ID</th>
+                                        <th>Project Name</th>
+                                        <th>Sub Project Name</th>
+                                        <th>Completed By</th>
+                                        <th>Auditor</th>
+                                        <th>Error Status</th>
+                                        <th>Parameter</th>
+                                        <th>Location</th>
+                                        <th>Auditor Comment</th>
+                                        <th>Quality %</th>
+                                        <th>Lifecycle Stage</th>
+                                        <th>Coder Action</th>
+                                        <th>Audit Completed Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="universalQualityTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUDITOR: AUDIT REPORT (UPDATED WITH REQUIRED TABLE HEADERS & CSV SCHEMA) -->
+                <div id="auditReportTab" class="tab-content hidden">
+                    <div class="card">
+                        <div class="control-header">
+                            <h3>Audit Report</h3>
+                            <button class="btn btn-export" onclick="exportAuditReportToCSV()">📥 Export Audit Report (CSV)</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Project Name</th>
+                                        <th>Sub Project Name</th>
+                                        <th>Charts ID</th>
+                                        <th>Login ID-Coder</th>
+                                        <th>QA Login ID</th>
+                                        <th>Coded Date</th>
+                                        <th>Total Charts Pages</th>
+                                        <th>Total codes audited</th>
+                                        <th>Total errors</th>
+                                        <th>Date Audited</th>
+                                        <th>QA status</th>
+                                        <th>Quality%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditorAuditTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUPERVISOR (TL / MANAGER) INTERFACE -->
+                <div id="supDashboard" class="tab-content hidden">
+                    <div class="card">
+                        <h3 id="supDashboardTitle">Team Analytics Dashboard</h3>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-title">Direct Subordinates</span>
+                            <span class="metric-value" id="supMetricTeamCount">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Level 2: Pending TL Review</span>
+                            <span class="metric-value" id="supMetricPendingLevel2" style="color: #f59e0b;">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Level 4: Pending Audit TL Final Decision</span>
+                            <span class="metric-value" id="supMetricPendingLevel4" style="color: #ef4444;">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Average Quality Score</span>
+                            <span class="metric-value" id="supMetricAvgQual">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="supTeamProd" class="tab-content hidden">
+                    <div class="card">
+                        <h3>Team Production Overview</h3>
+                        <div class="control-header" style="margin-top: 16px;">
+                            <span>Filter & Export Team Production Records</span>
+                            <button class="btn btn-export" onclick="exportSupProdToCSV()">📥 Export Team CSV</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Date</th>
+                                        <th>Employee Name</th>
+                                        <th>Project</th>
+                                        <th>Sub-Project</th>
+                                        <th>Chart ID</th>
+                                        <th>Page No</th>
+                                        <th>Status</th>
+                                        <th>Reporting TL</th>
+                                        <th>Reporting Manager</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="supTeamProdTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="supTeamQuality" class="tab-content hidden">
+                    <div class="card">
+                        <div class="control-header">
+                            <h3>Quality Dispute & Multi-Level Adjudication Oversight</h3>
+                            <button class="btn btn-export" onclick="exportSupQualityToCSV()">📥 Export Quality Logs</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Chart ID</th>
+                                        <th>Coder Name</th>
+                                        <th>Auditor ID</th>
+                                        <th>Error Status</th>
+                                        <th>Parameter</th>
+                                        <th>Coder Remarks</th>
+                                        <th>Auditor Stance</th>
+                                        <th>Lifecycle Stage</th>
+                                        <th>Supervisor Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="supTeamQualityTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT PRODUCTION ENTRY -->
+    <div id="editProdModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 12px; color: #38bdf8;">Edit Production Record</h3>
+            <form id="editProdForm" onsubmit="handleSaveEditedProduction(event)">
+                <input type="hidden" id="editProdChartId">
+                <div class="form-group">
+                    <label>Project Name (Locked)</label>
+                    <input type="text" id="editProdProj" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Sub Project Name</label>
+                    <input type="text" id="editProdSubProj" required>
+                </div>
+                <div class="form-group">
+                    <label>Login Name</label>
+                    <input type="text" id="editProdLoginName" required>
+                </div>
+                <div class="form-group">
+                    <label>Page No</label>
+                    <input type="number" id="editProdPageNo" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Total No ICD</label>
+                    <input type="number" id="editProdTotalIcd" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editProdStatus" required>
+                        <option value="Completed">Completed</option>
+                        <option value="SAR">SAR</option>
+                        <option value="Inprogress">Inprogress</option>
+                        <option value="Reject">Reject</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Comment</label>
+                    <textarea id="editProdComment" required></textarea>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Save Changes</button>
+                    <button type="button" class="btn btn-danger" onclick="closeEditProdModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REMARKS / REBUTTAL PROMPT -->
+    <div id="disagreeModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 id="disagreeModalTitle" style="margin-bottom: 12px; color: #38bdf8;">Submit Remarks</h3>
+            <p id="disagreeModalSub" style="font-size: 12px; color: #94a3b8; margin-bottom: 12px;">Provide detailed justification.</p>
+            <div class="form-group">
+                <label>Remarks / Clinical Evidence</label>
+                <textarea id="disagreeRemarksInput" required placeholder="Enter remarks..."></textarea>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button type="button" class="btn btn-success" style="flex: 1;" onclick="submitDisagreementFlow()">Confirm Action</button>
+                <button type="button" class="btn btn-danger" onclick="closeDisagreeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASSWORD RESET / CHANGE MODAL -->
+    <div id="passModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px;">Password Reset Option</h3>
+            <form onsubmit="handleSelfPasswordChange(event)">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="oldPass" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPass" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirmPass" required>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Update</button>
+                    <button type="button" class="btn btn-danger" onclick="closePassChangeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+        let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
+        let projects = [];
+        let users = [];
+        let productionLogs = [];
+        let qualityLogs = [];
+
+        let tempWizardData = {};
+        let activeAdminUser = null;
+        let activeModalContext = null;
+        let selectedAuditChartObj = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initAppFlow();
+        });
+
+        function initAppFlow() {
+            const isSetupDone = localStorage.getItem('isAdminSetupDone');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+            if (!isSetupDone) {
+                document.getElementById('setupWizardOverlay').classList.remove('hidden');
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('dashboardLayout').classList.add('hidden');
+            } else if (!isLoggedIn) {
+                document.getElementById('setupWizardOverlay').classList.add('hidden');
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('dashboardLayout').classList.add('hidden');
+                loadPersistentData();
+            } else {
+                loadPersistentData();
+                const storedUser = localStorage.getItem('activeUser');
+                if (storedUser) activeAdminUser = JSON.parse(storedUser);
+
+                document.getElementById('setupWizardOverlay').classList.add('hidden');
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('dashboardLayout').classList.remove('hidden');
+
+                setupProfileHeader();
+                setupNavigation();
+                
+                if (activeAdminUser && activeAdminUser.role === 'Coder') {
+                    setupEntryProductionInterface();
+                    switchTab(localStorage.getItem('activeTab') || 'auditorDashboard');
+                } else if (activeAdminUser && activeAdminUser.role === 'Auditor') {
+                    setupAuditorInterface();
+                    switchTab(localStorage.getItem('activeTab') || 'auditorDashboard');
+                } else if (activeAdminUser && (activeAdminUser.role === 'Team Lead' || activeAdminUser.role === 'Manager')) {
+                    setupSupervisorInterface();
+                    switchTab(localStorage.getItem('activeTab') || 'supDashboard');
+                } else {
+                    populateDropdowns();
+                    renderUsers();
+                    renderProjects();
+                    renderDesignations();
+                    renderRoles();
+                    switchTab(localStorage.getItem('activeTab') || 'userMgmt');
+                }
+            }
+        }
+
+        function handleWizardStep1(e) {
+            e.preventDefault();
+            tempWizardData.empId = document.getElementById('wizEmpId').value;
+            tempWizardData.empName = document.getElementById('wizEmpName').value;
+            tempWizardData.userName = document.getElementById('wizUsername').value;
+            tempWizardData.password = document.getElementById('wizPassword').value;
+
+            document.getElementById('wizardStep1Form').classList.add('hidden');
+            document.getElementById('wizardStep2Form').classList.remove('hidden');
+            document.getElementById('stepInd1').classList.remove('active');
+            document.getElementById('stepInd2').classList.add('active');
+        }
+
+        function prevWizardStep() {
+            document.getElementById('wizardStep2Form').classList.add('hidden');
+            document.getElementById('wizardStep1Form').classList.remove('hidden');
+            document.getElementById('stepInd2').classList.remove('active');
+            document.getElementById('stepInd1').classList.add('active');
+        }
+
+        function handleWizardStep2(e) {
+            e.preventDefault();
+            
+            const adminUser = {
+                empId: tempWizardData.empId,
+                userName: tempWizardData.userName,
+                empName: tempWizardData.empName,
+                role: "Admin",
+                designation: "Admin",
+                status: "Active",
+                tl: "Nill",
+                manager: "Nill",
+                password: tempWizardData.password
+            };
+            users.push(adminUser);
+
+            users.push({
+                empId: "TL001",
+                userName: "team_lead",
+                empName: "Sarah Connor",
+                role: "Team Lead",
+                designation: "Team Lead",
+                status: "Active",
+                tl: "Nill",
+                manager: "Nill",
+                password: "Temp@123"
+            });
+
+            users.push({
+                empId: "AUD001",
+                userName: "auditor_user",
+                empName: "User B (Auditor)",
+                role: "Auditor",
+                designation: "Quality Auditor",
+                status: "Active",
+                tl: "Sarah Connor",
+                manager: "Nill",
+                password: "Temp@123"
+            });
+
+            users.push({
+                empId: "EMP001",
+                userName: "coder_alex",
+                empName: "User A (Coder)",
+                role: "Coder",
+                designation: "Senior Coder",
+                status: "Active",
+                tl: "Sarah Connor",
+                manager: "Nill",
+                password: "Temp@123"
+            });
+
+            const projName = document.getElementById('wizProjName').value;
+            const subProjName = document.getElementById('wizSubProjName').value;
+
+            projects.push({ id: 101, name: projName, subName: subProjName });
+            projects.push({ id: 102, name: "Aetna", subName: "Aetna CRA" });
+
+            const currentDate = new Date().toISOString().slice(0, 10);
+            
+            productionLogs.push({
+                sNo: 1,
+                date: currentDate,
+                dateTime: `${currentDate} 09:30:00`,
+                projName: "Aetna",
+                subProjName: "Aetna MRA",
+                loginName: "coder_alex",
+                chartId: "CH-1001",
+                pageNo: 12,
+                totalIcd: 6,
+                status: "Completed",
+                comment: "Initial completed coding chart by User A.",
+                empIdentifier: "coder_alex",
+                completedByUserId: "coder_alex",
+                completedByEmpName: "User A (Coder)",
+                completedByEmpId: "EMP001",
+                tl: "Sarah Connor",
+                manager: "Nill"
+            });
+
+            qualityLogs.push({
+                sNo: 1,
+                chartId: "CH-1001",
+                projName: "Aetna",
+                subProjName: "Aetna MRA",
+                coderUser: "coder_alex",
+                completedByUserId: "coder_alex",
+                completedByEmpName: "User A (Coder)",
+                completedByEmpId: "EMP001",
+                completedByTl: "Sarah Connor",
+                completedByMgr: "Nill",
+                qaLoginId: "auditor_user",
+                auditorEmpId: "AUD001",
+                auditorEmpName: "User B (Auditor)",
+                auditorTl: "Sarah Connor",
+                totalPages: 12,
+                totalAuditedCodes: 6,
+                totalError: 1,
+                dateAudit: currentDate,
+                auditTime: "11:15:00",
+                errorStatus: "Yes",
+                errorParameter: "Missed",
+                location: "Assessment/Plan",
+                comment: "Missed secondary diabetes manifestation code.",
+                qualityPercentage: "83.3%",
+                workflowStage: "Level 1: Pending Coder Action",
+                coderRemarks: "",
+                tlAction: null,
+                tlRemarks: "",
+                auditorResponse: null,
+                auditorRemarks: "",
+                finalVerdict: null,
+                finalRemarks: ""
+            });
+
+            localStorage.setItem('isAdminSetupDone', 'true');
+            savePersistentData();
+
+            alert('System Setup Completed Successfully!');
+            initAppFlow();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const uInput = document.getElementById('loginUser').value;
+            const pInput = document.getElementById('loginPass').value;
+
+            const foundUser = users.find(u => u.userName === uInput && u.password === pInput);
+
+            if (foundUser) {
+                if(foundUser.status === 'Inactive') {
+                    alert('User account is Inactive!');
+                    return;
+                }
+                activeAdminUser = foundUser;
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('activeUser', JSON.stringify(foundUser));
+                
+                setupProfileHeader();
+                setupNavigation();
+
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('dashboardLayout').classList.remove('hidden');
+                
+                if (foundUser.role === 'Coder') {
+                    setupEntryProductionInterface();
+                    switchTab('auditorDashboard');
+                } else if (foundUser.role === 'Auditor') {
+                    setupAuditorInterface();
+                    switchTab('auditorDashboard');
+                } else if (foundUser.role === 'Team Lead' || foundUser.role === 'Manager') {
+                    setupSupervisorInterface();
+                    switchTab('supDashboard');
+                } else {
+                    populateDropdowns();
+                    renderUsers();
+                    renderProjects();
+                    renderDesignations();
+                    renderRoles();
+                    switchTab('userMgmt');
+                }
+            } else {
+                alert('Invalid Credentials!');
+            }
+        }
+
+        function handleLogout() {
+            activeAdminUser = null;
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('activeUser');
+            localStorage.removeItem('activeTab');
+            document.getElementById('dashboardLayout').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        function resetSystemState() {
+            if(confirm("Wipe all data and restart setup wizard?")) {
+                localStorage.clear();
+                window.location.reload();
+            }
+        }
+
+        function savePersistentData() {
+            localStorage.setItem('app_users', JSON.stringify(users));
+            localStorage.setItem('app_projects', JSON.stringify(projects));
+            localStorage.setItem('app_roles', JSON.stringify(roles));
+            localStorage.setItem('app_designations', JSON.stringify(designations));
+            localStorage.setItem('app_prod_logs', JSON.stringify(productionLogs));
+            localStorage.setItem('app_qual_logs', JSON.stringify(qualityLogs));
+        }
+
+        function loadPersistentData() {
+            users = JSON.parse(localStorage.getItem('app_users')) || [];
+            projects = JSON.parse(localStorage.getItem('app_projects')) || [];
+            roles = JSON.parse(localStorage.getItem('app_roles')) || roles;
+            designations = JSON.parse(localStorage.getItem('app_designations')) || designations;
+            productionLogs = JSON.parse(localStorage.getItem('app_prod_logs')) || [];
+            qualityLogs = JSON.parse(localStorage.getItem('app_qual_logs')) || [];
+        }
+
+        function setupProfileHeader() {
+            if(!activeAdminUser) return;
+            document.getElementById('profEmpId').textContent = activeAdminUser.empId;
+            document.getElementById('profEmpName').textContent = activeAdminUser.empName;
+            document.getElementById('profShortName').textContent = activeAdminUser.empName;
+            document.getElementById('profDesig').textContent = activeAdminUser.designation;
+            document.getElementById('profTl').textContent = activeAdminUser.tl;
+            document.getElementById('profMgr').textContent = activeAdminUser.manager;
+            document.getElementById('profAvatar').textContent = activeAdminUser.empName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+        }
+
+        function setupNavigation() {
+            const navList = document.getElementById('navList');
+            const portalHeader = document.getElementById('portalHeader');
+
+            if (activeAdminUser && activeAdminUser.role === 'Auditor') {
+                portalHeader.textContent = "⚡ Auditor Portal";
+                navList.innerHTML = `
+                    <li id="nav-auditorDashboard" class="nav-item" onclick="switchTab('auditorDashboard')">Dashboard</li>
+                    <li id="nav-entryProdTab" class="nav-item" onclick="switchTab('entryProdTab')">Entry Production</li>
+                    <li id="nav-qualityReviewTab" class="nav-item" onclick="switchTab('qualityReviewTab')">Quality Review</li>
+                    <li id="nav-auditReportTab" class="nav-item" onclick="switchTab('auditReportTab')">Audit Report</li>
+                    <li id="nav-prodReportTab" class="nav-item" onclick="switchTab('prodReportTab')">Production Report</li>
+                    <li id="nav-qualityReportTab" class="nav-item" onclick="switchTab('qualityReportTab')">Quality Report</li>
+                `;
+            } else if (activeAdminUser && activeAdminUser.role === 'Coder') {
+                portalHeader.textContent = "⚡ Coder Portal";
+                navList.innerHTML = `
+                    <li id="nav-auditorDashboard" class="nav-item" onclick="switchTab('auditorDashboard')">Dashboard</li>
+                    <li id="nav-entryProdTab" class="nav-item" onclick="switchTab('entryProdTab')">Entry Production</li>
+                    <li id="nav-prodReportTab" class="nav-item" onclick="switchTab('prodReportTab')">Production Report</li>
+                    <li id="nav-qualityReportTab" class="nav-item" onclick="switchTab('qualityReportTab')">Quality Report</li>
+                `;
+            } else if (activeAdminUser && (activeAdminUser.role === 'Team Lead' || activeAdminUser.role === 'Manager')) {
+                portalHeader.textContent = `⚡ ${activeAdminUser.role} Portal`;
+                navList.innerHTML = `
+                    <li id="nav-supDashboard" class="nav-item" onclick="switchTab('supDashboard')">Analytics Dashboard</li>
+                    <li id="nav-supTeamProd" class="nav-item" onclick="switchTab('supTeamProd')">Team Production</li>
+                    <li id="nav-supTeamQuality" class="nav-item" onclick="switchTab('supTeamQuality')">Dispute Lifecycle (Level 2 & 4)</li>
+                `;
+            } else {
+                portalHeader.textContent = "⚡ Admin Portal";
+                navList.innerHTML = `
+                    <li id="nav-userMgmt" class="nav-item" onclick="switchTab('userMgmt')">User Management</li>
+                    <li id="nav-projMgmt" class="nav-item" onclick="switchTab('projMgmt')">Project Management</li>
+                    <li id="nav-desigMgmt" class="nav-item" onclick="switchTab('desigMgmt')">Designation Management</li>
+                    <li id="nav-roleMgmt" class="nav-item" onclick="switchTab('roleMgmt')">Role Management</li>
+                    <li id="nav-reports" class="nav-item" onclick="switchTab('reports')">Reports</li>
+                `;
+            }
+        }
+
+        function toggleProfileDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('profileDropdown').classList.toggle('show');
+        }
+
+        document.addEventListener('click', () => {
+            const dropdown = document.getElementById('profileDropdown');
+            if(dropdown) dropdown.classList.remove('show');
+        });
+
+        function switchTab(tabId) {
+            localStorage.setItem('activeTab', tabId);
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-list .nav-item').forEach(el => el.classList.remove('active'));
+            
+            const targetContent = document.getElementById(tabId);
+            const targetNav = document.getElementById(`nav-${tabId}`);
+            
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetNav) {
+                targetNav.classList.add('active');
+                document.getElementById('tabTitle').textContent = targetNav.textContent;
+            }
+
+            if (tabId === 'auditorDashboard') calculateAnalyticsDashboardMetrics();
+            if (tabId === 'reports') renderAdminReports();
+            if (tabId === 'entryProdTab') setupEntryProductionInterface();
+            if (tabId === 'qualityReviewTab') setupAuditorInterface();
+            if (tabId === 'prodReportTab') {
+                setupProdReportFilters();
+                renderUniversalProdReport();
+            }
+            if (tabId === 'qualityReportTab') {
+                setupMyQualityReportFilters();
+                renderUniversalQualityReport();
+            }
+            if (tabId === 'auditReportTab') renderAuditorAuditReport();
+            if (tabId === 'supDashboard') calculateSupervisorMetrics();
+            if (tabId === 'supTeamProd') renderSupervisorTeamProduction();
+            if (tabId === 'supTeamQuality') renderSupervisorTeamQuality();
+        }
+
+        function openPassChangeModal() { document.getElementById('passModal').classList.remove('hidden'); }
+        function closePassChangeModal() { document.getElementById('passModal').classList.add('hidden'); }
+
+        function handleSelfPasswordChange(e) {
+            e.preventDefault();
+            const np = document.getElementById('newPass').value;
+            const cp = document.getElementById('confirmPass').value;
+            if (np !== cp) {
+                alert("Passwords do not match!");
+                return;
+            }
+            if(activeAdminUser) {
+                activeAdminUser.password = np;
+                const uIndex = users.findIndex(u => u.userName === activeAdminUser.userName);
+                if(uIndex >= 0) users[uIndex].password = np;
+                localStorage.setItem('activeUser', JSON.stringify(activeAdminUser));
+                savePersistentData();
+            }
+            alert("Password updated successfully!");
+            closePassChangeModal();
+        }
+
+        function populateDropdowns() {
+            const rSelect = document.getElementById('uRole');
+            const dSelect = document.getElementById('uDesignation');
+            rSelect.innerHTML = roles.map(r => `<option value="${r}">${r}</option>`).join('');
+            dSelect.innerHTML = designations.map(d => `<option value="${d}">${d}</option>`).join('');
+            handleRoleChange();
+        }
+
+        // DATE FORMATTER: MM/DD/YYYY
+        function formatToMMDDYYYY(dateInput) {
+            if (!dateInput) return "N/A";
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return dateInput;
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${mm}/${dd}/${yyyy}`;
+        }
+
+        // METRIC CALCULATIONS
+        function calculateAnalyticsDashboardMetrics() {
+            if(!activeAdminUser) return;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const currentMonthStr = todayStr.slice(0, 7);
+
+            const userProd = productionLogs.filter(p => p.completedByUserId === activeAdminUser.userName);
+            const userAudits = qualityLogs.filter(q => q.qaLoginId === activeAdminUser.userName);
+
+            const dayProdCount = userProd.filter(p => p.date === todayStr).length;
+            const dayAuditCount = userAudits.filter(q => q.dateAudit === todayStr).length;
+            const dayTotalCharts = dayProdCount + dayAuditCount;
+
+            const monthProdCount = userProd.filter(p => p.date && p.date.startsWith(currentMonthStr)).length;
+            const monthAuditCount = userAudits.filter(q => q.dateAudit && q.dateAudit.startsWith(currentMonthStr)).length;
+            const monthTotalCharts = monthProdCount + monthAuditCount;
+
+            const myChartsAudited = qualityLogs.filter(q => q.completedByUserId === activeAdminUser.userName);
+            
+            const dayQualEntries = myChartsAudited.filter(q => q.dateAudit === todayStr);
+            let dayQualPct = "100%";
+            if(dayQualEntries.length > 0) {
+                const totalErr = dayQualEntries.reduce((acc, c) => acc + (parseInt(c.totalError) || 0), 0);
+                const totalAud = dayQualEntries.reduce((acc, c) => acc + (parseInt(c.totalAuditedCodes) || 1), 0);
+                dayQualPct = `${Math.max(0, ((totalAud - totalErr) / totalAud) * 100).toFixed(1)}%`;
+            }
+
+            const monthQualEntries = myChartsAudited.filter(q => q.dateAudit && q.dateAudit.startsWith(currentMonthStr));
+            let monthQualPct = "100%";
+            if(monthQualEntries.length > 0) {
+                const totalErr = monthQualEntries.reduce((acc, c) => acc + (parseInt(c.totalError) || 0), 0);
+                const totalAud = monthQualEntries.reduce((acc, c) => acc + (parseInt(c.totalAuditedCodes) || 1), 0);
+                monthQualPct = `${Math.max(0, ((totalAud - totalErr) / totalAud) * 100).toFixed(1)}%`;
+            }
+
+            document.getElementById('audDashDayCount').textContent = dayTotalCharts;
+            document.getElementById('audDashDayQual').textContent = dayQualPct;
+            document.getElementById('audDashMonthCount').textContent = monthTotalCharts;
+            document.getElementById('audDashMonthQual').textContent = monthQualPct;
+        }
+
+        // ENTRY PRODUCTION SETUP & HANDLERS
+        function setupEntryProductionInterface() {
+            if(!activeAdminUser) return;
+            document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('entryLoginNameEdit').value = activeAdminUser.userName;
+
+            const pSelect = document.getElementById('entryProjSelect');
+            const uniqueProjects = [...new Set(projects.map(p => p.name))];
+            if(uniqueProjects.length) {
+                pSelect.innerHTML = `<option value="">Select Project</option>` + uniqueProjects.map(p => `<option value="${p}">${p}</option>`).join('');
+            } else {
+                pSelect.innerHTML = `<option value="">Select Project</option><option value="Aetna">Aetna</option>`;
+            }
+            handleEntryProjectChange();
+        }
+
+        function handleEntryProjectChange() {
+            const selectedProj = document.getElementById('entryProjSelect').value;
+            const subSelect = document.getElementById('entrySubProjSelect');
+            if (!selectedProj) {
+                subSelect.innerHTML = `<option value="">Select Sub Project</option>`;
+                return;
+            }
+            const subs = [...new Set(projects.filter(p => p.name === selectedProj).map(p => p.subName))];
+            if(subs.length) {
+                subSelect.innerHTML = `<option value="">Select Sub Project</option>` + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+            } else {
+                subSelect.innerHTML = `<option value="">Select Sub Project</option><option value="Aetna MRA">Aetna MRA</option><option value="Aetna CRA">Aetna CRA</option>`;
+            }
+        }
+
+        function handleUniversalAddEntry(e) {
+            e.preventDefault();
+            const chartIdInput = document.getElementById('entryChartId').value.trim();
+            const selectedProject = document.getElementById('entryProjSelect').value;
+            const selectedSubProject = document.getElementById('entrySubProjSelect').value;
+
+            if (productionLogs.some(p => p.chartId.toLowerCase() === chartIdInput.toLowerCase())) {
+                alert(`Chart ID "${chartIdInput}" already exists!`);
+                return;
+            }
+
+            const today = new Date();
+            const dateStr = today.toISOString().slice(0, 10);
+            const timeStr = today.toTimeString().slice(0, 8);
+
+            productionLogs.push({
+                sNo: productionLogs.length + 1,
+                date: dateStr,
+                dateTime: `${dateStr} ${timeStr}`,
+                projName: selectedProject,
+                subProjName: selectedSubProject,
+                loginName: document.getElementById('entryLoginNameEdit').value.trim(),
+                chartId: chartIdInput,
+                pageNo: document.getElementById('entryPageNo').value,
+                totalIcd: document.getElementById('entryTotalIcd').value,
+                status: document.getElementById('entryStatus').value,
+                comment: document.getElementById('entryComment').value.trim(),
+                empIdentifier: activeAdminUser.userName,
+                completedByUserId: activeAdminUser.userName,
+                completedByEmpName: activeAdminUser.empName,
+                completedByEmpId: activeAdminUser.empId,
+                tl: activeAdminUser.tl || 'Nill',
+                manager: activeAdminUser.manager || 'Nill'
+            });
+
+            savePersistentData();
+            alert(`Production entry for Chart ${chartIdInput} completed and forwarded to audit!`);
+            document.getElementById('entryChartId').value = '';
+            document.getElementById('entryPageNo').value = '';
+            document.getElementById('entryTotalIcd').value = '';
+            document.getElementById('entryComment').value = '';
+            switchTab('prodReportTab');
+        }
+
+        // QUALITY REVIEW
+        function setupAuditorInterface() {
+            if(activeAdminUser) {
+                document.getElementById('audAuditQaLoginId').value = activeAdminUser.userName;
+            }
+            displayChartMetadata('');
+        }
+
+        function handleManualChartLookup(chartId) {
+            displayChartMetadata(chartId.trim());
+        }
+
+        function displayChartMetadata(chartId) {
+            const previewBox = document.getElementById('chartLookupDetailsBox');
+            if(!chartId) {
+                selectedAuditChartObj = null;
+                previewBox.className = "lookup-preview-box";
+                previewBox.innerHTML = `
+                    Chart ID: <span id="prevChartId">-</span><br>
+                    Project Name: <span id="prevProjName">-</span><br>
+                    Sub Project Name: <span id="prevSubProjName">-</span><br>
+                    Completed By: <span id="prevCoderName">-</span>
+                `;
+                return;
+            }
+
+            const chartObj = productionLogs.find(p => p.chartId.toLowerCase() === chartId.toLowerCase() && p.status === 'Completed');
+            if(chartObj) {
+                selectedAuditChartObj = chartObj;
+                previewBox.className = "lookup-preview-box";
+                previewBox.innerHTML = `
+                    Chart ID: <span id="prevChartId">${chartObj.chartId}</span><br>
+                    Project Name: <span id="prevProjName">${chartObj.projName}</span><br>
+                    Sub Project Name: <span id="prevSubProjName">${chartObj.subProjName}</span><br>
+                    Completed By: <span id="prevCoderName">${chartObj.completedByEmpName || chartObj.loginName} (${chartObj.completedByUserId})</span>
+                `;
+            } else {
+                selectedAuditChartObj = null;
+                previewBox.className = "lookup-preview-box not-found";
+                previewBox.innerHTML = `
+                    <strong>Lookup Result:</strong> Information not found: Chart ID does not exist or has not been marked Completed.
+                `;
+            }
+        }
+
+        function toggleAudErrorParams() {
+            const status = document.getElementById('audAuditErrorStatus').value;
+            const p = document.getElementById('audAuditErrorParam');
+            const l = document.getElementById('audAuditLocation');
+            p.disabled = status !== 'Yes';
+            l.disabled = status !== 'Yes';
+            p.required = status === 'Yes';
+            l.required = status === 'Yes';
+            if(status !== 'Yes') {
+                p.value = '';
+                l.value = '';
+            }
+        }
+
+        function handleAuditorAddAuditEntry(e) {
+            e.preventDefault();
+            if(!selectedAuditChartObj) {
+                alert("Please enter a valid Completed Chart ID before submitting!");
+                return;
+            }
+
+            const chartId = selectedAuditChartObj.chartId;
+            const totalAudited = parseInt(document.getElementById('audAuditTotalAudited').value) || 1;
+            const totalErrors = parseInt(document.getElementById('audAuditTotalError').value) || 0;
+            const qualScore = Math.max(0, ((totalAudited - totalErrors) / totalAudited) * 100).toFixed(1);
+            const errorStatus = document.getElementById('audAuditErrorStatus').value;
+            const qaLoginId = document.getElementById('audAuditQaLoginId').value.trim();
+
+            const today = new Date();
+            const dateAuditStr = today.toISOString().slice(0, 10);
+            const auditTimeStr = today.toTimeString().slice(0, 8);
+
+            qualityLogs.push({
+                sNo: qualityLogs.length + 1,
+                chartId: chartId,
+                projName: selectedAuditChartObj.projName,
+                subProjName: selectedAuditChartObj.subProjName,
+                coderUser: selectedAuditChartObj.loginName,
+                completedByUserId: selectedAuditChartObj.completedByUserId,
+                completedByEmpName: selectedAuditChartObj.completedByEmpName || selectedAuditChartObj.loginName,
+                completedByEmpId: selectedAuditChartObj.completedByEmpId || '',
+                completedByTl: selectedAuditChartObj.tl || 'Nill',
+                completedByMgr: selectedAuditChartObj.manager || 'Nill',
+                qaLoginId: qaLoginId,
+                auditorEmpId: activeAdminUser.empId,
+                auditorEmpName: activeAdminUser.empName,
+                auditorTl: activeAdminUser.tl,
+                auditorMgr: activeAdminUser.manager,
+                totalPages: document.getElementById('audAuditTotalPages').value,
+                totalAuditedCodes: totalAudited,
+                totalError: totalErrors,
+                dateAudit: dateAuditStr,
+                auditTime: auditTimeStr,
+                errorStatus: errorStatus,
+                errorParameter: errorStatus === 'Yes' ? document.getElementById('audAuditErrorParam').value : 'N/A',
+                location: errorStatus === 'Yes' ? document.getElementById('audAuditLocation').value : 'N/A',
+                comment: document.getElementById('audAuditComment').value,
+                qualityPercentage: `${qualScore}%`,
+                workflowStage: errorStatus === 'Yes' ? 'Level 1: Pending Coder Action' : 'Completed - 100% Quality',
+                coderRemarks: "",
+                tlAction: null,
+                tlRemarks: "",
+                auditorResponse: null,
+                auditorRemarks: "",
+                finalVerdict: null,
+                finalRemarks: ""
+            });
+
+            savePersistentData();
+            alert(`Quality audit for chart "${chartId}" submitted successfully! Result is tied exclusively to chart owner (${selectedAuditChartObj.completedByUserId}).`);
+            document.getElementById('audManualChartInput').value = '';
+            document.getElementById('audAuditComment').value = '';
+            displayChartMetadata('');
+            switchTab('auditReportTab');
+        }
+
+        // AUDIT REPORT: RENDERING & CSV EXPORT
+        function renderAuditorAuditReport() {
+            const tbody = document.getElementById('auditorAuditTableBody');
+            
+            let audits = [];
+            if(activeAdminUser.role === 'Admin' || activeAdminUser.role === 'Sub-Admin') {
+                audits = qualityLogs;
+            } else if(activeAdminUser.role === 'Auditor') {
+                audits = qualityLogs.filter(q => q.qaLoginId === activeAdminUser.userName);
+            } else {
+                const teamUserNames = getSupervisorTeamUsers().map(u => u.userName);
+                audits = qualityLogs.filter(q => teamUserNames.includes(q.completedByUserId));
+            }
+
+            if(audits.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #94a3b8;">No audit records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = audits.map((q, idx) => {
+                const prod = productionLogs.find(p => p.chartId === q.chartId) || {};
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${q.projName}</td>
+                        <td>${q.subProjName}</td>
+                        <td><strong>${q.chartId}</strong></td>
+                        <td>${q.completedByUserId}</td>
+                        <td>${q.qaLoginId}</td>
+                        <td>${formatToMMDDYYYY(prod.date)}</td>
+                        <td>${q.totalPages}</td>
+                        <td>${q.totalAuditedCodes}</td>
+                        <td>${q.totalError}</td>
+                        <td>${formatToMMDDYYYY(q.dateAudit)}</td>
+                        <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
+                        <td><strong>${q.qualityPercentage}</strong></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportAuditReportToCSV() {
+            let audits = [];
+            if(activeAdminUser.role === 'Admin' || activeAdminUser.role === 'Sub-Admin') {
+                audits = qualityLogs;
+            } else if(activeAdminUser.role === 'Auditor') {
+                audits = qualityLogs.filter(q => q.qaLoginId === activeAdminUser.userName);
+            } else {
+                const teamUserNames = getSupervisorTeamUsers().map(u => u.userName);
+                audits = qualityLogs.filter(q => teamUserNames.includes(q.completedByUserId));
+            }
+
+            const headers = [
+                "Sr.No", "Project Name", "Sub Project Name", "Chart ID", "Login ID-Coder",
+                "QA Login ID", "Coded Date", "Total Charts Pages", "Total codes audited",
+                "Total errors", "Date Audited", "QA status", "Parameter", "Header",
+                "Text Comment", "Quality", "Coder EMP ID", "Coder EMP Name", "Team Lead",
+                "Manager", "Auditor EMP ID", "Auditor EMP Name", "Team Lead", "Manager"
+            ];
+
+            let csvRows = [headers.join(",")];
+            audits.forEach((q, idx) => {
+                const prod = productionLogs.find(p => p.chartId === q.chartId) || {};
+                csvRows.push([
+                    idx + 1,
+                    `"${q.projName}"`,
+                    `"${q.subProjName}"`,
+                    `"${q.chartId}"`,
+                    `"${q.completedByUserId}"`,
+                    `"${q.qaLoginId}"`,
+                    formatToMMDDYYYY(prod.date),
+                    q.totalPages || "",
+                    q.totalAuditedCodes || "",
+                    q.totalError || 0,
+                    formatToMMDDYYYY(q.dateAudit),
+                    `"${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}"`,
+                    `"${q.errorParameter || 'N/A'}"`,
+                    `"${q.location || 'N/A'}"`,
+                    `"${(q.comment || '').replace(/"/g, '""')}"`,
+                    `"${q.qualityPercentage}"`,
+                    `"${q.completedByEmpId || ''}"`,
+                    `"${(q.completedByEmpName || '').replace(/"/g, '""')}"`,
+                    `"${(q.completedByTl || 'Nill').replace(/"/g, '""')}"`,
+                    `"${(q.completedByMgr || 'Nill').replace(/"/g, '""')}"`,
+                    `"${q.auditorEmpId || ''}"`,
+                    `"${(q.auditorEmpName || '').replace(/"/g, '""')}"`,
+                    `"${(q.auditorTl || 'Nill').replace(/"/g, '""')}"`,
+                    `"${(q.auditorMgr || 'Nill').replace(/"/g, '""')}"`
+                ].join(","));
+            });
+
+            downloadCSV(csvRows.join("\n"), `Audit_Report_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+
+        // PRODUCTION REPORT FILTERS & RENDERING
+        function setupProdReportFilters() {
+            const filterProjSelect = document.getElementById('prodFilterProject');
+            const uniqueProjects = [...new Set(projects.map(p => p.name))];
+            filterProjSelect.innerHTML = `<option value="">All Project</option>` + 
+                (uniqueProjects.length ? uniqueProjects.map(p => `<option value="${p}">${p}</option>`).join('') : `<option value="Aetna">Aetna</option>`);
+            updateSubProjectFilterOptions();
+        }
+
+        function updateSubProjectFilterOptions() {
+            const selectedProjName = document.getElementById('prodFilterProject').value;
+            const filterSubProjSelect = document.getElementById('prodFilterSubProject');
+
+            let matchingSubs = [];
+            if (selectedProjName === "") {
+                matchingSubs = [...new Set(projects.map(p => p.subName))];
+            } else {
+                matchingSubs = projects.filter(p => p.name === selectedProjName).map(p => p.subName);
+            }
+
+            if(matchingSubs.length) {
+                filterSubProjSelect.innerHTML = `<option value="">All Sub Project</option>` + matchingSubs.map(s => `<option value="${s}">${s}</option>`).join('');
+            } else {
+                filterSubProjSelect.innerHTML = `<option value="">All Sub Project</option><option value="Aetna MRA">Aetna MRA</option><option value="Aetna CRA">Aetna CRA</option>`;
+            }
+        }
+
+        function clearProdFilter() {
+            document.getElementById('prodFilterEmpId').value = '';
+            document.getElementById('prodFilterStartDate').value = '';
+            document.getElementById('prodFilterEndDate').value = '';
+            document.getElementById('prodFilterProject').value = '';
+            updateSubProjectFilterOptions();
+            document.getElementById('prodFilterSubProject').value = '';
+            renderUniversalProdReport();
+        }
+
+        function getStrictMyProductionDataset() {
+            if (!activeAdminUser) return [];
+
+            const empIdSearch = (document.getElementById('prodFilterEmpId').value || '').trim().toLowerCase();
+            const sDate = document.getElementById('prodFilterStartDate').value;
+            const eDate = document.getElementById('prodFilterEndDate').value;
+            const pFilt = document.getElementById('prodFilterProject').value;
+            const spFilt = document.getElementById('prodFilterSubProject').value;
+
+            return productionLogs.filter(p => {
+                const isOwner = (p.completedByUserId === activeAdminUser.userName);
+                if (!isOwner) return false;
+
+                if (empIdSearch && !(p.completedByEmpId || '').toLowerCase().includes(empIdSearch)) return false;
+                if (sDate && p.date < sDate) return false;
+                if (eDate && p.date > eDate) return false;
+                if (pFilt && p.projName !== pFilt) return false;
+                if (spFilt && p.subProjName !== spFilt) return false;
+                return true;
+            });
+        }
+
+        function renderUniversalProdReport() {
+            const tbody = document.getElementById('universalProdTableBody');
+            const filtered = getStrictMyProductionDataset();
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#94a3b8;">No Records Found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((p, idx) => `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${formatToMMDDYYYY(p.date)}</td>
+                    <td>${p.projName}</td>
+                    <td>${p.subProjName}</td>
+                    <td>${p.loginName}</td>
+                    <td><strong>${p.chartId}</strong></td>
+                    <td>${p.pageNo}</td>
+                    <td>${p.totalIcd}</td>
+                    <td><span class="badge badge-status">${p.status}</span></td>
+                    <td>${p.completedByEmpId || activeAdminUser.empId}</td>
+                    <td>${p.completedByEmpName || activeAdminUser.empName}</td>
+                    <td>${p.tl || activeAdminUser.tl}</td>
+                    <td>${p.manager || activeAdminUser.manager}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="openEditProdModal('${p.chartId}')">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function exportUniversalProdReportToCSV() {
+            const filtered = getStrictMyProductionDataset();
+
+            let csv = ["Sr.No,Project Name,Sub Project Name,Chart ID,Page count,No of ICD,Login name,Status,EMP ID,EMP Name,Reporting Team Lead,Reporting Manager,Date"];
+            filtered.forEach((p, idx) => {
+                csv.push(`${idx + 1},"${p.projName}","${p.subProjName}","${p.chartId}",${p.pageNo},${p.totalIcd},"${p.loginName}","${p.status}","${p.completedByEmpId || activeAdminUser.empId}","${p.completedByEmpName || activeAdminUser.empName}","${p.tl || activeAdminUser.tl}","${p.manager || activeAdminUser.manager}",${formatToMMDDYYYY(p.date)}`);
+            });
+            downloadCSV(csv.join("\n"), `My_Production_Report_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+
+        function openEditProdModal(chartId) {
+            const entry = productionLogs.find(p => p.chartId === chartId && p.completedByUserId === activeAdminUser.userName);
+            if(!entry) {
+                alert("Permission denied or record does not exist!");
+                return;
+            }
+
+            document.getElementById('editProdChartId').value = entry.chartId;
+            document.getElementById('editProdProj').value = entry.projName;
+            document.getElementById('editProdSubProj').value = entry.subProjName;
+            document.getElementById('editProdLoginName').value = entry.loginName;
+            document.getElementById('editProdPageNo').value = entry.pageNo;
+            document.getElementById('editProdTotalIcd').value = entry.totalIcd;
+            document.getElementById('editProdStatus').value = entry.status;
+            document.getElementById('editProdComment').value = entry.comment || '';
+
+            document.getElementById('editProdModal').classList.remove('hidden');
+        }
+
+        function closeEditProdModal() {
+            document.getElementById('editProdModal').classList.add('hidden');
+        }
+
+        function handleSaveEditedProduction(e) {
+            e.preventDefault();
+            const chartId = document.getElementById('editProdChartId').value;
+            const entry = productionLogs.find(p => p.chartId === chartId && p.completedByUserId === activeAdminUser.userName);
+            if(!entry) return;
+
+            entry.subProjName = document.getElementById('editProdSubProj').value.trim();
+            entry.loginName = document.getElementById('editProdLoginName').value.trim();
+            entry.pageNo = document.getElementById('editProdPageNo').value;
+            entry.totalIcd = document.getElementById('editProdTotalIcd').value;
+            entry.status = document.getElementById('editProdStatus').value;
+            entry.comment = document.getElementById('editProdComment').value.trim();
+
+            savePersistentData();
+            alert(`Production entry for Chart ID "${chartId}" updated successfully!`);
+            closeEditProdModal();
+            renderUniversalProdReport();
+        }
+
+        // MY QUALITY FILTERS & RENDERING
+        function setupMyQualityReportFilters() {
+            const filterProjSelect = document.getElementById('myQualFilterProject');
+            const uniqueProjects = [...new Set(projects.map(p => p.name))];
+            
+            filterProjSelect.innerHTML = `<option value="">All Project</option>` + 
+                (uniqueProjects.length ? uniqueProjects.map(p => `<option value="${p}">${p}</option>`).join('') : `<option value="Aetna">Aetna</option>`);
+            
+            updateMyQualSubProjectFilterOptions();
+        }
+
+        function updateMyQualSubProjectFilterOptions() {
+            const selectedProjName = document.getElementById('myQualFilterProject').value;
+            const filterSubProjSelect = document.getElementById('myQualFilterSubProject');
+
+            let matchingSubs = [];
+            if (selectedProjName === "") {
+                matchingSubs = [...new Set(projects.map(p => p.subName))];
+            } else {
+                matchingSubs = projects.filter(p => p.name === selectedProjName).map(p => p.subName);
+            }
+
+            if(matchingSubs.length) {
+                filterSubProjSelect.innerHTML = `<option value="">All Sub Project</option>` + matchingSubs.map(s => `<option value="${s}">${s}</option>`).join('');
+            } else {
+                filterSubProjSelect.innerHTML = `<option value="">All Sub Project</option><option value="Aetna MRA">Aetna MRA</option><option value="Aetna CRA">Aetna CRA</option>`;
+            }
+        }
+
+        function clearMyQualFilter() {
+            document.getElementById('myQualFilterStartDate').value = '';
+            document.getElementById('myQualFilterEndDate').value = '';
+            document.getElementById('myQualFilterProject').value = '';
+            updateMyQualSubProjectFilterOptions();
+            document.getElementById('myQualFilterSubProject').value = '';
+            renderUniversalQualityReport();
+        }
+
+        function getFilteredMyQualityRecords() {
+            if(!activeAdminUser) return [];
+
+            const sDate = document.getElementById('myQualFilterStartDate').value;
+            const eDate = document.getElementById('myQualFilterEndDate').value;
+            const pFilt = document.getElementById('myQualFilterProject').value;
+            const spFilt = document.getElementById('myQualFilterSubProject').value;
+
+            return qualityLogs.filter(q => {
+                const isOwner = (q.completedByUserId === activeAdminUser.userName);
+                if (!isOwner) return false;
+
+                if (sDate && q.dateAudit < sDate) return false;
+                if (eDate && q.dateAudit > eDate) return false;
+                if (pFilt && q.projName !== pFilt) return false;
+                if (spFilt && q.subProjName !== spFilt) return false;
+                return true;
+            });
+        }
+
+        function renderUniversalQualityReport() {
+            const tbody = document.getElementById('universalQualityTableBody');
+            const myQuals = getFilteredMyQualityRecords();
+
+            if(myQuals.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #94a3b8;">No records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = myQuals.map((q, idx) => {
+                let actionBtn = `<span style="color:#64748b;">No Action Required</span>`;
+                
+                if (q.workflowStage === 'Level 1: Pending Coder Action') {
+                    actionBtn = `
+                        <div class="action-btns">
+                            <button class="btn btn-success btn-sm" onclick="handleCoderAgree('${q.chartId}')">Agree</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDisagreeModal('${q.chartId}', 'LEVEL1_CODER_DISAGREE')">Disagree</button>
+                        </div>
+                    `;
+                } else {
+                    actionBtn = `<strong>${q.workflowStage}</strong>`;
+                }
+
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><strong>${q.chartId}</strong></td>
+                        <td>${q.projName}</td>
+                        <td>${q.subProjName}</td>
+                        <td>${q.completedByEmpName || q.completedByUserId}</td>
+                        <td>${q.auditorEmpName || q.qaLoginId}</td>
+                        <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus}</span></td>
+                        <td>${q.errorParameter}</td>
+                        <td>${q.location}</td>
+                        <td style="white-space:normal; max-width:180px;">${q.comment}</td>
+                        <td><strong>${q.qualityPercentage}</strong></td>
+                        <td><span class="badge badge-pending">${q.workflowStage}</span></td>
+                        <td>${actionBtn}</td>
+                        <td>${formatToMMDDYYYY(q.dateAudit)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportMyQualityToCSV() {
+            const myQuals = getFilteredMyQualityRecords();
+            
+            const headers = [
+                "S.no", "chart_id", "project_name", "sub_project_name", "coded_date", "coder_login_id",
+                "auditor_login_id", "total_icd", "total_page_count", "total_errors", "audit_type",
+                "Audit Sub Category", "audit_date", "coder_employee_id", "coder_name",
+                "coder_reporting_to", "coded_date_time", "auditor_employee_id", "auditor_name",
+                "auditor_reporting_to", "audit_Time"
+            ];
+
+            let csvRows = [headers.join(",")];
+
+            myQuals.forEach((q, idx) => {
+                const prodEntry = productionLogs.find(p => p.chartId === q.chartId) || {};
+
+                const row = [
+                    idx + 1,
+                    q.chartId || "",
+                    `"${(q.projName || "").replace(/"/g, '""')}"`,
+                    `"${(q.subProjName || "").replace(/"/g, '""')}"`,
+                    formatToMMDDYYYY(prodEntry.date),
+                    q.completedByUserId || "",
+                    q.qaLoginId || "",
+                    prodEntry.totalIcd || "",
+                    q.totalPages || prodEntry.pageNo || "",
+                    q.totalError || 0,
+                    `"${(q.errorParameter || "Quality Audit").replace(/"/g, '""')}"`,
+                    `"${(q.location || "General").replace(/"/g, '""')}"`,
+                    formatToMMDDYYYY(q.dateAudit),
+                    q.completedByEmpId || activeAdminUser.empId,
+                    `"${(q.completedByEmpName || activeAdminUser.empName).replace(/"/g, '""')}"`,
+                    `"${(q.completedByTl || activeAdminUser.tl).replace(/"/g, '""')}"`,
+                    prodEntry.dateTime || "",
+                    q.auditorEmpId || "",
+                    `"${(q.auditorEmpName || q.qaLoginId || "").replace(/"/g, '""')}"`,
+                    `"${(q.auditorTl || "Nill").replace(/"/g, '""')}"`,
+                    q.auditTime || "00:00:00"
+                ];
+
+                csvRows.push(row.join(","));
+            });
+
+            downloadCSV(csvRows.join("\n"), `My_Quality_Report_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+
+        // DISPUTE LIFECYCLE MODAL
+        function openDisagreeModal(chartId, stageType) {
+            activeModalContext = { chartId, stageType };
+            document.getElementById('disagreeRemarksInput').value = '';
+            
+            if(stageType === 'LEVEL1_CODER_DISAGREE') {
+                document.getElementById('disagreeModalTitle').textContent = "Level 1: Coder Disagreement";
+                document.getElementById('disagreeModalSub').textContent = "Provide dispute remarks. This will advance the chart to Level 2 (Pending TL Review).";
+            } else if(stageType === 'LEVEL2_TL_DISAGREE') {
+                document.getElementById('disagreeModalTitle').textContent = "Level 2: Team Lead Disagree Confirmation";
+                document.getElementById('disagreeModalSub').textContent = "Provide TL feedback supporting the dispute. This will advance the chart to Level 3 (Auditor Review).";
+            } else if(stageType === 'LEVEL3_AUDITOR_REJECT') {
+                document.getElementById('disagreeModalTitle').textContent = "Level 3: Auditor Reject Rebuttal";
+                document.getElementById('disagreeModalSub').textContent = "Maintain the finding and escalate to Level 4 (Audit TL Final Decision).";
+            } else if(stageType === 'LEVEL4_AUDITTL_REJECT') {
+                document.getElementById('disagreeModalTitle').textContent = "Level 4: Audit TL Final Rejection";
+                document.getElementById('disagreeModalSub').textContent = "Uphold error as final binding verdict.";
+            }
+
+            document.getElementById('disagreeModal').classList.remove('hidden');
+        }
+
+        function closeDisagreeModal() {
+            activeModalContext = null;
+            document.getElementById('disagreeModal').classList.add('hidden');
+        }
+
+        function submitDisagreementFlow() {
+            const remarks = document.getElementById('disagreeRemarksInput').value.trim();
+            if(!remarks) {
+                alert("Remarks are mandatory!");
+                return;
+            }
+
+            const { chartId, stageType } = activeModalContext;
+            const record = qualityLogs.find(q => q.chartId === chartId);
+            if(!record) return;
+
+            if(stageType === 'LEVEL1_CODER_DISAGREE') {
+                record.workflowStage = "Level 2: Pending TL Review";
+                record.coderRemarks = remarks;
+                alert(`Chart ${chartId} escalated to Level 2 (Pending TL Review).`);
+                closeDisagreeModal();
+                renderUniversalQualityReport();
+            } else if(stageType === 'LEVEL2_TL_DISAGREE') {
+                record.workflowStage = "Level 3: Auditor Review & Response";
+                record.tlAction = "Disagree";
+                record.tlRemarks = remarks;
+                alert(`Chart ${chartId} escalated to Level 3 (Auditor Review & Response).`);
+                closeDisagreeModal();
+                renderSupervisorTeamQuality();
+            } else if(stageType === 'LEVEL3_AUDITOR_REJECT') {
+                record.workflowStage = "Level 4: Audit TL Final Decision";
+                record.auditorResponse = "Reject Rebuttal";
+                record.auditorRemarks = remarks;
+                alert(`Rebuttal rejected. Chart ${chartId} escalated to Level 4 (Audit TL Final Decision).`);
+                closeDisagreeModal();
+                renderAuditorAuditReport();
+            } else if(stageType === 'LEVEL4_AUDITTL_REJECT') {
+                record.workflowStage = "Completed - Error Upheld (Final)";
+                record.finalVerdict = "Reject Rebuttal (Upheld)";
+                record.finalRemarks = remarks;
+                alert(`Error upheld as final binding verdict for chart ${chartId}. Lifecycle complete.`);
+                closeDisagreeModal();
+                renderSupervisorTeamQuality();
+            }
+
+            savePersistentData();
+        }
+
+        function handleCoderAgree(chartId) {
+            if(confirm(`Accept audit finding and close audit for chart ${chartId}?`)) {
+                const record = qualityLogs.find(q => q.chartId === chartId);
+                if(record) {
+                    record.workflowStage = "Completed - Error Accepted";
+                    savePersistentData();
+                    renderUniversalQualityReport();
+                    alert("Audit closed successfully.");
+                }
+            }
+        }
+
+        // SUPERVISOR WORKFLOW
+        function setupSupervisorInterface() { calculateSupervisorMetrics(); }
+
+        function getSupervisorTeamUsers() {
+            if(!activeAdminUser) return [];
+            if(activeAdminUser.role === 'Team Lead') return users.filter(u => u.tl === activeAdminUser.empName || u.tl === activeAdminUser.userName);
+            if(activeAdminUser.role === 'Manager') return users.filter(u => u.manager === activeAdminUser.empName || u.manager === activeAdminUser.userName);
+            return users;
+        }
+
+        function calculateSupervisorMetrics() {
+            const teamNames = getSupervisorTeamUsers().map(u => u.userName);
+            document.getElementById('supMetricTeamCount').textContent = teamNames.length;
+            document.getElementById('supMetricPendingLevel2').textContent = qualityLogs.filter(q => teamNames.includes(q.completedByUserId) && q.workflowStage === 'Level 2: Pending TL Review').length;
+            document.getElementById('supMetricPendingLevel4').textContent = qualityLogs.filter(q => teamNames.includes(q.completedByUserId) && q.workflowStage === 'Level 4: Audit TL Final Decision').length;
+        }
+
+        function handleTlAgreeLevel2(chartId) {
+            if(confirm(`Level 2: Uphold auditor's error and conclude audit for chart ${chartId}?`)) {
+                const record = qualityLogs.find(q => q.chartId === chartId);
+                if(record) {
+                    record.workflowStage = "Completed - Error Upheld by TL";
+                    record.tlAction = "Agree";
+                    savePersistentData();
+                    renderSupervisorTeamQuality();
+                    alert("Audit concluded. Error upheld.");
+                }
+            }
+        }
+
+        function handleAuditTlAcceptLevel4(chartId) {
+            if(confirm(`Level 4: Accept rebuttal, nullify error, and set quality score to 100% for chart ${chartId}?`)) {
+                const record = qualityLogs.find(q => q.chartId === chartId);
+                if(record) {
+                    record.workflowStage = "Completed - Rebuttal Accepted (100% Quality)";
+                    record.finalVerdict = "Accept Rebuttal (Error Nullified)";
+                    record.totalError = 0;
+                    record.errorStatus = "No";
+                    record.qualityPercentage = "100.0%";
+                    savePersistentData();
+                    renderSupervisorTeamQuality();
+                    alert("Rebuttal accepted. Quality score updated to 100%.");
+                }
+            }
+        }
+
+        function renderSupervisorTeamQuality() {
+            const tbody = document.getElementById('supTeamQualityTableBody');
+            const teamUsers = getSupervisorTeamUsers();
+            const teamUserNames = teamUsers.map(u => u.userName);
+
+            const quals = qualityLogs.filter(q => teamUserNames.includes(q.completedByUserId));
+            if(quals.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #94a3b8;">No dispute lifecycle records for team.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = quals.map(q => {
+                const coder = users.find(u => u.userName === q.completedByUserId) || {};
+                let actionBtn = `<span style="color:#64748b;">In Progress / Other Stage</span>`;
+
+                if(q.workflowStage === 'Level 2: Pending TL Review') {
+                    actionBtn = `
+                        <div class="action-btns">
+                            <button class="btn btn-success btn-sm" onclick="handleTlAgreeLevel2('${q.chartId}')">Agree</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDisagreeModal('${q.chartId}', 'LEVEL2_TL_DISAGREE')">Disagree</button>
+                        </div>
+                    `;
+                } else if(q.workflowStage === 'Level 4: Audit TL Final Decision') {
+                    actionBtn = `
+                        <div class="action-btns">
+                            <button class="btn btn-success btn-sm" onclick="handleAuditTlAcceptLevel4('${q.chartId}')">Accept Rebuttal</button>
+                            <button class="btn btn-danger btn-sm" onclick="openDisagreeModal('${q.chartId}', 'LEVEL4_AUDITTL_REJECT')">Reject Rebuttal</button>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <tr>
+                        <td><strong>${q.chartId}</strong></td>
+                        <td>${coder.empName || q.completedByUserId}</td>
+                        <td>${q.qaLoginId}</td>
+                        <td><span class="badge badge-yes">${q.errorStatus}</span></td>
+                        <td>${q.errorParameter}</td>
+                        <td style="white-space:normal; max-width:150px;">${q.coderRemarks || 'None'}</td>
+                        <td>${q.auditorResponse || 'Pending'}</td>
+                        <td><span class="badge badge-pending">${q.workflowStage}</span></td>
+                        <td>${actionBtn}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSupervisorTeamProduction() {
+            const teamNames = getSupervisorTeamUsers().map(u => u.userName);
+            const logs = productionLogs.filter(p => teamNames.includes(p.completedByUserId) || teamNames.includes(p.loginName));
+            document.getElementById('supTeamProdTableBody').innerHTML = logs.length ? logs.map((p, idx) => `<tr><td>${idx+1}</td><td>${formatToMMDDYYYY(p.date)}</td><td>${p.loginName}</td><td>${p.projName}</td><td>${p.subProjName}</td><td>${p.chartId}</td><td>${p.pageNo}</td><td>${p.status}</td><td>-</td><td>-</td></tr>`).join('') : `<tr><td colspan="10" style="text-align:center;">No records.</td></tr>`;
+        }
+
+        function downloadCSV(csv, filename) {
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv));
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportSupProdToCSV() { downloadCSV("S.No,Chart ID", "Production.csv"); }
+        function exportSupQualityToCSV() { downloadCSV("Chart ID,Status", "Quality.csv"); }
+
+        // BASIC USER & PROJECT MANAGEMENT
+        function forceFormDefaultPassword() { document.getElementById('uDefaultPassword').value = "Temp@123"; }
+
+        function handleRoleChange(selectedTlValue = 'Nill', selectedMgrValue = 'Nill') {
+            const role = document.getElementById('uRole').value;
+            const tlSelect = document.getElementById('uTl');
+            const mgrSelect = document.getElementById('uMgr');
+
+            if (role === "Team Lead" || role === "Manager") {
+                tlSelect.innerHTML = `<option value="Nill">Nill</option>`;
+                tlSelect.value = "Nill";
+                tlSelect.disabled = true;
+            } else {
+                tlSelect.disabled = false;
+                const teamLeads = users.filter(u => u.role === "Team Lead");
+                let options = `<option value="Nill">Nill</option>`;
+                teamLeads.forEach(tl => options += `<option value="${tl.empName}">${tl.empName} (${tl.empId})</option>`);
+                tlSelect.innerHTML = options;
+                tlSelect.value = selectedTlValue;
+            }
+
+            if (role === "Manager") {
+                mgrSelect.innerHTML = `<option value="Nill">Nill</option>`;
+                mgrSelect.value = "Nill";
+                mgrSelect.disabled = true;
+            } else {
+                mgrSelect.disabled = false;
+                const managers = users.filter(u => u.role === "Manager");
+                let options = `<option value="Nill">Nill</option>`;
+                managers.forEach(m => options += `<option value="${m.empName}">${m.empName} (${m.empId})</option>`);
+                mgrSelect.innerHTML = options;
+                mgrSelect.value = selectedMgrValue;
+            }
+        }
+
+        function renderUsers() {
+            document.getElementById('userTableBody').innerHTML = users.map((u, i) => `
+                <tr>
+                    <td>${u.empId}</td>
+                    <td>${u.userName}</td>
+                    <td>${u.empName}</td>
+                    <td>${u.role}</td>
+                    <td>${u.designation}</td>
+                    <td>${u.tl}</td>
+                    <td>${u.manager}</td>
+                    <td><span class="badge ${u.status === 'Active' ? 'badge-active' : 'badge-inactive'}">${u.status}</span></td>
+                    <td class="action-btns">
+                        <button class="btn" onclick="editUser(${i})">Edit</button>
+                        <button class="btn btn-warning" onclick="toggleStatus(${i})">${u.status === 'Active' ? 'Inactive' : 'Active'}</button>
+                        <button class="btn btn-danger" onclick="deleteUser(${i})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function handleUserSubmit(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('editIndex').value);
+            const userPassword = document.getElementById('uDefaultPassword').value.trim() || 'Temp@123';
+
+            const userObj = {
+                userName: document.getElementById('uName').value,
+                empId: document.getElementById('uEmpId').value,
+                empName: document.getElementById('uEmpName').value,
+                role: document.getElementById('uRole').value,
+                designation: document.getElementById('uDesignation').value,
+                status: idx >= 0 ? users[idx].status : 'Active',
+                tl: document.getElementById('uTl').value || 'Nill',
+                manager: document.getElementById('uMgr').value || 'Nill',
+                password: userPassword
+            };
+
+            if (idx >= 0) users[idx] = userObj;
+            else users.push(userObj);
+
+            savePersistentData();
+            resetUserForm();
+            populateDropdowns();
+            renderUsers();
+            alert("User saved successfully!");
+        }
+
+        function editUser(i) {
+            const u = users[i];
+            document.getElementById('editIndex').value = i;
+            document.getElementById('uName').value = u.userName;
+            document.getElementById('uEmpId').value = u.empId;
+            document.getElementById('uEmpName').value = u.empName;
+            document.getElementById('uRole').value = u.role;
+            document.getElementById('uDesignation').value = u.designation;
+            document.getElementById('uDefaultPassword').value = u.password || "Temp@123";
+            handleRoleChange(u.tl, u.manager);
+            document.getElementById('userFormTitle').textContent = "Edit User";
+            document.getElementById('userSubmitBtn').textContent = "Update User";
+            document.getElementById('userCancelBtn').classList.remove('hidden');
+        }
+
+        function resetUserForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('editIndex').value = -1;
+            document.getElementById('uDefaultPassword').value = "Temp@123";
+            document.getElementById('userFormTitle').textContent = "New User Create Option";
+            document.getElementById('userSubmitBtn').textContent = "+ Create User";
+            document.getElementById('userCancelBtn').classList.add('hidden');
+            handleRoleChange();
+        }
+
+        function toggleStatus(i) {
+            users[i].status = users[i].status === 'Active' ? 'Inactive' : 'Active';
+            savePersistentData();
+            renderUsers();
+        }
+
+        function deleteUser(i) {
+            users.splice(i, 1);
+            savePersistentData();
+            populateDropdowns();
+            renderUsers();
+        }
+
+        function renderProjects() {
+            document.getElementById('projectTableBody').innerHTML = projects.map((p, i) => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.subName}</td>
+                    <td><button class="btn btn-danger" onclick="deleteProject(${i})">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function handleAddProject(e) {
+            e.preventDefault();
+            projects.push({
+                id: Date.now().toString().slice(-4),
+                name: document.getElementById('pName').value.trim(),
+                subName: document.getElementById('subPName').value.trim()
+            });
+            savePersistentData();
+            renderProjects();
+            e.target.reset();
+        }
+
+        function deleteProject(i) {
+            projects.splice(i, 1);
+            savePersistentData();
+            renderProjects();
+        }
+
+        function renderDesignations() {
+            document.getElementById('desigTableBody').innerHTML = designations.map((d, i) => `
+                <tr><td>${d}</td><td><button class="btn btn-danger" onclick="deleteDesignation(${i})">Delete</button></td></tr>
+            `).join('');
+        }
+
+        function handleAddDesignation(e) {
+            e.preventDefault();
+            designations.push(document.getElementById('dTitle').value.trim());
+            savePersistentData();
+            populateDropdowns();
+            renderDesignations();
+            e.target.reset();
+        }
+
+        function deleteDesignation(i) {
+            designations.splice(i, 1);
+            savePersistentData();
+            populateDropdowns();
+            renderDesignations();
+        }
+
+        function renderRoles() {
+            document.getElementById('roleTableBody').innerHTML = roles.map((r, i) => `
+                <tr><td>${r}</td><td><button class="btn btn-danger" onclick="deleteRole(${i})">Delete</button></td></tr>
+            `).join('');
+        }
+
+        function handleAddRole(e) {
+            e.preventDefault();
+            roles.push(document.getElementById('rTitle').value.trim());
+            savePersistentData();
+            populateDropdowns();
+            renderRoles();
+            e.target.reset();
+        }
+
+        function deleteRole(i) {
+            roles.splice(i, 1);
+            savePersistentData();
+            populateDropdowns();
+            renderRoles();
+        }
+
+        // ADMIN REPORTS WITH "SELECT ALL" & MASS DELETE FOR SYSTEM PRODUCTION REPORT
+        function renderAdminReports() {
+            const type = document.getElementById('reportTypeSelect').value;
+            const thead = document.getElementById('adminReportTableHead');
+            const tbody = document.getElementById('adminReportTableBody');
+            const heading = document.getElementById('adminReportHeading');
+            const eDate = document.getElementById('adminRepEndDate').value;
+            const massDeleteBtn = document.getElementById('adminMassDeleteBtn');
+            
+            if (type === 'userMgmtReport') {
+                massDeleteBtn.classList.add('hidden');
+                heading.textContent = "User Management Report";
+                thead.innerHTML = `<tr><th>User Name</th><th>EMP ID</th><th>EMP Name</th><th>TL</th><th>Manager</th></tr>`;
+                tbody.innerHTML = users.map(u => `<tr><td>${u.userName}</td><td>${u.empId}</td><td>${u.empName}</td><td>${u.tl}</td><td>${u.manager}</td></tr>`).join('');
+            } else {
+                massDeleteBtn.classList.remove('hidden');
+                heading.textContent = "System Production Report";
+                thead.innerHTML = `
+                    <tr>
+                        <th><input type="checkbox" id="adminSelectAllCheckbox" onchange="toggleAdminSelectAll(this)"></th>
+                        <th>Sr.No</th>
+                        <th>Project Name</th>
+                        <th>Sub Project</th>
+                        <th>Chart ID</th>
+                        <th>Page count</th>
+                        <th>No of ICD</th>
+                        <th>Login ID</th>
+                        <th>Status</th>
+                        <th>Date (MM/DD/YYYY)</th>
+                        <th>EMP ID</th>
+                        <th>EMP Name</th>
+                        <th>Team Lead</th>
+                        <th>Manager</th>
+                        <th>Action</th>
+                    </tr>
+                `;
+                
+                const filtered = productionLogs.map((p, originalIdx) => ({ ...p, originalIdx })).filter(p => {
+                    if (eDate && p.date > eDate) return false;
+                    return true;
+                });
+
+                if(filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:#94a3b8;">No records found.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map((p, i) => `
+                    <tr>
+                        <td><input type="checkbox" class="admin-prod-checkbox" value="${p.originalIdx}"></td>
+                        <td>${i + 1}</td>
+                        <td>${p.projName}</td>
+                        <td>${p.subProjName}</td>
+                        <td><strong>${p.chartId}</strong></td>
+                        <td>${p.pageNo}</td>
+                        <td>${p.totalIcd}</td>
+                        <td>${p.loginName}</td>
+                        <td><span class="badge badge-status">${p.status}</span></td>
+                        <td>${formatToMMDDYYYY(p.date)}</td>
+                        <td>${p.completedByEmpId || 'N/A'}</td>
+                        <td>${p.completedByEmpName || 'N/A'}</td>
+                        <td>${p.tl || 'Nill'}</td>
+                        <td>${p.manager || 'Nill'}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSingleAdminProduction(${p.originalIdx})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function toggleAdminSelectAll(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('.admin-prod-checkbox');
+            checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        }
+
+        function deleteSingleAdminProduction(index) {
+            if (confirm("Are you sure you want to delete this production record?")) {
+                const deleted = productionLogs.splice(index, 1)[0];
+                if(deleted) {
+                    qualityLogs = qualityLogs.filter(q => q.chartId !== deleted.chartId);
+                }
+                savePersistentData();
+                renderAdminReports();
+            }
+        }
+
+        function deleteSelectedAdminProduction() {
+            const checkedBoxes = Array.from(document.querySelectorAll('.admin-prod-checkbox:checked')).map(cb => parseInt(cb.value));
+            if (checkedBoxes.length === 0) {
+                alert("Please select at least one record to delete!");
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected record(s)?`)) {
+                checkedBoxes.sort((a, b) => b - a);
+                checkedBoxes.forEach(idx => {
+                    const deleted = productionLogs.splice(idx, 1)[0];
+                    if (deleted) {
+                        qualityLogs = qualityLogs.filter(q => q.chartId !== deleted.chartId);
+                    }
+                });
+                savePersistentData();
+                renderAdminReports();
+            }
+        }
+
+        function exportAdminReportToCSV() {
+            const type = document.getElementById('reportTypeSelect').value;
+            if (type === 'userMgmtReport') {
+                let csv = ["User Name,EMP ID,EMP Name,Reporting TL,Reporting Manager"];
+                users.forEach(u => csv.push(`${u.userName},${u.empId},"${u.empName}","${u.tl}","${u.manager}"`));
+                downloadCSV(csv.join("\n"), "User_Management_Report.csv");
+            } else {
+                const eDate = document.getElementById('adminRepEndDate').value;
+                const filtered = productionLogs.filter(p => {
+                    if (eDate && p.date > eDate) return false;
+                    return true;
+                });
+
+                const headers = ["Sr.No", "Project Name", "Sub Project", "Chart ID", "Page count", "No of ICD", "Login ID", "Status", "Date (MM/DD/YYYY)", "EMP ID", "EMP Name", "Team Lead", "Manager"];
+                let csvRows = [headers.join(",")];
+
+                filtered.forEach((p, idx) => {
+                    csvRows.push([
+                        idx + 1,
+                        `"${p.projName}"`,
+                        `"${p.subProjName}"`,
+                        `"${p.chartId}"`,
+                        p.pageNo,
+                        p.totalIcd,
+                        `"${p.loginName}"`,
+                        `"${p.status}"`,
+                        formatToMMDDYYYY(p.date),
+                        `"${p.completedByEmpId || ''}"`,
+                        `"${(p.completedByEmpName || '').replace(/"/g, '""')}"`,
+                        `"${(p.tl || 'Nill').replace(/"/g, '""')}"`,
+                        `"${(p.manager || 'Nill').replace(/"/g, '""')}"`
+                    ].join(","));
+                });
+
+                downloadCSV(csvRows.join("\n"), `System_Production_Report_${new Date().toISOString().slice(0,10)}.csv`);
+            }
+        }
+    </script>
+</body>
+</html>
