@@ -385,7 +385,7 @@
 </head>
 <body>
 
-    <!-- 1. FIRST TIME SETUP WIZARD OVERLAY -->
+    <!-- 1. FIRST TIME SETUP WIZARD OVERLAY (PERMANENT UNTIL INITIALIZED) -->
     <div id="setupWizardOverlay" class="auth-overlay hidden">
         <div class="auth-card">
             <div class="auth-title">First Time Setup Wizard</div>
@@ -433,7 +433,7 @@
         </div>
     </div>
 
-    <!-- 2. LOGIN SCREEN -->
+    <!-- 2. LOGIN SCREEN (RESET APP REMOVED, FORGOT PASSWORD ADDED) -->
     <div id="loginOverlay" class="auth-overlay hidden">
         <div class="auth-card">
             <div class="auth-title">Enterprise Portal</div>
@@ -449,9 +449,33 @@
                 </div>
                 <button type="submit" class="btn" style="width:100%; margin-top: 10px;">Sign In</button>
             </form>
-            <div style="margin-top: 15px; text-align: center;">
-                <button class="btn btn-danger" style="font-size: 11px;" onclick="resetSystemState()">Reset App (Re-enable Setup Wizard)</button>
+            <div style="margin-top: 18px; text-align: center;">
+                <a href="javascript:void(0)" onclick="openForgotPasswordModal()" style="color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: 500;">Forgot Password?</a>
             </div>
+        </div>
+    </div>
+
+    <!-- FORGOT PASSWORD MODAL (RESETS TO Temp@123) -->
+    <div id="forgotPasswordModal" class="modal-overlay hidden">
+        <div class="modal-card" style="width: 400px;">
+            <h3 style="margin-bottom: 8px; color: #38bdf8;">Reset Password</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+                Enter your registered Username and EMP ID. Your password will be automatically restored to the default password (<strong>Temp@123</strong>).
+            </p>
+            <form onsubmit="handleForgotPasswordSubmit(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="forgotUsername" required placeholder="Enter Username">
+                </div>
+                <div class="form-group">
+                    <label>EMP ID</label>
+                    <input type="text" id="forgotEmpId" required placeholder="Enter EMP ID">
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Reset to Default</button>
+                    <button type="button" class="btn btn-danger" onclick="closeForgotPasswordModal()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -662,7 +686,7 @@
                     </div>
                 </div>
 
-                <!-- ADMIN: REPORTS (USER MGMT & SYSTEM PROD) -->
+                <!-- ADMIN: REPORTS -->
                 <div id="reports" class="tab-content hidden">
                     <div class="card">
                         <div class="form-grid">
@@ -1001,7 +1025,7 @@
                     </div>
                 </div>
 
-                <!-- AUDITOR: AUDIT REPORT (UPDATED WITH REQUIRED TABLE HEADERS & CSV SCHEMA) -->
+                <!-- AUDITOR: AUDIT REPORT -->
                 <div id="auditReportTab" class="tab-content hidden">
                     <div class="card">
                         <div class="control-header">
@@ -1305,6 +1329,7 @@
             };
             users.push(adminUser);
 
+            // User Hierarchy Seeding
             users.push({
                 empId: "TL001",
                 userName: "team_lead",
@@ -1335,6 +1360,18 @@
                 empName: "User A (Coder)",
                 role: "Coder",
                 designation: "Senior Coder",
+                status: "Active",
+                tl: "Sarah Connor",
+                manager: "Nill",
+                password: "Temp@123"
+            });
+
+            users.push({
+                empId: "EMP002",
+                userName: "user_c",
+                empName: "User C (Coder)",
+                role: "Coder",
+                designation: "Medical Coder",
                 status: "Active",
                 tl: "Sarah Connor",
                 manager: "Nill",
@@ -1384,6 +1421,7 @@
                 auditorEmpId: "AUD001",
                 auditorEmpName: "User B (Auditor)",
                 auditorTl: "Sarah Connor",
+                auditorMgr: "Nill",
                 totalPages: 12,
                 totalAuditedCodes: 6,
                 totalError: 1,
@@ -1464,10 +1502,33 @@
             document.getElementById('loginOverlay').classList.remove('hidden');
         }
 
-        function resetSystemState() {
-            if(confirm("Wipe all data and restart setup wizard?")) {
-                localStorage.clear();
-                window.location.reload();
+        // FORGOT PASSWORD CONTROLLERS (RESTORES PASSWORD TO Temp@123)
+        function openForgotPasswordModal() {
+            document.getElementById('forgotUsername').value = '';
+            document.getElementById('forgotEmpId').value = '';
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+        }
+
+        function handleForgotPasswordSubmit(e) {
+            e.preventDefault();
+            const uName = document.getElementById('forgotUsername').value.trim();
+            const empId = document.getElementById('forgotEmpId').value.trim();
+
+            const targetUser = users.find(u => u.userName.toLowerCase() === uName.toLowerCase() && u.empId.toLowerCase() === empId.toLowerCase());
+
+            if (targetUser) {
+                targetUser.password = "Temp@123";
+                savePersistentData();
+                alert(`Password for user "${targetUser.userName}" (EMP: ${targetUser.empId}) has been reset to default: Temp@123\n\nPlease sign in with your default credentials.`);
+                closeForgotPasswordModal();
+                document.getElementById('loginUser').value = targetUser.userName;
+                document.getElementById('loginPass').value = 'Temp@123';
+            } else {
+                alert("No matching user account found with that Username and EMP ID!");
             }
         }
 
@@ -2427,6 +2488,7 @@
             document.getElementById('supTeamProdTableBody').innerHTML = logs.length ? logs.map((p, idx) => `<tr><td>${idx+1}</td><td>${formatToMMDDYYYY(p.date)}</td><td>${p.loginName}</td><td>${p.projName}</td><td>${p.subProjName}</td><td>${p.chartId}</td><td>${p.pageNo}</td><td>${p.status}</td><td>-</td><td>-</td></tr>`).join('') : `<tr><td colspan="10" style="text-align:center;">No records.</td></tr>`;
         }
 
+        // CSV HELPERS
         function downloadCSV(csv, filename) {
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv));
@@ -2632,7 +2694,7 @@
             renderRoles();
         }
 
-        // ADMIN REPORTS WITH "SELECT ALL" & MASS DELETE FOR SYSTEM PRODUCTION REPORT
+        // ADMIN REPORTS
         function renderAdminReports() {
             const type = document.getElementById('reportTypeSelect').value;
             const thead = document.getElementById('adminReportTableHead');
