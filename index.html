@@ -4,22 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Work Flow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-canvas: #0b1120;
+            --bg-surface: #111827;
+            --bg-card: #1e293b;
+            --bg-card-elevated: #243248;
+            --bg-input: #0f172a;
+            --border-subtle: #1e293b;
+            --border-card: #334155;
+            --border-focus: #6366f1;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent-primary: #6366f1;
+            --accent-primary-hover: #4f46e5;
+            --accent-success: #10b981;
+            --accent-success-hover: #059669;
+            --accent-warning: #f59e0b;
+            --accent-warning-hover: #d97706;
+            --accent-danger: #f43f5e;
+            --accent-danger-hover: #e11d48;
+            --accent-cyan: #06b6d4;
+
+            --radius-sm: 8px;
+            --radius-md: 10px;
+            --radius-bento: 14px;
+            --radius-pill: 9999px;
+
+            --shadow-bento: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+            --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+            
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
             height: 100vh;
             overflow: hidden;
+            font-size: 13px;
         }
 
         .hidden { display: none !important; }
+
+        /* SCROLLBARS */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-canvas);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-card);
+            border-radius: var(--radius-pill);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
 
         /* AUTH & SETUP OVERLAYS */
         .auth-overlay {
@@ -28,7 +85,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #0f172a;
+            background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-canvas) 70%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -36,27 +93,39 @@
         }
 
         .auth-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            padding: 32px;
-            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            padding: 32px 28px;
+            border-radius: 18px;
             width: 100%;
-            max-width: 480px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            max-width: 420px;
+            box-shadow: var(--shadow-float);
+            position: relative;
+        }
+
+        .auth-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
         }
 
         .auth-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            color: #38bdf8;
-            margin-bottom: 8px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
             text-align: center;
+            letter-spacing: -0.02em;
         }
 
         .auth-subtitle {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-bottom: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 22px;
             text-align: center;
         }
 
@@ -65,48 +134,66 @@
             display: flex;
             height: 100vh;
             width: 100vw;
+            background: var(--bg-canvas);
         }
 
         .sidebar {
-            width: 270px;
-            background-color: #1e293b;
-            border-right: 1px solid #334155;
+            width: 250px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
             display: flex;
             flex-direction: column;
+            user-select: none;
         }
 
         .sidebar-header {
-            padding: 20px;
-            font-size: 17px;
+            padding: 16px 20px;
+            font-size: 13.5px;
             font-weight: 700;
-            color: #38bdf8;
-            border-bottom: 1px solid #334155;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-subtle);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%);
         }
 
         .nav-list {
             list-style: none;
-            padding: 15px 10px;
+            padding: 12px 10px;
             flex: 1;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .nav-item {
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #94a3b8;
+            padding: 9px 14px;
+            border-radius: var(--radius-md);
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
             cursor: pointer;
-            margin-bottom: 4px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
         }
 
-        .nav-item:hover, .nav-item.active {
-            background-color: #0284c7;
-            color: #ffffff;
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0.08) 100%);
+            color: #c7d2fe;
+            border-color: rgba(99, 102, 241, 0.35);
+            font-weight: 700;
         }
 
         .main-content {
@@ -115,20 +202,24 @@
             flex-direction: column;
             overflow-y: auto;
             position: relative;
+            background: var(--bg-canvas);
         }
 
         .top-bar {
-            background-color: #1e293b;
-            padding: 16px 32px;
-            border-bottom: 1px solid #334155;
+            background-color: var(--bg-surface);
+            padding: 10px 28px;
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-height: 52px;
         }
 
         .page-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
         }
 
         .profile-container {
@@ -139,35 +230,41 @@
         .profile-btn {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: #0f172a;
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid #334155;
+            gap: 9px;
+            background: var(--bg-card);
+            padding: 4px 12px 4px 5px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-card);
+            transition: border-color 0.2s ease;
+        }
+
+        .profile-btn:hover {
+            border-color: var(--accent-primary);
         }
 
         .avatar-circle {
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            background-color: #0284c7;
-            color: white;
+            background: linear-gradient(135deg, var(--accent-primary), #4338ca);
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 11px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .profile-dropdown {
             position: absolute;
             right: 0;
-            top: 48px;
-            width: 280px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            top: 42px;
+            width: 270px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-bento);
+            box-shadow: var(--shadow-float);
             display: none;
             z-index: 100;
             padding: 16px;
@@ -175,101 +272,141 @@
 
         .profile-dropdown.show { display: block; }
 
+        .profile-dropdown h4 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 6px;
+        }
+
         .profile-info-row {
             display: flex;
             justify-content: space-between;
             font-size: 12px;
             padding: 6px 0;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .profile-info-row span:first-child { color: #94a3b8; }
-        .profile-info-row span:last-child { color: #f8fafc; font-weight: 500; }
+        .profile-info-row span:first-child { color: var(--text-secondary); }
+        .profile-info-row span:last-child { color: var(--text-primary); font-weight: 600; font-family: var(--font-mono); }
 
         .profile-actions {
             margin-top: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
         }
 
         .content-body {
-            padding: 32px;
+            padding: 22px 28px;
             flex: 1;
         }
 
+        /* BENTO CARDS */
         .card {
-            background: #1e293b;
-            padding: 24px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 18px 22px;
+            border-radius: var(--radius-bento);
+            border: 1px solid var(--border-card);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-bento);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
         }
 
         .lookup-preview-box {
-            background-color: #0f172a;
-            border: 1px solid #38bdf8;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-card);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            font-size: 12.5px;
             line-height: 1.6;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
         }
 
         .lookup-preview-box.not-found {
-            border-color: #ef4444;
-            color: #fca5a5;
+            border-left-color: var(--accent-danger);
+            color: #fda4af;
+            background: rgba(244, 63, 94, 0.05);
         }
 
+        /* BENTO METRICS GRID */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 14px;
+            margin-bottom: 16px;
         }
 
         .metric-card {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 20px;
+            background: linear-gradient(145deg, var(--bg-card) 0%, var(--bg-card-elevated) 100%);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-bento);
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-bento);
+        }
+
+        .metric-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), transparent);
         }
 
         .metric-title {
             font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
+            font-weight: 700;
+            color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .metric-value {
             font-size: 24px;
-            font-weight: 700;
-            color: #38bdf8;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            letter-spacing: -0.02em;
         }
 
         .control-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 12px;
+            gap: 5px;
+            margin-bottom: 4px;
         }
 
         .form-group-full {
@@ -284,7 +421,7 @@
         }
 
         .password-wrapper input {
-            padding-right: 44px;
+            padding-right: 40px;
         }
 
         .pwd-toggle-btn {
@@ -292,97 +429,232 @@
             right: 8px;
             background: transparent;
             border: none;
-            color: #94a3b8;
+            color: var(--text-muted);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
+            transition: color 0.15s ease;
         }
 
         .pwd-toggle-btn:hover {
-            color: #38bdf8;
+            color: var(--text-primary);
         }
 
         label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #cbd5e1;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         input, select, textarea {
             padding: 8px 12px;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            color: #f8fafc;
-            font-size: 13px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 12.5px;
             outline: none;
             width: 100%;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
+            line-height: 1.4;
         }
 
         input:disabled, select:disabled, textarea:disabled {
-            background-color: #1e293b;
-            color: #64748b;
+            background-color: rgba(15, 23, 42, 0.6);
+            color: var(--text-muted);
+            border-color: rgba(51, 65, 85, 0.4);
             cursor: not-allowed;
         }
 
-        input:focus, select:focus, textarea:focus { border-color: #0284c7; }
-
-        .btn {
-            padding: 8px 16px;
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
         }
 
-        .btn:hover { background-color: #0369a1; }
-        .btn-danger { background-color: #dc2626; }
-        .btn-danger:hover { background-color: #b91c1c; }
-        .btn-warning { background-color: #d97706; }
-        .btn-warning:hover { background-color: #b45309; }
-        .btn-success { background-color: #16a34a; }
-        .btn-success:hover { background-color: #15803d; }
-        .btn-export { background-color: #059669; }
-        .btn-export:hover { background-color: #047857; }
-        .btn-secondary { background-color: #475569; }
-        .btn-secondary:hover { background-color: #334155; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; }
+        /* BUTTONS (TACTILE PILLS) */
+        .btn {
+            padding: 7px 16px;
+            background-color: var(--accent-primary);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
 
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; white-space: nowrap; }
-        th, td { padding: 12px; border-bottom: 1px solid #334155; }
-        th { background-color: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 11px; }
-        tr:hover { background-color: #334155; }
+        .btn:hover {
+            background-color: var(--accent-primary-hover);
+            transform: translateY(-1px);
+        }
 
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
-        .badge-active { background-color: #064e3b; color: #a7f3d0; }
-        .badge-inactive { background-color: #450a0a; color: #fca5a5; }
-        .badge-status { background-color: #0369a1; color: #e0f2fe; }
-        .badge-yes { background-color: #7f1d1d; color: #fecaca; }
-        .badge-no { background-color: #064e3b; color: #a7f3d0; }
-        .badge-pending { background-color: #78350f; color: #fde68a; }
+        .btn:active {
+            transform: translateY(0);
+        }
 
-        .action-btns { display: flex; gap: 6px; align-items: center; }
+        .btn-success {
+            background-color: var(--accent-success);
+        }
+        .btn-success:hover {
+            background-color: var(--accent-success-hover);
+        }
 
+        .btn-danger {
+            background-color: var(--accent-danger);
+        }
+        .btn-danger:hover {
+            background-color: var(--accent-danger-hover);
+        }
+
+        .btn-warning {
+            background-color: var(--accent-warning);
+            color: #1e1b4b;
+            font-weight: 700;
+        }
+        .btn-warning:hover {
+            background-color: var(--accent-warning-hover);
+        }
+
+        .btn-export {
+            background-color: #059669;
+        }
+        .btn-export:hover {
+            background-color: #047857;
+        }
+
+        .btn-secondary {
+            background-color: #334155;
+            color: var(--text-primary);
+            border-color: #475569;
+        }
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: var(--radius-pill);
+        }
+
+        /* TABLES */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            background: var(--bg-surface);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            background-color: #141f33;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10.5px;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 3px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 10.5px;
+            font-weight: 700;
+            display: inline-block;
+            font-family: var(--font-mono);
+            border: 1px solid transparent;
+        }
+
+        .badge-active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-inactive {
+            background-color: rgba(244, 63, 94, 0.15);
+            color: #fda4af;
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .badge-status {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: #c7d2fe;
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .badge-yes {
+            background-color: rgba(244, 63, 94, 0.15);
+            color: #fda4af;
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .badge-no {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-pending {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #fde68a;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        /* MODALS */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -390,12 +662,29 @@
         }
 
         .modal-card {
-            background: #1e293b;
-            border: 1px solid #334155;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
             padding: 24px;
-            border-radius: 8px;
-            width: 580px;
-            max-width: 95vw;
+            border-radius: var(--radius-bento);
+            width: 560px;
+            max-width: 94vw;
+            box-shadow: var(--shadow-float);
+        }
+
+        .modal-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            background: var(--bg-surface);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-card);
+            color: #a5b4fc;
         }
     </style>
 </head>
@@ -412,32 +701,32 @@
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label>Username or EMP ID</label>
-                    <input type="text" id="loginUser" required placeholder>
+                    <input type="text" id="loginUser" required placeholder="Enter username or EMP ID">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="loginPass" required placeholder>
+                        <input type="password" id="loginPass" required placeholder="••••••••">
                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('loginPass', this)">👁</button>
                     </div>
                 </div>
-                <button type="submit" class="btn" style="width:100%; margin-top: 10px;">Sign In</button>
-                <div style="margin-top: 16px; text-align: center;">
-                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: 500;">Forgot Password</a>
+                <button type="submit" class="btn btn-success" style="width:100%; margin-top: 16px; padding: 9px;">Sign In</button>
+                <div style="margin-top: 14px; text-align: center;">
+                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); font-size: 12px; text-decoration: none; font-weight: 600;">Forgot Password?</a>
                 </div>
             </form>
 
             <form id="loginResetForm" class="hidden" onsubmit="handleDirectPasswordReset(event)">
-                <div style="background-color: #0f172a; padding: 12px; border-radius: 6px; border-left: 3px solid #38bdf8; margin-bottom: 16px;">
-                    <p style="font-size: 12px; color: #94a3b8;">Enter your Username and registered EMP ID to restore your password to default</p>
+                <div style="background-color: var(--bg-surface); padding: 12px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-cyan); margin-bottom: 14px;">
+                    <p style="font-size: 12px; color: var(--text-secondary);">Enter your Username and registered EMP ID to restore your password to default</p>
                 </div>
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="resetInputUsername" required placeholder>
+                    <input type="text" id="resetInputUsername" required placeholder="Enter Username">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 6px;">
                     <label>Registered EMP ID</label>
-                    <input type="text" id="resetInputEmpId" required placeholder>
+                    <input type="text" id="resetInputEmpId" required placeholder="Enter registered EMP ID">
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 16px;">
                     <button type="submit" class="btn btn-success" style="flex: 1;">Reset to Default</button>
@@ -461,11 +750,11 @@
                 <div class="profile-container" onclick="toggleProfileDropdown(event)">
                     <div class="profile-btn">
                         <div class="avatar-circle" id="profAvatar">AD</div>
-                        <span id="profShortName" style="font-size: 13px; font-weight: 600;">User</span>
+                        <span id="profShortName" style="font-size: 12px; font-weight: 600;">User</span>
                     </div>
 
                     <div id="profileDropdown" class="profile-dropdown" onclick="event.stopPropagation()">
-                        <h4 style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 6px;">Profile Info</h4>
+                        <h4>Profile Info</h4>
                         <div class="profile-info-row"><span>EMP ID:</span><span id="profEmpId">EMP101</span></div>
                         <div class="profile-info-row"><span>EMP Name:</span><span id="profEmpName">User Name</span></div>
                         <div class="profile-info-row"><span>Designation:</span><span id="profDesig">Role</span></div>
@@ -486,7 +775,7 @@
                 <div id="adminDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Dashboard Overview</h3>
-                        <p style="color: #94a3b8; margin-top: 4px; font-size: 13px;"></p>
+                        <p style="color: var(--text-muted); margin-top: 2px; font-size: 12.5px;"></p>
                     </div>
 
                     <div class="metrics-grid">
@@ -553,25 +842,25 @@
                                     </div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
+                            <div style="display: flex; gap: 8px; margin-top: 6px;">
                                 <button type="submit" id="userSubmitBtn" class="btn btn-success">+ Create User</button>
                                 <button type="button" class="btn btn-secondary" onclick="forceFormDefaultPassword()">Set Default Password</button>
                             </div>
                         </form>
                     </div>
 
-                    <div id="subAdminNoticeCard" class="card hidden" style="border-left: 4px solid #38bdf8; padding: 16px;">
-                        <p style="font-size: 13px; color: #94a3b8;">
-                            <strong style="color: #38bdf8;">Sub-Admin Mode:</strong> User Creation is disabled. You have permission to <strong>Edit (Role, Designation, TL, Mgr, Password)</strong>, <strong>Disable/Enable</strong>, <strong>Delete</strong>, and <strong>Reset Password</strong>.
+                    <div id="subAdminNoticeCard" class="card hidden" style="border-left: 4px solid var(--accent-cyan); padding: 14px 18px;">
+                        <p style="font-size: 12.5px; color: var(--text-secondary);">
+                            <strong style="color: var(--accent-cyan);">Sub-Admin Mode:</strong> User Creation is disabled. You have permission to <strong>Edit (Role, Designation, TL, Mgr, Password)</strong>, <strong>Disable/Enable</strong>, <strong>Delete</strong>, and <strong>Reset Password</strong>.
                         </p>
                     </div>
 
                     <div class="card">
                         <div class="control-header">
                             <h3 id="userTableSectionTitle">⚡ System Users Management</h3>
-                            <button class="btn btn-export" onclick="exportUserMgmtTableToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportUserMgmtTableToCSV()">Export Report</button>
                         </div>
-                        <div class="table-responsive" style="margin-top: 16px;">
+                        <div class="table-responsive" style="margin-top: 10px;">
                             <table>
                                 <thead>
                                     <tr>
@@ -597,7 +886,7 @@
                 <div id="projMgmt" class="tab-content hidden">
                     <div class="card">
                         <h3>Project Management</h3>
-                        <form onsubmit="handleAddProject(event)" style="margin-top: 16px;">
+                        <form onsubmit="handleAddProject(event)" style="margin-top: 12px;">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Project Name</label>
@@ -608,13 +897,13 @@
                                     <input type="text" id="subPName" placeholder="e.g. Aetna MRA" required>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">+ Add New Project Name</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 4px;">+ Add New Project Name</button>
                         </form>
                     </div>
 
                     <div class="card">
                         <h3>Projects List</h3>
-                        <div class="table-responsive" style="margin-top: 16px;">
+                        <div class="table-responsive" style="margin-top: 12px;">
                             <table>
                                 <thead>
                                     <tr>
@@ -634,20 +923,20 @@
                 <div id="desigMgmt" class="tab-content hidden">
                     <div class="card">
                         <h3>Add New Designation</h3>
-                        <form onsubmit="handleAddDesignation(event)" style="margin-top: 16px;">
+                        <form onsubmit="handleAddDesignation(event)" style="margin-top: 12px;">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Designation Title</label>
                                     <input type="text" id="dTitle" required>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">+ Add Designation</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 4px;">+ Add Designation</button>
                         </form>
                     </div>
 
                     <div class="card">
                         <h3>Designation</h3>
-                        <div class="table-responsive" style="margin-top: 16px;">
+                        <div class="table-responsive" style="margin-top: 12px;">
                             <table>
                                 <thead>
                                     <tr>
@@ -665,20 +954,20 @@
                 <div id="roleMgmt" class="tab-content hidden">
                     <div class="card">
                         <h3>Added New Role</h3>
-                        <form onsubmit="handleAddRole(event)" style="margin-top: 16px;">
+                        <form onsubmit="handleAddRole(event)" style="margin-top: 12px;">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Role Title</label>
                                     <input type="text" id="rTitle" required>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">+ Add Role</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 4px;">+ Add Role</button>
                         </form>
                     </div>
 
                     <div class="card">
                         <h3>Role Management</h3>
-                        <div class="table-responsive" style="margin-top: 16px;">
+                        <div class="table-responsive" style="margin-top: 12px;">
                             <table>
                                 <thead>
                                     <tr>
@@ -696,26 +985,26 @@
                 <div id="reports" class="tab-content hidden">
                     <div class="card">
                         <h3>⚡ Cloud (JSONBin.io) & LocalStorage Management</h3>
-                        <p style="color: #94a3b8; font-size: 13px; margin-top: 4px; margin-bottom: 12px;">
+                        <p style="color: var(--text-muted); font-size: 12.5px; margin-top: 4px; margin-bottom: 14px;">
                             Configured with JSONBin.io (Bin: <code>6aa76837ffd5d16053035d34</code>) and persistent browser storage.
                         </p>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-success" onclick="pushToCloud(true)">☁️ Push to Cloud (JSONBin)</button>
-                            <button class="btn" style="background-color: #0284c7;" onclick="fetchFromCloud(true)">🔄 Pull from Cloud (JSONBin)</button>
-                            <button class="btn btn-export" onclick="exportDatabaseFile()">💾 Export JSON File</button>
-                            <label class="btn btn-warning" style="cursor: pointer; margin-bottom: 0;">
+                            <button class="btn btn-success btn-sm" onclick="pushToCloud(true)">☁️ Push to Cloud (JSONBin)</button>
+                            <button class="btn btn-sm" onclick="fetchFromCloud(true)">🔄 Pull from Cloud (JSONBin)</button>
+                            <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export JSON File</button>
+                            <label class="btn btn-warning btn-sm" style="cursor: pointer; margin-bottom: 0;">
                                 📂 Import JSON File
                                 <input type="file" id="dbFileInput" accept=".json" style="display: none;" onchange="importDatabaseFile(event)">
                             </label>
-                            <button class="btn btn-secondary" onclick="checkLocalStorageStatus()">🔍 Storage Status</button>
-                            <button class="btn btn-danger" onclick="executeLocalStorageClear()">🧹 Reset All Data</button>
+                            <button class="btn btn-secondary btn-sm" onclick="checkLocalStorageStatus()">🔍 Storage Status</button>
+                            <button class="btn btn-danger btn-sm" onclick="executeLocalStorageClear()">🧹 Reset All Data</button>
                         </div>
-                        <div id="syncStatusIndicator" style="margin-top: 10px; font-size: 12px; color: #38bdf8;"></div>
+                        <div id="syncStatusIndicator" style="margin-top: 10px; font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono);"></div>
                     </div>
 
                     <div class="card">
                         <h3>Reports</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>Report Option</label>
                                 <select id="reportTypeSelect" onchange="renderAdminReports()">
@@ -740,10 +1029,10 @@
                         <div class="control-header">
                             <h3 id="adminReportHeading">User Management Report</h3>
                             <div style="display: flex; gap: 8px;">
-                                <button id="adminMassDeleteBtn" class="btn btn-danger hidden" onclick="deleteSelectedAdminProduction()">Delete Selected</button>
-                                <button id="adminMassDeleteAuditBtn" class="btn btn-danger hidden" onclick="deleteSelectedAdminAudit()">Delete Selected</button>
-                                <button id="adminMassDeleteQualityBtn" class="btn btn-danger hidden" onclick="deleteSelectedAdminQuality()">Delete Selected</button>
-                                <button class="btn btn-export" onclick="exportAdminReportToCSV()">Export Report</button>
+                                <button id="adminMassDeleteBtn" class="btn btn-danger btn-sm hidden" onclick="deleteSelectedAdminProduction()">Delete Selected</button>
+                                <button id="adminMassDeleteAuditBtn" class="btn btn-danger btn-sm hidden" onclick="deleteSelectedAdminAudit()">Delete Selected</button>
+                                <button id="adminMassDeleteQualityBtn" class="btn btn-danger btn-sm hidden" onclick="deleteSelectedAdminQuality()">Delete Selected</button>
+                                <button class="btn btn-export btn-sm" onclick="exportAdminReportToCSV()">Export Report</button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -819,7 +1108,7 @@
                                     <input type="text" id="apiCustomHeaderPrefix" value="Bearer ">
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px;">
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
                                 <button type="submit" id="apiConfigSubmitBtn" class="btn btn-success">+ Add API Provider</button>
                                 <button type="button" id="apiConfigCancelBtn" class="btn btn-secondary hidden" onclick="resetApiConfigForm()">Cancel Edit</button>
                             </div>
@@ -830,8 +1119,8 @@
                         <div class="control-header">
                             <h3>⚡ Configured API Providers</h3>
                         </div>
-                        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 12px;">
-                            Each provider is checked automatically after saving. <span class="badge badge-active">Active</span> means the API responded successfully; <span class="badge badge-inactive">Failed</span> means the connection or credentials could not be verified.
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+                            Each provider is checked automatically after saving. <span class="badge badge-active">Active</span> means the API responded successfully; <span class="badge badge-inactive">Failed</span> means connection or auth failed.
                         </p>
                         <div class="table-responsive">
                             <table>
@@ -856,7 +1145,7 @@
                 <div id="coderDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Coder Workflow Analytics Dashboard</h3>
-                        <p style="color: #94a3b8; margin-top: 4px; font-size: 13px;">Real-time overview of personal production throughput and quality audit performance[cite: 1].</p>
+                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time overview of personal production throughput and quality audit performance[cite: 1].</p>
                     </div>
 
                     <div class="metrics-grid">
@@ -883,7 +1172,7 @@
                 <div id="auditorDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Auditor Workflow Analytics Dashboard</h3>
-                        <p style="color: #94a3b8; margin-top: 4px; font-size: 13px;">Real-time throughput metrics showcasing production counts and quality percentages[cite: 1].</p>
+                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time throughput metrics showcasing production counts and quality percentages[cite: 1].</p>
                     </div>
 
                     <div class="metrics-grid">
@@ -910,7 +1199,7 @@
                 <div id="entryProdTab" class="tab-content hidden">
                     <div class="card">
                         <h3>Entry Production</h3>
-                        <p style="color: #94a3b8; font-size: 12px; margin-top: 4px; margin-bottom: 16px;">
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px; margin-bottom: 14px;">
                             Enter chart details below. Unique Chart ID validation is enforced automatically[cite: 1].
                         </p>
                         <form id="entryProdForm" onsubmit="handleUniversalAddEntry(event)">
@@ -959,10 +1248,10 @@
                                 </div>
                                 <div class="form-group form-group-full">
                                     <label>Comment (Required Detailed Notes)</label>
-                                    <textarea id="entryComment" required placeholder="Provide your detailed production comment or clinical documentation notes here..."></textarea>
+                                    <textarea id="entryComment" required placeholder="Provide clinical documentation notes here..."></textarea>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">+ Submitted</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 6px;">+ Submitted</button>
                         </form>
                     </div>
                 </div>
@@ -971,7 +1260,7 @@
                 <div id="qualityReviewTab" class="tab-content hidden">
                     <div class="card">
                         <h3>Quality Review Entry (Completed Charts Only)</h3>
-                        <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
                             Enter a Completed Chart ID. The system will automatically identify and display matching production metadata[cite: 1].
                         </p>
 
@@ -1039,7 +1328,7 @@
                                     <textarea id="audAuditComment" required placeholder="Provide your detailed quality audit comment and observations..."></textarea>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">+ Submit Quality Audit</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 6px;">+ Submit Quality Audit</button>
                         </form>
                     </div>
                 </div>
@@ -1048,7 +1337,7 @@
                 <div id="prodReportTab" class="tab-content hidden">
                     <div class="card">
                         <h3>My Production Reports Filter</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>Search EMP ID</label>
                                 <input type="text" id="prodFilterEmpId" placeholder="Enter EMP ID">
@@ -1074,16 +1363,16 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <button class="btn" onclick="renderUniversalProdReport()">Search</button>
-                            <button class="btn btn-warning" onclick="clearProdFilter()">Clear</button>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary btn-sm" onclick="renderUniversalProdReport()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearProdFilter()">Clear</button>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="control-header">
                             <h3>My Production Reports</h3>
-                            <button class="btn btn-export" onclick="exportUniversalProdReportToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportUniversalProdReportToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1114,8 +1403,8 @@
                 <!-- CODER: MY QUALITY REPORT -->
                 <div id="qualityReportTab" class="tab-content hidden">
                     <div class="card">
-                        <h3>⚡ Coder Workflow Quality Report My Quality Report</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <h3>⚡ Coder Workflow Quality Report</h3>
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>Start Date</label>
                                 <input type="date" id="myQualFilterStartDate">
@@ -1140,16 +1429,16 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <button class="btn" onclick="renderUniversalQualityReport()">Search</button>
-                            <button class="btn btn-warning" onclick="clearMyQualFilter()">Clear</button>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary btn-sm" onclick="renderUniversalQualityReport()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearMyQualFilter()">Clear</button>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="control-header">
                             <h3>My Quality</h3>
-                            <button class="btn btn-export" onclick="exportMyQualityToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportMyQualityToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1186,8 +1475,8 @@
                 <div id="auditReportTab" class="tab-content hidden">
                     <div class="card">
                         <div class="control-header">
-                            <h3>⚡ Auditor Workflow Audit Report Audit Report</h3>
-                            <button class="btn btn-export" onclick="exportAuditReportToCSV()">Export Report</button>
+                            <h3>⚡ Auditor Workflow Audit Report</h3>
+                            <button class="btn btn-export btn-sm" onclick="exportAuditReportToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1219,7 +1508,7 @@
                 <div id="supDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3 id="supDashboardTitle">Dashboard</h3>
-                        <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;"></p>
+                        <p style="color: var(--text-muted); font-size: 12.5px; margin-top: 4px;"></p>
                     </div>
 
                     <div class="metrics-grid">
@@ -1253,7 +1542,7 @@
                         </div>
                         <div class="metric-card">
                             <span class="metric-title">Inactive Assigned Users</span>
-                            <span class="metric-value" id="tlMetricAssignedInactive" style="color: #ef4444;">0</span>
+                            <span class="metric-value" id="tlMetricAssignedInactive" style="color: var(--accent-danger);">0</span>
                         </div>
                     </div>
                 </div>
@@ -1263,9 +1552,9 @@
                         <div class="control-header">
                             <div>
                                 <h3>Team User List</h3>
-                                <p style="color: #94a3b8; font-size: 12px; margin-top: 4px;"></p>
+                                <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;"></p>
                             </div>
-                            <button class="btn btn-export" onclick="exportTeamUsersToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportTeamUsersToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1291,15 +1580,15 @@
 
                 <div id="supTeamProd" class="tab-content hidden">
                     <div class="card">
-                        <h3>Team Entry Production</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <h3>Team Entry Production Filter</h3>
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>EMP ID</label>
                                 <input type="text" id="supProdFilterEmpId" placeholder="Search EMP ID">
                             </div>
                             <div class="form-group">
                                 <label>EMP Name</label>
-                                <input type="text" id="supProdFilterEmpName" placeholder="Search EMP ID">
+                                <input type="text" id="supProdFilterEmpName" placeholder="Search EMP Name">
                             </div>
                             <div class="form-group">
                                 <label>Start Date</label>
@@ -1322,16 +1611,16 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <button class="btn" onclick="renderSupervisorTeamProduction()">Search</button>
-                            <button class="btn btn-warning" onclick="clearSupProdFilter()">Clear</button>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary btn-sm" onclick="renderSupervisorTeamProduction()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearSupProdFilter()">Clear</button>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="control-header">
                             <h3>Team Entry Production</h3>
-                            <button class="btn btn-export" onclick="exportSupProdToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportSupProdToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1359,8 +1648,8 @@
 
                 <div id="supTeamAuditTab" class="tab-content hidden">
                     <div class="card">
-                        <h3>Team Audit Production</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <h3>Team Audit Production Filter</h3>
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>EMP ID</label>
                                 <input type="text" id="supQualFilterEmpId" placeholder="Enter EMP ID">
@@ -1393,9 +1682,9 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <button class="btn" onclick="renderSupervisorTeamQuality()">Search</button>
-                            <button class="btn btn-warning" onclick="clearSupQualFilter()">Clear</button>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary btn-sm" onclick="renderSupervisorTeamQuality()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearSupQualFilter()">Clear</button>
                         </div>
                     </div>
 
@@ -1403,9 +1692,9 @@
                         <div class="control-header">
                             <div>
                                 <h3>Team Audit Production</h3>
-                                <p style="color: #94a3b8; font-size: 12px; margin-top: 4px;"></p>
+                                <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;"></p>
                             </div>
-                            <button class="btn btn-export" onclick="exportSupAuditReportToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportSupAuditReportToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1434,10 +1723,9 @@
 
                 <!-- SUPERVISOR: TEAM QUALITY REPORT -->
                 <div id="supTeamQuality" class="tab-content hidden">
-                    <!-- Filters Card -->
                     <div class="card">
-                        <h3>Team Quality Report</h3>
-                        <div class="form-grid" style="margin-top: 16px;">
+                        <h3>Team Quality Report Filter</h3>
+                        <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>EMP ID</label>
                                 <input type="text" id="supQualFilterEmpId" placeholder="Enter EMP ID">
@@ -1470,17 +1758,16 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <button class="btn" onclick="renderSupervisorTeamQuality()">Search</button>
-                            <button class="btn btn-warning" onclick="clearSupQualFilter()">Clear</button>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button class="btn btn-secondary btn-sm" onclick="renderSupervisorTeamQuality()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearSupQualFilter()">Clear</button>
                         </div>
                     </div>
 
-                    <!-- Quality Report Table Card -->
                     <div class="card">
                         <div class="control-header">
                             <h3>My Quality</h3>
-                            <button class="btn btn-export" onclick="exportSupQualityToCSV()">Export Report</button>
+                            <button class="btn btn-export btn-sm" onclick="exportSupQualityToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive">
                             <table>
@@ -1517,40 +1804,40 @@
         </div>
     </div>
 
-    <!-- MODAL: AUDITOR REBUTTAL VIEW (TL DISAGREED -> LEVEL 3 AUDITOR REVIEW) -->
+    <!-- MODAL: AUDITOR REBUTTAL VIEW -->
     <div id="auditorRebuttalViewModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 4px; color: #38bdf8;">Auditor Rebuttal Review</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Auditor Rebuttal Review</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
                 Coder and Coder Team Lead have disagreed with your audit. Choose to accept the rebuttal and deduct errors, or disagree to escalate.
             </p>
 
-            <div style="background: #0f172a; padding: 16px; border-radius: 6px; border: 1px solid #334155; font-size: 12px; line-height: 1.8; margin-bottom: 16px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div><strong style="color: #94a3b8;">Chart ID:</strong> <span id="rebChartId" style="color:#38bdf8; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">Total Errors Logged:</strong> <span id="rebLoggedErrors" style="color:#ef4444; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">Coder:</strong> <span id="rebCoderName">-</span></div>
-                    <div><strong style="color: #94a3b8;">Reporting TL:</strong> <span id="rebTlName">-</span></div>
-                    <div><strong style="color: #94a3b8;">Audit Parameter:</strong> <span id="rebParam">-</span></div>
-                    <div><strong style="color: #94a3b8;">Header / Location:</strong> <span id="rebLocation">-</span></div>
+            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="rebChartId" style="color:var(--accent-cyan); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Total Errors Logged:</strong> <span id="rebLoggedErrors" style="color:var(--accent-danger); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Coder:</strong> <span id="rebCoderName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Reporting TL:</strong> <span id="rebTlName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Audit Parameter:</strong> <span id="rebParam">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Header / Location:</strong> <span id="rebLocation">-</span></div>
                 </div>
-                <div style="margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">
-                    <strong style="color: #94a3b8;">Coder Rebuttal Remarks:</strong>
-                    <p id="rebCoderRemarks" style="margin-top: 4px; color: #f8fafc; background: #1e293b; padding: 8px; border-radius: 4px;">-</p>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                    <strong style="color: var(--text-muted);">Coder Rebuttal Remarks:</strong>
+                    <p id="rebCoderRemarks" style="margin-top: 4px; color: var(--text-primary); background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
                 </div>
                 <div style="margin-top: 8px;">
-                    <strong style="color: #f59e0b;">Coder Team Lead Disagreement Remarks:</strong>
-                    <p id="rebTlRemarks" style="margin-top: 4px; color: #fde68a; background: #1e293b; padding: 8px; border-radius: 4px; border-left: 3px solid #f59e0b;">-</p>
+                    <strong style="color: var(--accent-warning);">Coder Team Lead Disagreement Remarks:</strong>
+                    <p id="rebTlRemarks" style="margin-top: 4px; color: #fde68a; background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-warning);">-</p>
                 </div>
             </div>
 
-            <div id="rebuttalDeductSection" style="background: #0f172a; border: 1px dashed #38bdf8; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                <label style="color: #38bdf8; font-weight: 600; font-size: 11px; text-transform: uppercase;">Accept Rebuttal: Enter number of errors to remove/concede</label>
+            <div id="rebuttalDeductSection" style="background: var(--bg-surface); border: 1px dashed var(--accent-cyan); padding: 12px; border-radius: var(--radius-md); margin-bottom: 14px;">
+                <label style="color: var(--accent-cyan); font-weight: 700; font-size: 10.5px; text-transform: uppercase;">Accept Rebuttal: Enter number of errors to remove/concede</label>
                 <div style="display: flex; gap: 8px; margin-top: 6px;">
                     <input type="number" id="rebDeductErrorCount" min="1" placeholder="e.g. 8" style="flex: 1;">
                     <button type="button" class="btn btn-success" onclick="handleAuditorAgreeWithDeduction()">Agree (Remove Errors & Recalculate)</button>
                 </div>
-                <small style="color: #94a3b8; font-size: 11px; display: block; margin-top: 4px;">
+                <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px;">
                     If all errors are removed, quality goes to 100%. If partial (e.g. 8 of 10 removed), remaining errors will recalculate quality.
                 </small>
             </div>
@@ -1562,29 +1849,29 @@
         </div>
     </div>
 
-    <!-- MODAL: AUDITOR TEAM LEAD REVIEW (LEVEL 4 AUDIT TL DECISION) -->
+    <!-- MODAL: AUDITOR TEAM LEAD REVIEW -->
     <div id="auditTlReviewModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 4px; color: #38bdf8;">Auditor Team Lead Final Review</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Auditor Team Lead Final Review</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
                 Auditor has rejected the Coder TL's rebuttal. As Auditor Team Lead, render the final decision.
             </p>
 
-            <div style="background: #0f172a; padding: 16px; border-radius: 6px; border: 1px solid #334155; font-size: 12px; line-height: 1.8; margin-bottom: 16px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div><strong style="color: #94a3b8;">Chart ID:</strong> <span id="atlChartId" style="color:#38bdf8; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">Total Errors Logged:</strong> <span id="atlLoggedErrors" style="color:#ef4444; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">Coder:</strong> <span id="atlCoderName">-</span></div>
-                    <div><strong style="color: #94a3b8;">Auditor QA Login:</strong> <span id="atlAuditorName">-</span></div>
+            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="atlChartId" style="color:var(--accent-cyan); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Total Errors Logged:</strong> <span id="atlLoggedErrors" style="color:var(--accent-danger); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Coder:</strong> <span id="atlCoderName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Auditor QA Login:</strong> <span id="atlAuditorName">-</span></div>
                 </div>
-                <div style="margin-top: 8px; border-top: 1px solid #334155; padding-top: 8px;">
-                    <strong style="color: #94a3b8;">Auditor Reject Rebuttal Justification:</strong>
-                    <p id="atlAuditorRemarks" style="margin-top: 4px; color: #f8fafc; background: #1e293b; padding: 8px; border-radius: 4px;">-</p>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                    <strong style="color: var(--text-muted);">Auditor Reject Rebuttal Justification:</strong>
+                    <p id="atlAuditorRemarks" style="margin-top: 4px; color: var(--text-primary); background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
                 </div>
             </div>
 
-            <div style="background: #0f172a; border: 1px dashed #38bdf8; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                <label style="color: #38bdf8; font-weight: 600; font-size: 11px; text-transform: uppercase;">Accept Rebuttal: Enter number of errors to remove</label>
+            <div style="background: var(--bg-surface); border: 1px dashed var(--accent-cyan); padding: 12px; border-radius: var(--radius-md); margin-bottom: 14px;">
+                <label style="color: var(--accent-cyan); font-weight: 700; font-size: 10.5px; text-transform: uppercase;">Accept Rebuttal: Enter number of errors to remove</label>
                 <div style="display: flex; gap: 8px; margin-top: 6px;">
                     <input type="number" id="atlDeductErrorCount" min="1" placeholder="e.g. 6" style="flex: 1;">
                     <button type="button" class="btn btn-success" onclick="handleAuditTlAcceptDeduction()">Accept & Remove Errors</button>
@@ -1601,28 +1888,28 @@
     <!-- MODAL: VIEW AUDIT QUALITY ERROR DETAIL & CODER ACTION -->
     <div id="viewAuditErrorModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 4px; color: #38bdf8;">Quality Audit Error Details</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">Chart Quality Review & Action Panel</p>
+            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Quality Audit Error Details</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Chart Quality Review & Action Panel</p>
 
-            <div style="background: #0f172a; padding: 16px; border-radius: 6px; border: 1px solid #334155; font-size: 12px; line-height: 1.8; margin-bottom: 16px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div><strong style="color: #94a3b8;">Chart ID:</strong> <span id="vChartId" style="color:#38bdf8; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">Quality %:</strong> <span id="vQualityScore">-</span></div>
-                    <div><strong style="color: #94a3b8;">Project:</strong> <span id="vProject">-</span></div>
-                    <div><strong style="color: #94a3b8;">Sub-Project:</strong> <span id="vSubProject">-</span></div>
-                    <div><strong style="color: #94a3b8;">Total Errors:</strong> <span id="vTotalError" style="color:#ef4444; font-weight:700;">-</span></div>
-                    <div><strong style="color: #94a3b8;">QA Status:</strong> <span id="vQaStatus">-</span></div>
-                    <div><strong style="color: #94a3b8;">Parameter:</strong> <span id="vErrorParam">-</span></div>
-                    <div><strong style="color: #94a3b8;">Header / Location:</strong> <span id="vErrorLocation">-</span></div>
-                    <div><strong style="color: #94a3b8;">Auditor:</strong> <span id="vAuditorName">-</span></div>
-                    <div><strong style="color: #94a3b8;">Audit Date:</strong> <span id="vAuditDate">-</span></div>
+            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="vChartId" style="color:var(--accent-cyan); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Quality %:</strong> <span id="vQualityScore" style="font-family:var(--font-mono); font-weight:600;">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Project:</strong> <span id="vProject">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Sub-Project:</strong> <span id="vSubProject">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Total Errors:</strong> <span id="vTotalError" style="color:var(--accent-danger); font-weight:700; font-family:var(--font-mono);">-</span></div>
+                    <div><strong style="color: var(--text-muted);">QA Status:</strong> <span id="vQaStatus">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Parameter:</strong> <span id="vErrorParam">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Header / Location:</strong> <span id="vErrorLocation">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Auditor:</strong> <span id="vAuditorName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Audit Date:</strong> <span id="vAuditDate">-</span></div>
                 </div>
-                <div style="margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">
-                    <strong style="color: #94a3b8;">Auditor Comment & Observations:</strong>
-                    <p id="vAuditorComment" style="margin-top: 4px; color: #f8fafc; white-space: pre-wrap; background: #1e293b; padding: 8px; border-radius: 4px;">-</p>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                    <strong style="color: var(--text-muted);">Auditor Comment & Observations:</strong>
+                    <p id="vAuditorComment" style="margin-top: 4px; color: var(--text-primary); white-space: pre-wrap; background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
                 </div>
                 <div id="vStageStatusBox" style="margin-top: 8px;">
-                    <strong style="color: #94a3b8;">Current Workflow Stage:</strong>
+                    <strong style="color: var(--text-muted);">Current Workflow Stage:</strong>
                     <span id="vWorkflowStage" class="badge badge-pending" style="margin-left: 6px;">-</span>
                 </div>
             </div>
@@ -1638,8 +1925,8 @@
     <!-- MODAL: EDIT USER DIALOG -->
     <div id="editUserModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 id="editModalHeaderTitle" style="margin-bottom: 6px; color: #38bdf8;">Edit User Configuration</h3>
-            <p id="editModalSubInfo" style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">Update user configuration and credentials.</p>
+            <h3 id="editModalHeaderTitle" style="margin-bottom: 4px; color: var(--accent-cyan);">Edit User Configuration</h3>
+            <p id="editModalSubInfo" style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Update user configuration and credentials.</p>
             <form id="editUserModalForm" onsubmit="handleSaveEditedUser(event)">
                 <input type="hidden" id="modalEditIndex" value="-1">
 
@@ -1681,7 +1968,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
                     <button type="submit" class="btn btn-success" style="flex: 1;">Save Changes</button>
                     <button type="button" class="btn btn-secondary" onclick="forceModalDefaultPassword()">Set Temp@123</button>
                     <button type="button" class="btn btn-danger" onclick="closeEditUserModal()">Cancel</button>
@@ -1693,7 +1980,7 @@
     <!-- MODAL: EDIT PRODUCTION ENTRY -->
     <div id="editProdModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 12px; color: #38bdf8;">Edit Production Record</h3>
+            <h3 style="margin-bottom: 10px; color: var(--accent-cyan);">Edit Production Record</h3>
             <form id="editProdForm" onsubmit="handleSaveEditedProduction(event)">
                 <input type="hidden" id="editProdChartId">
                 <div class="form-group">
@@ -1740,8 +2027,8 @@
     <!-- MODAL: REMARKS PROMPT -->
     <div id="disagreeModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 id="disagreeModalTitle" style="margin-bottom: 12px; color: #38bdf8;">Submit Remarks</h3>
-            <p id="disagreeModalSub" style="font-size: 12px; color: #94a3b8; margin-bottom: 12px;">Provide detailed justification.</p>
+            <h3 id="disagreeModalTitle" style="margin-bottom: 8px; color: var(--accent-cyan);">Submit Remarks</h3>
+            <p id="disagreeModalSub" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Provide detailed justification.</p>
             <div class="form-group">
                 <label>Remarks / Clinical Evidence</label>
                 <textarea id="disagreeRemarksInput" required placeholder="Enter remarks..."></textarea>
@@ -1756,9 +2043,9 @@
     <!-- MODAL: REPORTING SUPERVISOR RE-ASSIGNMENT -->
     <div id="reportingChangeModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 12px; color: #38bdf8;">Change User Reporting Setup</h3>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
-                Update reporting Team Lead and Manager for target employee: <strong id="repTargetUserLabel" style="color:#f8fafc;">-</strong>
+            <h3 style="margin-bottom: 8px; color: var(--accent-cyan);">Change User Reporting Setup</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                Update reporting Team Lead and Manager for target employee: <strong id="repTargetUserLabel" style="color:var(--text-primary);">-</strong>
             </p>
             <form onsubmit="handleSaveReportingChange(event)">
                 <input type="hidden" id="repTargetEmpId">
@@ -1770,7 +2057,7 @@
                     <label>Reporting Manager Name</label>
                     <select id="repSelectMgr" required></select>
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
                     <button type="submit" class="btn btn-success" style="flex: 1;">Save Reporting Assignment</button>
                     <button type="button" class="btn btn-danger" onclick="closeReportingModal()">Cancel</button>
                 </div>
@@ -1781,7 +2068,7 @@
     <!-- MODAL: PASSWORD CHANGE -->
     <div id="passModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 style="margin-bottom: 16px; color: #38bdf8;">Change Password</h3>
+            <h3 style="margin-bottom: 12px; color: var(--accent-cyan);">Change Password</h3>
             <form onsubmit="handleSelfPasswordChange(event)">
                 <div class="form-group">
                     <label>Current Password</label>
@@ -1804,7 +2091,7 @@
                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('confirmPass', this)">👁</button>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
                     <button type="submit" class="btn btn-success" style="flex: 1;">Update Password</button>
                     <button type="button" class="btn btn-danger" onclick="closePassChangeModal()">Cancel</button>
                 </div>
@@ -2670,7 +2957,7 @@
             tbody.innerHTML = users.map((u, idx) => `
                 <tr>
                     <td>${idx + 1}</td>
-                    <td><strong>${u.empId}</strong></td>
+                    <td><strong style="font-family: var(--font-mono); font-weight: 700;">${u.empId}</strong></td>
                     <td>${u.userName}</td>
                     <td>${u.empName}</td>
                     <td><span class="badge badge-status">${u.role}</span></td>
@@ -2683,7 +2970,7 @@
                             <button class="btn btn-warning btn-sm" onclick="editUser(${idx})">Edit</button>
                             <button class="btn btn-secondary btn-sm" onclick="toggleUserStatus(${idx})">${u.status === 'Active' ? 'Disable' : 'Enable'}</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteUser(${idx})">Deleted</button>
-                            <button class="btn btn-sm" style="background-color:#0891b2;" onclick="resetUserPasswordDirect(${idx})">Rest Password</button>
+                            <button class="btn btn-sm" style="background-color: var(--accent-primary);" onclick="resetUserPasswordDirect(${idx})">Rest Password</button>
                         </div>
                     </td>
                 </tr>
@@ -2728,7 +3015,7 @@
             if(!tbody) return;
             tbody.innerHTML = projects.map((p, idx) => `
                 <tr>
-                    <td>PROJ-${p.id}</td>
+                    <td style="font-family: var(--font-mono); font-weight: 600;">PROJ-${p.id}</td>
                     <td>${p.name}</td>
                     <td>${p.subName}</td>
                     <td><button class="btn btn-danger btn-sm" onclick="deleteProject(${idx})">Delete</button></td>
@@ -2805,7 +3092,7 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // API CONFIGURATION (ADMIN ONLY) - EXPANDED 21 PROVIDER PRESETS
+        // API CONFIGURATION (ADMIN ONLY) - 21 PROVIDERS
         // ═══════════════════════════════════════════════════════════════════
         const API_PROVIDER_PRESETS = {
             "OpenAI": {
@@ -3158,8 +3445,8 @@
                 <tr>
                     <td>${idx + 1}</td>
                     <td>${c.providerName}</td>
-                    <td>${maskApiKey(c.apiKey)}</td>
-                    <td>${c.model || '-'}</td>
+                    <td style="font-family: var(--font-mono);">${maskApiKey(c.apiKey)}</td>
+                    <td style="font-family: var(--font-mono);">${c.model || '-'}</td>
                     <td>${apiStatusBadge(c.status)}</td>
                     <td>${c.lastChecked ? new Date(c.lastChecked).toLocaleString() : 'Never'}</td>
                     <td class="action-btns">
@@ -3218,7 +3505,7 @@
                 tbody.innerHTML = users.map((u, idx) => `
                     <tr>
                         <td>${idx + 1}</td>
-                        <td><strong>${u.empId}</strong></td>
+                        <td><strong style="font-family: var(--font-mono); font-weight: 700;">${u.empId}</strong></td>
                         <td>${u.userName}</td>
                         <td>${u.empName}</td>
                         <td>${u.role}</td>
@@ -3257,7 +3544,7 @@
                 `;
 
                 if (logs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #94a3b8;">No production records found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: var(--text-muted);">No production records found.</td></tr>`;
                     return;
                 }
 
@@ -3267,7 +3554,7 @@
                         <td>${formatToMMDDYYYY(p.date)}</td>
                         <td>${p.projName}</td>
                         <td>${p.subProjName}</td>
-                        <td><strong>${p.chartId}</strong></td>
+                        <td><strong style="font-family: var(--font-mono); font-weight: 700;">${p.chartId}</strong></td>
                         <td>${p.loginName}</td>
                         <td>${p.completedByEmpId || '-'}</td>
                         <td>${p.completedByEmpName || p.loginName}</td>
@@ -3308,7 +3595,7 @@
                 `;
 
                 if (logs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #94a3b8;">No audit production records found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted);">No audit production records found.</td></tr>`;
                     return;
                 }
 
@@ -3320,7 +3607,7 @@
                             <td>${idx + 1}</td>
                             <td>${q.projName}</td>
                             <td>${q.subProjName}</td>
-                            <td><strong>${q.chartId}</strong></td>
+                            <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                             <td>${q.completedByUserId}</td>
                             <td>${q.qaLoginId}</td>
                             <td>${formatToMMDDYYYY(prod.date)}</td>
@@ -3329,7 +3616,7 @@
                             <td>${q.totalError}</td>
                             <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                             <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                            <td><strong>${q.qualityPercentage}</strong></td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                         </tr>
                     `;
                 }).join('');
@@ -3363,7 +3650,7 @@
                 `;
 
                 if (logs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #94a3b8;">No quality report records found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted);">No quality report records found.</td></tr>`;
                     return;
                 }
 
@@ -3375,7 +3662,7 @@
                             <td>${idx + 1}</td>
                             <td>${q.projName}</td>
                             <td>${q.subProjName}</td>
-                            <td><strong>${q.chartId}</strong></td>
+                            <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                             <td>${q.completedByUserId}</td>
                             <td>${q.qaLoginId}</td>
                             <td>${formatToMMDDYYYY(prod.date)}</td>
@@ -3384,7 +3671,7 @@
                             <td>${q.totalError}</td>
                             <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                             <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                            <td><strong>${q.qualityPercentage}</strong></td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                         </tr>
                     `;
                 }).join('');
@@ -3785,7 +4072,7 @@
             }
 
             if(audits.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #94a3b8;">No audit records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted);">No audit records found.</td></tr>`;
                 return;
             }
 
@@ -3793,7 +4080,7 @@
                 const prod = productionLogs.find(p => p.chartId === q.chartId) || {};
                 const isLevel3Pending = (q.workflowStage === 'Level 3: Auditor Review & Response' || (q.tlAction === 'Disagree' && !q.workflowStage.includes('Completed')));
 
-                let actionHtml = `<span style="color:#64748b; font-size:11px;">-</span>`;
+                let actionHtml = `<span style="color:var(--text-muted); font-size:11px;">-</span>`;
                 if (isLevel3Pending) {
                     actionHtml = `
                         <button class="btn btn-warning btn-sm" onclick="openAuditorRebuttalModal('${q.chartId}')">👁 View (Rebuttal)</button>
@@ -3805,7 +4092,7 @@
                         <td>${idx + 1}</td>
                         <td>${q.projName}</td>
                         <td>${q.subProjName}</td>
-                        <td><strong>${q.chartId}</strong></td>
+                        <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                         <td>${q.completedByUserId}</td>
                         <td>${q.qaLoginId}</td>
                         <td>${formatToMMDDYYYY(prod.date)}</td>
@@ -3814,7 +4101,7 @@
                         <td>${q.totalError}</td>
                         <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                         <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                        <td><strong>${q.qualityPercentage}</strong></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                         <td>${actionHtml}</td>
                     </tr>
                 `;
@@ -4052,7 +4339,7 @@
             const filtered = getStrictMyProductionDataset();
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:#94a3b8;">No Records Found</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; color:var(--text-muted);">No Records Found</td></tr>`;
                 return;
             }
 
@@ -4063,7 +4350,7 @@
                     <td>${p.projName}</td>
                     <td>${p.subProjName}</td>
                     <td>${p.loginName}</td>
-                    <td><strong>${p.chartId}</strong></td>
+                    <td><strong style="font-family: var(--font-mono); font-weight: 700;">${p.chartId}</strong></td>
                     <td>${p.pageNo}</td>
                     <td>${p.totalIcd}</td>
                     <td><span class="badge badge-status">${p.status}</span></td>
@@ -4177,7 +4464,7 @@
             const myQuals = getFilteredMyQualityRecords();
 
             if(myQuals.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="19" style="text-align: center; color: #94a3b8;">No records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="19" style="text-align: center; color: var(--text-muted);">No records found.</td></tr>`;
                 return;
             }
 
@@ -4186,10 +4473,10 @@
                 const hasErrors = (q.errorStatus === 'Yes' || (parseInt(q.totalError) || 0) > 0);
                 const isCompleted = q.workflowStage && q.workflowStage.includes('Completed');
 
-                let actionHtml = `<span style="color:#64748b; font-size:11px;">-</span>`;
+                let actionHtml = `<span style="color:var(--text-muted); font-size:11px;">-</span>`;
                 if (!isCompleted && hasErrors) {
                     actionHtml = `
-                        <button class="btn btn-sm" style="background-color: #0284c7;" onclick="openViewAuditErrorModal('${q.chartId}')">👁 View</button>
+                        <button class="btn btn-sm" onclick="openViewAuditErrorModal('${q.chartId}')">👁 View</button>
                     `;
                 }
 
@@ -4198,13 +4485,13 @@
                         <td>${idx + 1}</td>
                         <td>${q.projName}</td>
                         <td>${q.subProjName}</td>
-                        <td><strong>${q.chartId}</strong></td>
+                        <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                         <td>${q.totalPages || prod.pageNo || '-'}</td>
                         <td>${prod.totalIcd || '-'}</td>
-                        <td><strong style="color: ${hasErrors ? '#ef4444' : '#a7f3d0'};">${q.totalError || 0}</strong></td>
+                        <td><strong style="color: ${hasErrors ? 'var(--accent-danger)' : '#6ee7b7'}; font-family: var(--font-mono);">${q.totalError || 0}</strong></td>
                         <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                         <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                        <td><strong>${q.qualityPercentage}</strong></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                         <td>${q.completedByEmpId || activeAdminUser.empId}</td>
                         <td>${q.completedByEmpName || activeAdminUser.empName}</td>
                         <td>${q.completedByTl || activeAdminUser.tl || 'Nill'}</td>
@@ -4248,7 +4535,7 @@
                 `;
             } else {
                 actionControls.innerHTML = `
-                    <span style="font-size: 12px; color: #94a3b8; align-self: center; flex: 1;">Action completed (${q.workflowStage})</span>
+                    <span style="font-size: 12px; color: var(--text-muted); align-self: center; flex: 1;">Action completed (${q.workflowStage})</span>
                     <button type="button" class="btn btn-secondary" onclick="closeViewAuditErrorModal()">Close</button>
                 `;
             }
@@ -4503,14 +4790,14 @@
             const assignedMembers = getSupervisorTeamUsers();
 
             if (assignedMembers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #94a3b8;">No subordinates currently assigned to you.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">No subordinates currently assigned to you.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = assignedMembers.map((u, idx) => `
                 <tr>
                     <td>${idx + 1}</td>
-                    <td><strong>${u.empId}</strong></td>
+                    <td><strong style="font-family: var(--font-mono); font-weight: 700;">${u.empId}</strong></td>
                     <td>${u.userName}</td>
                     <td>${u.empName}</td>
                     <td><span class="badge badge-status">${u.role}</span></td>
@@ -4518,7 +4805,7 @@
                     <td>${u.tl}</td>
                     <td>${u.manager}</td>
                     <td><span class="badge ${u.status === 'Active' ? 'badge-active' : 'badge-inactive'}">${u.status}</span></td>
-                    <td><button class="btn btn-sm" style="background-color:#0284c7;" onclick="openReportingModal('${u.empId}')">Change Reporting</button></td>
+                    <td><button class="btn btn-secondary btn-sm" onclick="openReportingModal('${u.empId}')">Change Reporting</button></td>
                 </tr>
             `).join('');
         }
@@ -4584,7 +4871,7 @@
             const logs = getFilteredSupervisorProductionLogs();
 
             if (logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: #94a3b8;">No production records found for assigned team.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-muted);">No production records found for assigned team.</td></tr>`;
                 return;
             }
 
@@ -4596,7 +4883,7 @@
                     <td>${p.completedByEmpId || '-'}</td>
                     <td>${p.projName}</td>
                     <td>${p.subProjName}</td>
-                    <td><strong>${p.chartId}</strong></td>
+                    <td><strong style="font-family: var(--font-mono); font-weight: 700;">${p.chartId}</strong></td>
                     <td>${p.pageNo}</td>
                     <td>${p.totalIcd || '-'}</td>
                     <td><span class="badge badge-status">${p.status}</span></td>
@@ -4646,7 +4933,7 @@
             const logs = getFilteredSupervisorAuditLogs();
 
             if (logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #94a3b8;">No team audit records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: var(--text-muted);">No team audit records found.</td></tr>`;
                 return;
             }
 
@@ -4656,7 +4943,7 @@
                     <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                     <td>${q.qaLoginId}</td>
                     <td>${q.auditorEmpName || q.qaLoginId}</td>
-                    <td><strong>${q.chartId}</strong></td>
+                    <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                     <td>${q.projName}</td>
                     <td>${q.subProjName}</td>
                     <td>${q.completedByUserId}</td>
@@ -4664,7 +4951,7 @@
                     <td>${q.totalAuditedCodes}</td>
                     <td>${q.totalError}</td>
                     <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                    <td><strong>${q.qualityPercentage}</strong></td>
+                    <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                 </tr>
             `).join('');
         }
@@ -4755,7 +5042,7 @@
             const teamQuals = getFilteredSupervisorQualityLogs();
 
             if (teamQuals.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="19" style="text-align: center; color: #94a3b8;">No records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="19" style="text-align: center; color: var(--text-muted);">No records found.</td></tr>`;
                 return;
             }
 
@@ -4763,7 +5050,7 @@
                 const prod = productionLogs.find(p => p.chartId === q.chartId) || {};
                 const hasErrors = (q.errorStatus === 'Yes' || (parseInt(q.totalError) || 0) > 0);
 
-                let actionHtml = `<span style="color:#64748b; font-size:11px;">-</span>`;
+                let actionHtml = `<span style="color:var(--text-muted); font-size:11px;">-</span>`;
                 if (q.workflowStage === 'Level 2: Pending TL Review') {
                     actionHtml = `
                         <div class="action-btns">
@@ -4784,13 +5071,13 @@
                         <td>${idx + 1}</td>
                         <td>${q.projName}</td>
                         <td>${q.subProjName}</td>
-                        <td><strong>${q.chartId}</strong></td>
+                        <td><strong style="font-family: var(--font-mono); font-weight: 700;">${q.chartId}</strong></td>
                         <td>${q.totalPages || prod.pageNo || '-'}</td>
                         <td>${prod.totalIcd || '-'}</td>
-                        <td><strong style="color: ${hasErrors ? '#ef4444' : '#a7f3d0'};">${q.totalError || 0}</strong></td>
+                        <td><strong style="color: ${hasErrors ? 'var(--accent-danger)' : '#6ee7b7'}; font-family: var(--font-mono);">${q.totalError || 0}</strong></td>
                         <td>${formatToMMDDYYYY(q.dateAudit)}</td>
                         <td><span class="badge ${q.errorStatus === 'Yes' ? 'badge-yes' : 'badge-no'}">${q.errorStatus === 'Yes' ? 'Error' : 'Pass'}</span></td>
-                        <td><strong>${q.qualityPercentage}</strong></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">${q.qualityPercentage}</td>
                         <td>${q.completedByEmpId || '-'}</td>
                         <td>${q.completedByEmpName || q.completedByUserId}</td>
                         <td>${q.completedByTl || 'Nill'}</td>
