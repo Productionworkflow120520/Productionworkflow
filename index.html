@@ -1056,9 +1056,9 @@
                                 <div class="form-group">
                                     <label>API Provider Name</label>
                                     <select id="apiProviderSelect" onchange="handleApiProviderSelectChange()">
+                                        <option value="Google AI / Gemini" selected>Google AI / Gemini</option>
                                         <option value="OpenAI">OpenAI</option>
                                         <option value="Anthropic">Anthropic</option>
-                                        <option value="Google AI / Gemini" selected>Google AI / Gemini</option>
                                         <option value="Mistral AI">Mistral AI</option>
                                         <option value="Cohere">Cohere</option>
                                         <option value="Groq">Groq</option>
@@ -1093,7 +1093,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label id="apiModelInputLabel">Model / Version (Optional)</label>
-                                    <input type="text" id="apiModelInput" placeholder="e.g. gemini-1.5-flash">
+                                    <input type="text" id="apiModelInput" placeholder="e.g. gemini-2.5-flash, gemini-1.5-flash">
                                 </div>
                                 <div class="form-group hidden" id="apiCustomEndpointGroup">
                                     <label>API Endpoint URL</label>
@@ -1120,7 +1120,7 @@
                             <h3>⚡ Configured API Providers</h3>
                         </div>
                         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-                            Each provider is checked automatically after saving. <span class="badge badge-active">Active</span> means the API responded successfully; <span class="badge badge-inactive">Failed</span> means connection or auth failed.
+                            Each provider is verified live upon saving. <span class="badge badge-active">Active</span> confirms authentication succeeded; <span class="badge badge-inactive">Failed</span> indicates credential or network rejection.
                         </p>
                         <div class="table-responsive">
                             <table>
@@ -1131,6 +1131,7 @@
                                         <th>API Key</th>
                                         <th>Model / Version</th>
                                         <th>Status</th>
+                                        <th>Usage / Credits</th>
                                         <th>Last Checked</th>
                                         <th>Actions</th>
                                     </tr>
@@ -1651,40 +1652,21 @@
                         <h3>Team Audit Production Filter</h3>
                         <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
-                                <label>EMP ID</label>
-                                <input type="text" id="supQualFilterEmpId" placeholder="Enter EMP ID">
-                            </div>
-                            <div class="form-group">
-                                <label>EMP Name</label>
-                                <input type="text" id="supQualFilterEmpName" placeholder="Enter EMP Name">
+                                <label>EMP ID / Search</label>
+                                <input type="text" id="supAuditFilterSearch" placeholder="Enter EMP ID or Login">
                             </div>
                             <div class="form-group">
                                 <label>Start Date</label>
-                                <input type="date" id="supQualFilterStartDate">
+                                <input type="date" id="supAuditFilterStartDate">
                             </div>
                             <div class="form-group">
                                 <label>End Date</label>
-                                <input type="date" id="supQualFilterEndDate">
-                            </div>
-                            <div class="form-group">
-                                <label>Project Name</label>
-                                <select id="supQualFilterProject" onchange="updateSupQualSubProjectFilter()">
-                                    <option value="">All Project</option>
-                                    <option value="Aetna">Aetna</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Sub Project Name</label>
-                                <select id="supQualFilterSubProject">
-                                    <option value="">All Sub Project</option>
-                                    <option value="Aetna MRA">Aetna MRA</option>
-                                    <option value="Aetna CRA">Aetna CRA</option>
-                                </select>
+                                <input type="date" id="supAuditFilterEndDate">
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px; margin-top: 6px;">
-                            <button class="btn btn-secondary btn-sm" onclick="renderSupervisorTeamQuality()">Search</button>
-                            <button class="btn btn-warning btn-sm" onclick="clearSupQualFilter()">Clear</button>
+                            <button class="btn btn-secondary btn-sm" onclick="renderSupervisorTeamAuditReport()">Search</button>
+                            <button class="btn btn-warning btn-sm" onclick="clearSupAuditFilter()">Clear</button>
                         </div>
                     </div>
 
@@ -2101,6 +2083,9 @@
 
     <script>
         const MASTER_STORE_KEY = 'ENTERPRISE_SYSTEM_STORE_V1';
+        const JSONBIN_BIN_ID = '6aa76837ffd5d16053035d34';
+        const JSONBIN_BASE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+        let JSONBIN_API_KEY = '$2a$10$defaultMasterKey';
 
         let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
         let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
@@ -2117,6 +2102,11 @@
         let activeViewAuditChartId = null;
         let activeAuditorRebuttalChartId = null;
         let activeAuditTlChartId = null;
+
+        function getEffectiveJsonBinKey() {
+            const cfg = apiConfigs.find(c => c.presetKey === 'JSONBin.io' || c.providerName === 'JSONBin.io');
+            return (cfg && cfg.apiKey) ? cfg.apiKey : JSONBIN_API_KEY;
+        }
 
         function loadPersistentData() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
@@ -2196,7 +2186,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Master-Key': getEffectiveJsonBinKey()
                     },
                     body: raw
                 });
@@ -2223,19 +2213,34 @@
                 const response = await fetch(`${JSONBIN_BASE_URL}/latest`, {
                     method: 'GET',
                     headers: {
-                        'X-Master-Key': JSONBIN_API_KEY
+                        'X-Master-Key': getEffectiveJsonBinKey()
                     }
                 });
 
                 if (response.ok) {
                     const resJson = await response.json();
                     const record = resJson.record || resJson;
+
+                    // Guard: Prevent overwriting newer local edits with an older cloud record
+                    const localRaw = localStorage.getItem(MASTER_STORE_KEY);
+                    if (localRaw) {
+                        const localData = JSON.parse(localRaw);
+                        const localTime = new Date(localData.savedAt || 0).getTime();
+                        const remoteTime = new Date(record.savedAt || 0).getTime();
+
+                        if (!showAlert && localTime >= remoteTime) {
+                            if (indicator) indicator.textContent = "Local data is up to date.";
+                            return;
+                        }
+                    }
+
                     if (record && record.users) {
                         applyParsedData(record);
                         localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
                         populateDropdowns();
                         renderUsers();
                         renderProjects();
+                        renderApiConfigs();
                         if (indicator) indicator.textContent = `Pulled from cloud: ${new Date().toLocaleTimeString()}`;
                         if (showAlert) alert("Database successfully pulled from JSONBin.io!");
                     } else {
@@ -2300,6 +2305,7 @@
                     populateDropdowns();
                     renderUsers();
                     renderProjects();
+                    renderApiConfigs();
                     alert("Database imported successfully and synced!");
                 } catch (err) {
                     alert("Error parsing JSON file!");
@@ -2323,6 +2329,7 @@
             if (activeAdminUser) {
                 renderUsers();
                 renderProjects();
+                renderApiConfigs();
             }
         });
 
@@ -3085,15 +3092,56 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // API CONFIGURATION (ADMIN ONLY) - 21 PROVIDERS
+        // API CONFIGURATION (ADMIN ONLY) - PRESETS & USAGE ENDPOINTS
         // ═══════════════════════════════════════════════════════════════════
         const API_PROVIDER_PRESETS = {
+            "Google AI / Gemini": {
+                modelPlaceholder: "e.g. gemini-2.5-flash, gemini-1.5-flash, gemini-1.5-pro",
+                buildTestRequest(apiKey, config) {
+                    const model = (config && config.model) ? config.model.trim() : '';
+                    const url = model 
+                        ? `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}?key=${encodeURIComponent(apiKey)}`
+                        : `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+                    return {
+                        url,
+                        options: { 
+                            method: 'GET',
+                            headers: { 'x-goog-api-key': apiKey }
+                        },
+                        parseUsage: (data) => data.models ? `${data.models.length} models ready` : 'Active'
+                    };
+                }
+            },
+            "OpenRouter": {
+                modelPlaceholder: "e.g. auto, openai/gpt-4o, anthropic/claude-3.5-sonnet",
+                buildTestRequest(apiKey) {
+                    return {
+                        url: `https://openrouter.ai/api/v1/auth/key`,
+                        options: {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`,
+                                'HTTP-Referer': window.location.origin || 'http://localhost'
+                            }
+                        },
+                        parseUsage: (data) => {
+                            if (data && data.data) {
+                                const used = Number(data.data.usage || 0).toFixed(4);
+                                const limit = data.data.limit ? `$${Number(data.data.limit).toFixed(2)}` : 'Unlimited';
+                                return `$${used} used / ${limit}`;
+                            }
+                            return 'Active';
+                        }
+                    };
+                }
+            },
             "OpenAI": {
                 modelPlaceholder: "e.g. gpt-4o, gpt-4o-mini",
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.openai.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: (data) => data.data ? `${data.data.length} models ready` : 'Active'
                     };
                 }
             },
@@ -3102,16 +3150,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.anthropic.com/v1/models`,
-                        options: { method: 'GET', headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } }
-                    };
-                }
-            },
-            "Google AI / Gemini": {
-                modelPlaceholder: "e.g. gemini-1.5-flash, gemini-1.5-pro",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
-                        options: { method: 'GET' }
+                        options: { method: 'GET', headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3120,7 +3160,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.mistral.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3129,7 +3170,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.cohere.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3138,7 +3180,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.groq.com/openai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: (data) => data.data ? `${data.data.length} models ready` : 'Active'
                     };
                 }
             },
@@ -3147,7 +3190,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.x.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3156,7 +3200,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.deepseek.com/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3165,7 +3210,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.together.xyz/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3174,7 +3220,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.fireworks.ai/inference/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3183,16 +3230,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.perplexity.ai/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
-                    };
-                }
-            },
-            "OpenRouter": {
-                modelPlaceholder: "e.g. auto, openai/gpt-4o",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://openrouter.ai/api/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3201,7 +3240,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://huggingface.co/api/whoami-v2`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: (data) => data.name ? `User: ${data.name}` : 'Active'
                     };
                 }
             },
@@ -3210,7 +3250,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.replicate.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3220,7 +3261,8 @@
                     const endpoint = config && config.endpoint ? config.endpoint : '';
                     return {
                         url: endpoint || `https://models.inference.ai.azure.com/models`,
-                        options: { method: 'GET', headers: { 'api-key': apiKey, 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'api-key': apiKey, 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3229,7 +3271,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://bedrock.us-east-1.amazonaws.com`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3238,7 +3281,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://us-central1-aiplatform.googleapis.com/v1/projects`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3247,7 +3291,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://integrate.api.nvidia.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3256,7 +3301,8 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.cerebras.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
@@ -3265,17 +3311,19 @@
                 buildTestRequest(apiKey) {
                     return {
                         url: `https://api.sambanova.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } }
+                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                        parseUsage: () => 'Active'
                     };
                 }
             },
             "JSONBin.io": {
-                modelPlaceholder: "e.g. Bin ID: 6aa76837ffd5d16053035d34 (Optional)",
+                modelPlaceholder: "Bin ID: 6aa76837ffd5d16053035d34 (Optional)",
                 buildTestRequest(apiKey, config) {
                     const bin = (config && config.model) ? config.model.trim() : JSONBIN_BIN_ID;
                     return {
                         url: `https://api.jsonbin.io/v3/b/${bin}/latest`,
-                        options: { method: 'GET', headers: { 'X-Master-Key': apiKey } }
+                        options: { method: 'GET', headers: { 'X-Master-Key': apiKey } },
+                        parseUsage: () => 'Connected'
                     };
                 }
             }
@@ -3314,7 +3362,8 @@
             const headerPrefix = config.headerPrefix || '';
             return {
                 url: config.endpoint,
-                options: { method: 'GET', headers: { [headerName]: `${headerPrefix}${config.apiKey}` } }
+                options: { method: 'GET', headers: { [headerName]: `${headerPrefix}${config.apiKey}` } },
+                parseUsage: () => 'Active'
             };
         }
 
@@ -3323,20 +3372,37 @@
             if (!config) return;
 
             config.status = 'Checking...';
+            config.usageCount = (config.usageCount || 0) + 1;
             renderApiConfigs();
 
             try {
-                const { url, options } = buildApiTestRequest(config);
-                if (!url) throw new Error('Missing API endpoint URL');
+                const req = buildApiTestRequest(config);
+                if (!req.url) throw new Error('Missing API endpoint URL');
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
-                const response = await fetch(url, { ...options, signal: controller.signal });
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(req.url, { ...req.options, signal: controller.signal });
                 clearTimeout(timeoutId);
 
-                config.status = response.ok ? 'Active' : 'Failed';
+                if (response.ok) {
+                    config.status = 'Active';
+                    try {
+                        const resJson = await response.json();
+                        if (typeof req.parseUsage === 'function') {
+                            config.usageInfo = req.parseUsage(resJson);
+                        } else {
+                            config.usageInfo = `${config.usageCount} calls verified`;
+                        }
+                    } catch (err) {
+                        config.usageInfo = `${config.usageCount} calls verified`;
+                    }
+                } else {
+                    config.status = 'Failed';
+                    config.usageInfo = `HTTP ${response.status}`;
+                }
             } catch (err) {
                 config.status = 'Failed';
+                config.usageInfo = err.name === 'AbortError' ? 'Timeout' : 'Network/CORS Error';
             }
 
             config.lastChecked = new Date().toISOString();
@@ -3367,6 +3433,8 @@
                 headerName: isCustom ? (document.getElementById('apiCustomHeaderName').value.trim() || 'Authorization') : '',
                 headerPrefix: isCustom ? document.getElementById('apiCustomHeaderPrefix').value : '',
                 status: 'Checking...',
+                usageInfo: 'Verifying...',
+                usageCount: 0,
                 lastChecked: null
             };
 
@@ -3434,16 +3502,24 @@
             const tbody = document.getElementById('apiConfigTableBody');
             if (!tbody) return;
 
+            if (apiConfigs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No API providers configured yet.</td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = apiConfigs.map((c, idx) => `
                 <tr>
                     <td>${idx + 1}</td>
-                    <td>${c.providerName}</td>
+                    <td><strong>${c.providerName}</strong></td>
                     <td style="font-family: var(--font-mono);">${maskApiKey(c.apiKey)}</td>
                     <td style="font-family: var(--font-mono);">${c.model || '-'}</td>
                     <td>${apiStatusBadge(c.status)}</td>
+                    <td style="font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-cyan);">
+                        ${c.usageInfo || `${c.usageCount || 0} calls verified`}
+                    </td>
                     <td>${c.lastChecked ? new Date(c.lastChecked).toLocaleString() : 'Never'}</td>
                     <td class="action-btns">
-                        <button class="btn btn-sm" onclick="testApiProviderConnection(${c.id})">Test</button>
+                        <button class="btn btn-sm" onclick="testApiProviderConnection(${c.id})">🔄 Test</button>
                         <button class="btn btn-warning btn-sm" onclick="editApiConfig(${c.id})">Edit</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteApiConfig(${c.id})">Delete</button>
                     </td>
