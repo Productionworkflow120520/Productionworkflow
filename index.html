@@ -412,18 +412,18 @@
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label>Username or EMP ID</label>
-                    <input type="text" id="loginUser" required placeholder="Enter admin, subadmin, or EMP101">
+                    <input type="text" id="loginUser" required placeholder>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="loginPass" required placeholder="Enter password">
+                        <input type="password" id="loginPass" required placeholder>
                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('loginPass', this)">👁</button>
                     </div>
                 </div>
                 <button type="submit" class="btn" style="width:100%; margin-top: 10px;">Sign In</button>
                 <div style="margin-top: 16px; text-align: center;">
-                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: 500;">Forgot Password?</a>
+                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: #38bdf8; font-size: 13px; text-decoration: none; font-weight: 500;">Forgot Password</a>
                 </div>
             </form>
 
