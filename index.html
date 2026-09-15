@@ -200,6 +200,39 @@
             letter-spacing: -0.01em;
         }
 
+        .cloud-sync-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+        }
+
+        .cloud-sync-pill:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #6ee7b7;
+        }
+
+        .cloud-sync-pill.syncing {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #c7d2fe;
+        }
+
+        .cloud-sync-pill.unconfigured {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fde68a;
+        }
+
         .profile-container {
             position: relative;
             cursor: pointer;
@@ -551,41 +584,36 @@
 </head>
 <body>
 
-    <!-- CLOUD CONNECT / SYNC MODAL (ON-DEMAND, NON-BLOCKING) -->
-    <div id="cloudConnectModal" class="modal-overlay hidden">
-        <div class="modal-card" style="max-width: 440px;">
+    <!-- DEDICATED JSONBIN AUTO-API INTEGRATION MODAL -->
+    <div id="jsonbinAutoModal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 480px;">
             <div class="control-header" style="margin-bottom: 8px;">
-                <h3 style="color: var(--accent-cyan);">☁️ Sync Shared Cloud Database</h3>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="closeCloudConnectModal()">✕</button>
+                <h3 style="color: var(--accent-cyan);">⚡ JSONBin.io Auto-Sync Configuration</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeJsonbinAutoModal()">✕</button>
             </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
-                Opening on a new browser or device? Enter your JSONBin credentials to pull your shared users and records.
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+                Changes auto-sync across browsers using JSONBin. Provide your <strong>Master Key</strong>. If you don't have a Bin ID yet, leave it blank and click <strong>Auto-Create New Bin</strong>.
             </p>
 
-            <form id="cloudSyncForm" onsubmit="handleCloudSyncSubmit(event)">
+            <form id="jsonbinAutoForm" onsubmit="handleSaveJsonbinAutoConfig(event)">
                 <div class="form-group">
-                    <label>Preset Provider</label>
-                    <select id="modalSyncProvider">
-                        <option value="JSONBin.io" selected>JSONBin.io</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-top: 6px;">
-                    <label>JSONBin Bin ID</label>
-                    <input type="text" id="modalSyncBinId" placeholder="e.g. 660fe8d..." required>
-                </div>
-                <div class="form-group" style="margin-top: 6px;">
-                    <label>Master Key / API Key</label>
+                    <label>JSONBin Master Key (X-Master-Key)</label>
                     <div class="password-wrapper">
-                        <input type="password" id="modalSyncApiKey" placeholder="$2a$10$..." required>
-                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('modalSyncApiKey', this)">👁</button>
+                        <input type="password" id="jbinMasterKeyInput" required placeholder="$2a$10$...">
+                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('jbinMasterKeyInput', this)">👁</button>
                     </div>
                 </div>
+                <div class="form-group" style="margin-top: 8px;">
+                    <label>JSONBin Bin ID (Leave blank to auto-create)</label>
+                    <input type="text" id="jbinBinIdInput" placeholder="e.g. 660f... or empty">
+                </div>
 
-                <div id="modalSyncStatus" style="font-size: 12px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 10px; min-height: 18px;"></div>
+                <div id="jbinModalStatus" style="font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 10px; min-height: 18px;"></div>
 
-                <div style="display: flex; gap: 8px; margin-top: 14px;">
-                    <button type="submit" id="btnSyncPull" class="btn btn-success" style="flex: 1;">🔄 Pull & Sync Now</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeCloudConnectModal()">Cancel</button>
+                <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-success btn-sm" style="flex: 1;">💾 Save & Sync Now</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="autoCreateNewJsonbin()">✨ Auto-Create New Bin</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyAutoShareUrl()">📋 Copy Auto-Connect URL</button>
                 </div>
             </form>
         </div>
@@ -614,7 +642,7 @@
                 <div style="margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 12px;">
                     <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Forgot Password?</a>
                     <span style="color: var(--border-card);">•</span>
-                    <a href="javascript:void(0)" onclick="openCloudConnectModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">☁️ Sync Cloud DB</a>
+                    <a href="javascript:void(0)" onclick="openJsonbinAutoModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">⚙️ JSONBin Auto-API</a>
                 </div>
             </form>
 
@@ -647,7 +675,14 @@
 
         <div class="main-content">
             <div class="top-bar">
-                <h1 id="tabTitle" class="page-title">Dashboard</h1>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <h1 id="tabTitle" class="page-title">Dashboard</h1>
+                    <div id="topBarSyncPill" class="cloud-sync-pill unconfigured" onclick="openJsonbinAutoModal()" title="Click to manage JSONBin Auto-Sync settings">
+                        <span id="topBarSyncIcon">⚠️</span>
+                        <span id="topBarSyncText">JSONBin: Setup API</span>
+                    </div>
+                </div>
+
                 <div class="profile-container" onclick="toggleProfileDropdown(event)">
                     <div class="profile-btn">
                         <div class="avatar-circle" id="profAvatar">AD</div>
@@ -664,6 +699,7 @@
                         
                         <div class="profile-actions">
                             <button class="btn btn-warning" style="width: 100%;" onclick="openPassChangeModal()">Password Change</button>
+                            <button class="btn btn-secondary" style="width: 100%;" onclick="openJsonbinAutoModal()">JSONBin Settings</button>
                             <button class="btn btn-danger" style="width: 100%;" onclick="handleLogout()">Logout</button>
                         </div>
                     </div>
@@ -975,20 +1011,20 @@
                     <div class="card" id="cloudDataHubCard">
                         <div class="control-header">
                             <h3>⚡ Cloud & Remote Backend Data Hub</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="switchTab('apiConfigTab')">⚙️ Manage API Providers</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ JSONBin Auto-API Settings</button>
                         </div>
                         <div class="active-provider-callout" id="activeProviderBanner">
                             <div>
                                 <span style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Active Cloud Provider</span>
-                                <strong id="bannerProviderName" style="color: #6ee7b7; font-size: 13px;">No Cloud Provider Configured</strong>
-                                <span id="bannerProviderEndpoint" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; margin-left: 8px;">Local-Only Operation</span>
+                                <strong id="bannerProviderName" style="color: #6ee7b7; font-size: 13px;">JSONBin.io (Auto-Sync Active)</strong>
+                                <span id="bannerProviderEndpoint" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; margin-left: 8px;">-</span>
                             </div>
-                            <span class="badge badge-active">Ready</span>
+                            <span class="badge badge-active">Live Sync</span>
                         </div>
 
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-success btn-sm" id="btnPushCloud" onclick="pushToCloud(true)">☁️ Push to Cloud</button>
-                            <button class="btn btn-sm" id="btnPullCloud" onclick="fetchFromCloud(true)">🔄 Pull from Cloud</button>
+                            <button class="btn btn-success btn-sm" id="btnPushCloud" onclick="pushToCloud(true)">☁️ Push to Cloud Now</button>
+                            <button class="btn btn-sm" id="btnPullCloud" onclick="fetchFromCloud(true)">🔄 Pull from Cloud Now</button>
                             <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export Backup JSON</button>
                             <label class="btn btn-warning btn-sm" style="cursor: pointer; margin-bottom: 0;">
                                 📂 Import Backup JSON
@@ -1083,6 +1119,7 @@
                                 <div class="form-group">
                                     <label>Preset Provider / Type</label>
                                     <select id="apiProviderPresetSelect" onchange="handlePresetProviderSelectChange()">
+                                        <option value="JSONBin.io" selected>JSONBin.io</option>
                                         <option value="OpenAI">OpenAI</option>
                                         <option value="Anthropic">Anthropic</option>
                                         <option value="Google Gemini">Google Gemini</option>
@@ -1101,10 +1138,8 @@
                                         <option value="NVIDIA NIM">NVIDIA NIM</option>
                                         <option value="AI21 Labs">AI21 Labs</option>
                                         <option value="Cerebras">Cerebras</option>
-                                        <option value="JSONBin.io" selected>JSONBin.io</option>
                                         <option value="OpenRouter">OpenRouter (API Gateway)</option>
                                         <option value="Firebase Realtime Database">Firebase Realtime Database</option>
-                                        <option value="Generic REST / MockAPI">Generic REST / MockAPI</option>
                                         <option value="Custom / Other API Provider">Custom / Other API Provider</option>
                                     </select>
                                 </div>
@@ -1117,11 +1152,11 @@
                                     <input type="url" id="apiEndpointInput" required placeholder="e.g. https://api.jsonbin.io/v3/b" value="https://api.jsonbin.io/v3/b">
                                 </div>
                                 <div class="form-group">
-                                    <label>Model ID / Resource Path</label>
+                                    <label>Model ID / Resource Path (Bin ID)</label>
                                     <input type="text" id="apiResourceIdInput" placeholder="Bin ID (e.g. 660f...)" value="">
                                 </div>
                                 <div class="form-group">
-                                    <label>API Key / Token</label>
+                                    <label>API Key / Master Key</label>
                                     <div class="password-wrapper">
                                         <input type="password" id="apiKeyInput" placeholder="Enter API Key / Master Key">
                                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('apiKeyInput', this)">👁</button>
@@ -1130,8 +1165,8 @@
                                 <div class="form-group">
                                     <label>Auth Header Format</label>
                                     <select id="apiAuthHeaderType">
-                                        <option value="Bearer">Bearer Token (Authorization: Bearer ...)</option>
                                         <option value="X-Master-Key" selected>X-Master-Key (JSONBin style)</option>
+                                        <option value="Bearer">Bearer Token (Authorization: Bearer ...)</option>
                                         <option value="x-api-key">x-api-key (Standard REST / Anthropic)</option>
                                         <option value="None">None / URL Query</option>
                                     </select>
@@ -2032,11 +2067,18 @@
     </div>
 
     <script>
+        // ==========================================
+        // CONSTANTS & AUTO-API ENGINE CONFIGURATION
+        // ==========================================
         let MASTER_STORE_KEY = localStorage.getItem('CUSTOM_STORAGE_KEY') || 'ENTERPRISE_SYSTEM_STORE_V1';
         let AUTO_SYNC_ENABLED = localStorage.getItem('AUTO_SYNC_ENABLED') !== 'false';
         let BACKUP_STRATEGY = localStorage.getItem('BACKUP_STRATEGY') || 'Standard';
 
-        // Default system roles & designations
+        // Direct JSONBin Configuration (stored in localStorage or auto-discovered)
+        let JSONBIN_MASTER_KEY = localStorage.getItem('JSONBIN_MASTER_KEY') || '';
+        let JSONBIN_BIN_ID = localStorage.getItem('JSONBIN_BIN_ID') || '';
+        const JSONBIN_ENDPOINT = "https://api.jsonbin.io/v3/b";
+
         let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
         let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
         let projects = [];
@@ -2047,6 +2089,8 @@
         let qualityLogs = [];
 
         let stagedBulkUsers = [];
+        let autoSyncDebounceTimer = null;
+        let isSyncingNow = false;
 
         let activeAdminUser = null;
         let activeModalContext = null;
@@ -2054,93 +2098,293 @@
         let activeViewAuditChartId = null;
         let activeAuditorRebuttalChartId = null;
 
-        function getActiveApiProvider() {
-            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) return null;
-            const active = apiConfigs.find(c => c.isActive === true);
-            if (active) return active;
-            apiConfigs[0].isActive = true;
-            return apiConfigs[0];
-        }
+        // ==========================================
+        // AUTO JSONBIN API INTEGRATION
+        // ==========================================
+        function updateSyncStatusUI(status, label) {
+            const pill = document.getElementById('topBarSyncPill');
+            const icon = document.getElementById('topBarSyncIcon');
+            const text = document.getElementById('topBarSyncText');
+            if (!pill || !text) return;
 
-        function updateCloudBannerInfo() {
-            const bannerName = document.getElementById('bannerProviderName');
-            const bannerEndpoint = document.getElementById('bannerProviderEndpoint');
-            const btnPush = document.getElementById('btnPushCloud');
-            const btnPull = document.getElementById('btnPullCloud');
-            const counter = document.getElementById('activeProviderCounterBadge');
-
-            const active = getActiveApiProvider();
-            if (active && active.apiKey) {
-                if (bannerName) bannerName.textContent = active.providerName + (active.isActive ? " (Active)" : "");
-                if (bannerEndpoint) bannerEndpoint.textContent = buildProviderRequestUrl(active);
-                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (${active.providerName})`;
-                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (${active.providerName})`;
-                if (counter) counter.textContent = `1 Active / ${apiConfigs.length} Total`;
+            if (status === 'syncing') {
+                pill.className = 'cloud-sync-pill syncing';
+                icon.textContent = '🔄';
+                text.textContent = label || 'Syncing...';
+            } else if (status === 'active') {
+                pill.className = 'cloud-sync-pill';
+                icon.textContent = '🟢';
+                text.textContent = label || 'JSONBin: Live';
             } else {
-                if (bannerName) bannerName.textContent = "No Cloud Provider Configured";
-                if (bannerEndpoint) bannerEndpoint.textContent = "Local-Only Operation";
-                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Disabled)`;
-                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Disabled)`;
-                if (counter) counter.textContent = `0 Active / ${apiConfigs.length} Total`;
+                pill.className = 'cloud-sync-pill unconfigured';
+                icon.textContent = '⚠️';
+                text.textContent = label || 'JSONBin: Setup API';
             }
-            refreshLocalStorageDiagnostics();
         }
 
-        function buildProviderRequestUrl(provider, isGet = false) {
-            if (!provider) return '';
-            let ep = (provider.endpoint || '').trim();
-            const resId = (provider.resourceId || '').trim();
+        function getActiveApiProvider() {
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
+                apiConfigs = [{
+                    id: 101,
+                    providerName: "JSONBin.io",
+                    presetKey: "JSONBin.io",
+                    endpoint: JSONBIN_ENDPOINT,
+                    resourceId: JSONBIN_BIN_ID,
+                    apiKey: JSONBIN_MASTER_KEY,
+                    headerType: "X-Master-Key",
+                    isActive: true,
+                    lastVerified: null
+                }];
+            }
+            const active = apiConfigs.find(c => c.isActive === true) || apiConfigs[0];
+            active.apiKey = JSONBIN_MASTER_KEY || active.apiKey || '';
+            active.resourceId = JSONBIN_BIN_ID || active.resourceId || '';
+            return active;
+        }
 
-            if (provider.providerName.toLowerCase().includes('openrouter') || ep.includes('openrouter.ai')) {
-                return ep;
+        async function autoSyncToJsonBin() {
+            if (!AUTO_SYNC_ENABLED) return;
+            clearTimeout(autoSyncDebounceTimer);
+            autoSyncDebounceTimer = setTimeout(async () => {
+                await pushToCloud(false);
+            }, 350);
+        }
+
+        async function pushToCloud(showAlert = true) {
+            const raw = localStorage.getItem(MASTER_STORE_KEY);
+            if (!raw) return;
+
+            const provider = getActiveApiProvider();
+            const key = (JSONBIN_MASTER_KEY || provider.apiKey || '').trim();
+            const binId = (JSONBIN_BIN_ID || provider.resourceId || '').trim();
+
+            if (!key) {
+                updateSyncStatusUI('unconfigured', 'JSONBin: Key Missing');
+                if (showAlert) alert("Please configure your JSONBin Master Key to enable cloud sync.");
+                return;
             }
 
-            if (provider.providerName.toLowerCase().includes('jsonbin') || ep.includes('jsonbin.io')) {
-                let base = ep.replace(/\/+$/, '');
-                if (resId) {
-                    return isGet ? `${base}/${resId}/latest` : `${base}/${resId}`;
+            updateSyncStatusUI('syncing', 'Syncing...');
+            isSyncingNow = true;
+
+            try {
+                let url = binId ? `${JSONBIN_ENDPOINT}/${binId}` : JSONBIN_ENDPOINT;
+                let method = binId ? 'PUT' : 'POST';
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': key
+                };
+
+                if (!binId) {
+                    headers['X-Bin-Name'] = 'ProductionWorkFlowDB';
+                    headers['X-Bin-Private'] = 'true';
                 }
-                return base;
-            }
 
-            if (provider.providerName.toLowerCase().includes('firebase') || ep.includes('firebaseio.com')) {
-                let cleanEp = ep.replace(/\/+$/, '');
-                let path = resId ? (resId.startsWith('/') ? resId : `/${resId}`) : '/production_store';
-                if (!path.endsWith('.json')) path += '.json';
-                let url = `${cleanEp}${path}`;
-                if (provider.apiKey && provider.apiKey.trim()) {
-                    url += `?auth=${encodeURIComponent(provider.apiKey.trim())}`;
+                const response = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: raw
+                });
+
+                if (response.ok) {
+                    const resJson = await response.json();
+                    if (!binId && resJson.metadata && resJson.metadata.id) {
+                        JSONBIN_BIN_ID = resJson.metadata.id;
+                        localStorage.setItem('JSONBIN_BIN_ID', JSONBIN_BIN_ID);
+                        provider.resourceId = JSONBIN_BIN_ID;
+                    }
+                    provider.lastVerified = new Date().toISOString();
+                    savePersistentData(false);
+
+                    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    updateSyncStatusUI('active', `Synced ${timeStr}`);
+                    if (showAlert) alert(`Successfully saved to JSONBin!\nBin ID: ${JSONBIN_BIN_ID}`);
+                    renderApiConfigs();
+                } else {
+                    const err = await response.text();
+                    updateSyncStatusUI('unconfigured', 'Sync Failed');
+                    if (showAlert) alert(`Sync failed (${response.status}):\n${err}`);
                 }
-                return url;
+            } catch (err) {
+                updateSyncStatusUI('unconfigured', 'Offline');
+                if (showAlert) alert(`Connection error: ${err.message}`);
+            } finally {
+                isSyncingNow = false;
             }
-
-            if (resId) {
-                return (ep.endsWith('/') || resId.startsWith('/')) ? `${ep}${resId}` : `${ep}/${resId}`;
-            }
-            return ep;
         }
 
-        function buildProviderHeaders(provider) {
-            const headers = { 'Content-Type': 'application/json' };
-            if (!provider) return headers;
-            const key = (provider.apiKey || '').trim();
-            const hType = provider.headerType || 'Bearer';
-            if (!key) return headers;
+        async function fetchFromCloud(showAlert = true) {
+            const provider = getActiveApiProvider();
+            const key = (JSONBIN_MASTER_KEY || provider.apiKey || '').trim();
+            const binId = (JSONBIN_BIN_ID || provider.resourceId || '').trim();
 
-            if (hType === 'Bearer' || provider.providerName.toLowerCase().includes('openrouter')) {
-                headers['Authorization'] = `Bearer ${key}`;
-                headers['HTTP-Referer'] = window.location.origin || 'http://localhost';
-                headers['X-Title'] = 'Production Work Flow';
-            } else if (hType === 'X-Master-Key' || provider.providerName.toLowerCase().includes('jsonbin')) {
-                headers['X-Master-Key'] = key;
-            } else if (hType === 'x-api-key') {
-                headers['x-api-key'] = key;
-            } else if (hType !== 'None') {
-                headers[hType] = key;
+            if (!key || !binId) {
+                updateSyncStatusUI('unconfigured', 'JSONBin: Setup API');
+                return false;
             }
-            return headers;
+
+            updateSyncStatusUI('syncing', 'Pulling...');
+            isSyncingNow = true;
+
+            try {
+                const response = await fetch(`${JSONBIN_ENDPOINT}/${binId}/latest`, {
+                    method: 'GET',
+                    headers: { 'X-Master-Key': key }
+                });
+
+                if (response.ok) {
+                    const resJson = await response.json();
+                    const record = resJson.record || resJson;
+                    if (record && (record.users || record.projects)) {
+                        applyParsedData(record);
+                        localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
+                        provider.lastVerified = new Date().toISOString();
+                        populateDropdowns();
+                        renderUsers();
+                        renderProjects();
+                        renderDesignations();
+                        renderRoles();
+                        renderApiConfigs();
+                        updateCloudBannerInfo();
+
+                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        updateSyncStatusUI('active', `Synced ${timeStr}`);
+                        if (showAlert) alert("Database loaded successfully from JSONBin!");
+                        return true;
+                    }
+                } else {
+                    updateSyncStatusUI('unconfigured', 'Fetch Error');
+                }
+            } catch (err) {
+                updateSyncStatusUI('unconfigured', 'Offline');
+            } finally {
+                isSyncingNow = false;
+            }
+            return false;
         }
 
+        async function autoCreateNewJsonbin() {
+            const key = document.getElementById('jbinMasterKeyInput').value.trim();
+            const statusEl = document.getElementById('jbinModalStatus');
+            if (!key) return alert("Please enter your JSONBin Master Key first.");
+
+            statusEl.textContent = "Creating fresh shared Bin on JSONBin.io...";
+            JSONBIN_MASTER_KEY = key;
+            localStorage.setItem('JSONBIN_MASTER_KEY', key);
+
+            try {
+                const raw = localStorage.getItem(MASTER_STORE_KEY) || JSON.stringify({
+                    initialized: true,
+                    users, projects, roles, designations, productionLogs, qualityLogs, apiConfigs
+                });
+
+                const response = await fetch(JSONBIN_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': key,
+                        'X-Bin-Name': 'ProductionWorkFlowDB',
+                        'X-Bin-Private': 'true'
+                    },
+                    body: raw
+                });
+
+                if (response.ok) {
+                    const resJson = await response.json();
+                    const newBinId = resJson.metadata.id;
+                    JSONBIN_BIN_ID = newBinId;
+                    localStorage.setItem('JSONBIN_BIN_ID', newBinId);
+                    document.getElementById('jbinBinIdInput').value = newBinId;
+
+                    let active = getActiveApiProvider();
+                    active.apiKey = key;
+                    active.resourceId = newBinId;
+                    savePersistentData(false);
+
+                    statusEl.textContent = `Bin created: ${newBinId}`;
+                    alert(`Created new JSONBin! Bin ID: ${newBinId}\n\nAuto-sync is now active for all browsers connecting to this Bin.`);
+                    updateSyncStatusUI('active', 'JSONBin: Live');
+                } else {
+                    const err = await response.text();
+                    statusEl.textContent = "Creation failed: " + err;
+                }
+            } catch (err) {
+                statusEl.textContent = "Error: " + err.message;
+            }
+        }
+
+        function handleSaveJsonbinAutoConfig(e) {
+            e.preventDefault();
+            const key = document.getElementById('jbinMasterKeyInput').value.trim();
+            const bin = document.getElementById('jbinBinIdInput').value.trim();
+
+            JSONBIN_MASTER_KEY = key;
+            JSONBIN_BIN_ID = bin;
+            localStorage.setItem('JSONBIN_MASTER_KEY', key);
+            localStorage.setItem('JSONBIN_BIN_ID', bin);
+
+            let active = getActiveApiProvider();
+            active.apiKey = key;
+            active.resourceId = bin;
+            savePersistentData(false);
+
+            document.getElementById('jbinModalStatus').textContent = "Saved. Connecting...";
+            
+            if (bin) {
+                fetchFromCloud(true).then(ok => {
+                    if (ok) closeJsonbinAutoModal();
+                });
+            } else {
+                pushToCloud(true).then(() => closeJsonbinAutoModal());
+            }
+        }
+
+        function copyAutoShareUrl() {
+            const bin = JSONBIN_BIN_ID || document.getElementById('jbinBinIdInput').value.trim();
+            const key = JSONBIN_MASTER_KEY || document.getElementById('jbinMasterKeyInput').value.trim();
+            if (!bin || !key) return alert("Configure Master Key and Bin ID first.");
+
+            const shareUrl = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(bin)}&key=${encodeURIComponent(key)}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("Auto-Connect URL copied to clipboard!\n\nOpen this link on any new browser or device to auto-sync immediately without typing keys.");
+            }).catch(() => {
+                prompt("Copy this URL to open on other browsers:", shareUrl);
+            });
+        }
+
+        function openJsonbinAutoModal() {
+            document.getElementById('jbinMasterKeyInput').value = JSONBIN_MASTER_KEY || '';
+            document.getElementById('jbinBinIdInput').value = JSONBIN_BIN_ID || '';
+            document.getElementById('jbinModalStatus').textContent = '';
+            document.getElementById('jsonbinAutoModal').classList.remove('hidden');
+        }
+
+        function closeJsonbinAutoModal() {
+            document.getElementById('jsonbinAutoModal').classList.add('hidden');
+        }
+
+        function checkUrlParametersForAutoConfig() {
+            const params = new URLSearchParams(window.location.search);
+            const urlBin = params.get('bin');
+            const urlKey = params.get('key');
+            if (urlBin && urlKey) {
+                JSONBIN_BIN_ID = urlBin;
+                JSONBIN_MASTER_KEY = urlKey;
+                localStorage.setItem('JSONBIN_BIN_ID', urlBin);
+                localStorage.setItem('JSONBIN_MASTER_KEY', urlKey);
+
+                let active = getActiveApiProvider();
+                active.resourceId = urlBin;
+                active.apiKey = urlKey;
+                savePersistentData(false);
+                fetchFromCloud(false);
+            }
+        }
+
+        // ==========================================
+        // CORE STORAGE & PARSING
+        // ==========================================
         function loadPersistentData() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
             if (raw) {
@@ -2161,15 +2405,16 @@
                     id: 101,
                     providerName: "JSONBin.io",
                     presetKey: "JSONBin.io",
-                    endpoint: "https://api.jsonbin.io/v3/b",
-                    resourceId: "",
-                    apiKey: "",
+                    endpoint: JSONBIN_ENDPOINT,
+                    resourceId: JSONBIN_BIN_ID,
+                    apiKey: JSONBIN_MASTER_KEY,
                     headerType: "X-Master-Key",
                     isActive: true,
                     lastVerified: null
                 }];
                 savePersistentData(false);
             }
+            updateCloudBannerInfo();
         }
 
         function initFreshBaseline() {
@@ -2186,9 +2431,9 @@
                 id: 101,
                 providerName: "JSONBin.io",
                 presetKey: "JSONBin.io",
-                endpoint: "https://api.jsonbin.io/v3/b",
-                resourceId: "",
-                apiKey: "",
+                endpoint: JSONBIN_ENDPOINT,
+                resourceId: JSONBIN_BIN_ID,
+                apiKey: JSONBIN_MASTER_KEY,
                 headerType: "X-Master-Key",
                 isActive: true,
                 lastVerified: null
@@ -2213,7 +2458,6 @@
 
             projects = data.projects || [];
             
-            // Retain custom and core roles
             const baseRoles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
             roles = Array.from(new Set([...baseRoles, ...(data.roles || [])]));
 
@@ -2248,163 +2492,39 @@
             }
 
             if (syncCloud && AUTO_SYNC_ENABLED) {
-                pushToCloud(false);
+                autoSyncToJsonBin();
             }
             updateCloudBannerInfo();
         }
 
-        async function pushToCloud(showAlert = true) {
-            const raw = localStorage.getItem(MASTER_STORE_KEY);
-            if (!raw) return;
+        function updateCloudBannerInfo() {
+            const bannerName = document.getElementById('bannerProviderName');
+            const bannerEndpoint = document.getElementById('bannerProviderEndpoint');
+            const btnPush = document.getElementById('btnPushCloud');
+            const btnPull = document.getElementById('btnPullCloud');
+            const counter = document.getElementById('activeProviderCounterBadge');
 
-            const provider = getActiveApiProvider();
-            if (!provider || !provider.apiKey) {
-                if (showAlert) alert(`Configure an API Key in API Configuration first.`);
-                return;
+            const active = getActiveApiProvider();
+            if (active && (active.apiKey || JSONBIN_MASTER_KEY)) {
+                if (bannerName) bannerName.textContent = `JSONBin.io (${JSONBIN_BIN_ID || 'Pending ID'})`;
+                if (bannerEndpoint) bannerEndpoint.textContent = `${JSONBIN_ENDPOINT}/${JSONBIN_BIN_ID || ''}`;
+                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (JSONBin)`;
+                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (JSONBin)`;
+                if (counter) counter.textContent = `1 Active / ${apiConfigs.length} Total`;
+                updateSyncStatusUI('active', 'JSONBin: Live');
+            } else {
+                if (bannerName) bannerName.textContent = "No Cloud Provider Configured";
+                if (bannerEndpoint) bannerEndpoint.textContent = "Local-Only Operation";
+                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Disabled)`;
+                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Disabled)`;
+                if (counter) counter.textContent = `0 Active / ${apiConfigs.length} Total`;
+                updateSyncStatusUI('unconfigured', 'JSONBin: Setup API');
             }
-
-            const indicator = document.getElementById('syncStatusIndicator');
-            if (indicator) indicator.textContent = `Pushing data to [${provider.providerName}]...`;
-
-            try {
-                let url = buildProviderRequestUrl(provider, false);
-                let method = provider.resourceId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: buildProviderHeaders(provider),
-                    body: raw
-                });
-
-                if (response.ok) {
-                    const resJson = await response.json();
-                    if (!provider.resourceId && resJson.metadata && resJson.metadata.id) {
-                        provider.resourceId = resJson.metadata.id;
-                    }
-                    provider.lastVerified = new Date().toISOString();
-                    savePersistentData(false);
-                    if (indicator) indicator.textContent = `Synced with [${provider.providerName}]: ${new Date().toLocaleTimeString()}`;
-                    if (showAlert) alert(`Synced with ${provider.providerName}!\nBin ID: ${provider.resourceId || 'Active'}`);
-                    renderApiConfigs();
-                } else {
-                    const err = await response.text();
-                    if (indicator) indicator.textContent = `Sync failed (${response.status})`;
-                    if (showAlert) alert(`Sync failed: ${err}`);
-                }
-            } catch (err) {
-                if (indicator) indicator.textContent = `Sync error.`;
-                if (showAlert) alert(`Error: ${err.message}`);
-            }
-        }
-
-        async function fetchFromCloud(showAlert = true) {
-            const provider = getActiveApiProvider();
-            if (!provider || !provider.apiKey || !provider.resourceId) return false;
-
-            try {
-                const response = await fetch(buildProviderRequestUrl(provider, true), {
-                    method: 'GET',
-                    headers: buildProviderHeaders(provider)
-                });
-
-                if (response.ok) {
-                    const resJson = await response.json();
-                    const record = resJson.record || resJson;
-                    if (record && (record.users || record.projects)) {
-                        applyParsedData(record);
-                        localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
-                        provider.lastVerified = new Date().toISOString();
-                        populateDropdowns();
-                        renderUsers();
-                        renderProjects();
-                        renderDesignations();
-                        renderRoles();
-                        renderApiConfigs();
-                        updateCloudBannerInfo();
-                        if (showAlert) alert(`Cloud database loaded successfully!`);
-                        return true;
-                    }
-                }
-            } catch (err) {
-                if (showAlert) alert(`Fetch error: ${err.message}`);
-            }
-            return false;
+            refreshLocalStorageDiagnostics();
         }
 
         async function testActiveCloudConnection() {
             await pushToCloud(true);
-        }
-
-        // --- ON-DEMAND CLOUD SYNC FOR MULTI-BROWSER USE ---
-        function openCloudConnectModal() {
-            const active = getActiveApiProvider();
-            if (active) {
-                document.getElementById('modalSyncBinId').value = active.resourceId || '';
-                document.getElementById('modalSyncApiKey').value = active.apiKey || '';
-            }
-            document.getElementById('modalSyncStatus').textContent = '';
-            document.getElementById('cloudConnectModal').classList.remove('hidden');
-        }
-
-        function closeCloudConnectModal() {
-            document.getElementById('cloudConnectModal').classList.add('hidden');
-        }
-
-        async function handleCloudSyncSubmit(e) {
-            e.preventDefault();
-            const binId = document.getElementById('modalSyncBinId').value.trim();
-            const apiKey = document.getElementById('modalSyncApiKey').value.trim();
-            const statusEl = document.getElementById('modalSyncStatus');
-
-            statusEl.textContent = "Connecting to cloud...";
-
-            let active = getActiveApiProvider();
-            if (!active) {
-                active = {
-                    id: 101,
-                    providerName: "JSONBin.io",
-                    presetKey: "JSONBin.io",
-                    endpoint: "https://api.jsonbin.io/v3/b",
-                    resourceId: binId,
-                    apiKey: apiKey,
-                    headerType: "X-Master-Key",
-                    isActive: true
-                };
-                apiConfigs = [active];
-            } else {
-                active.resourceId = binId;
-                active.apiKey = apiKey;
-                active.headerType = "X-Master-Key";
-            }
-
-            savePersistentData(false);
-            const success = await fetchFromCloud(false);
-
-            if (success) {
-                statusEl.textContent = "Database synced successfully!";
-                setTimeout(() => {
-                    closeCloudConnectModal();
-                    alert("Synced! You can now sign in using your existing account credentials.");
-                }, 400);
-            } else {
-                statusEl.textContent = "Failed to sync. Please verify your Bin ID and Master Key.";
-            }
-        }
-
-        function checkUrlAutoSync() {
-            const params = new URLSearchParams(window.location.search);
-            const bin = params.get('bin');
-            const key = params.get('key');
-            if (bin && key) {
-                let active = getActiveApiProvider();
-                if (active) {
-                    active.resourceId = bin;
-                    active.apiKey = key;
-                    active.headerType = 'X-Master-Key';
-                    savePersistentData(false);
-                    fetchFromCloud(false);
-                }
-            }
         }
 
         function executeLocalStorageClear() {
@@ -2434,10 +2554,7 @@
             reader.onload = function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
-                    if (!parsed.users) {
-                        alert("Invalid database structure.");
-                        return;
-                    }
+                    if (!parsed.users) return alert("Invalid database structure.");
                     applyParsedData(parsed);
                     savePersistentData(true);
                     populateDropdowns();
@@ -2446,7 +2563,7 @@
                     renderDesignations();
                     renderRoles();
                     renderApiConfigs();
-                    alert("Database imported successfully.");
+                    alert("Database imported and auto-synced successfully.");
                 } catch {
                     alert("Error parsing file.");
                 }
@@ -2498,9 +2615,7 @@
                 let match;
                 while ((match = regex.exec(row)) !== null && cells.length < 8) {
                     let cell = match[1] || '';
-                    if (cell.startsWith('"') && cell.endsWith('"')) {
-                        cell = cell.slice(1, -1).replace(/""/g, '"');
-                    }
+                    if (cell.startsWith('"') && cell.endsWith('"')) cell = cell.slice(1, -1).replace(/""/g, '"');
                     cells.push(cell.trim());
                     if (regex.lastIndex >= row.length) break;
                 }
@@ -2602,7 +2717,7 @@
             populateDropdowns();
             renderUsers();
             calculateAdminDashboardMetrics();
-            alert(`Onboarded ${stagedBulkUsers.length} users!`);
+            alert(`Onboarded ${stagedBulkUsers.length} users! Auto-synced to cloud.`);
             clearBulkUserStaging();
         }
 
@@ -2740,10 +2855,35 @@
             URL.revokeObjectURL(url);
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // ==========================================
+        // INITIALIZATION & LIFECYCLE
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', async () => {
             loadPersistentData();
-            checkUrlAutoSync();
+            checkUrlParametersForAutoConfig();
+            
+            // Auto-pull from cloud on startup
+            if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                try { await fetchFromCloud(false); } catch (e) {}
+            }
             initAppFlow();
+
+            // Background Auto-Sync Polling every 20 seconds
+            setInterval(() => {
+                if (!isSyncingNow && JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                    fetchFromCloud(false);
+                }
+            }, 20000);
+
+            // Auto-sync when returning to tab
+            window.addEventListener('focus', () => {
+                if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) fetchFromCloud(false);
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                    fetchFromCloud(false);
+                }
+            });
         });
 
         function initAppFlow() {
@@ -2805,8 +2945,9 @@
             const btn = document.getElementById('loginSubmitBtn');
             if (btn) btn.textContent = 'Verifying...';
 
-            // Silently try background cloud pull if credentials exist
-            try { await fetchFromCloud(false); } catch (err) {}
+            if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                try { await fetchFromCloud(false); } catch (err) {}
+            }
             loadPersistentData();
 
             const uInput = document.getElementById('loginUser').value.trim().toLowerCase();
@@ -2842,7 +2983,7 @@
                 }
             }
 
-            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "☁️ Sync Cloud DB" below to load your shared database.`);
+            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "⚙️ JSONBin Auto-API" below to sync with your shared database.`);
         }
 
         function handleLogout() {
@@ -3056,7 +3197,7 @@
 
             localStorage.setItem('activeUser', JSON.stringify(activeAdminUser));
             savePersistentData(true);
-            alert("Password updated and saved!");
+            alert("Password updated and auto-synced!");
             closePassChangeModal();
         }
 
@@ -3391,6 +3532,7 @@
             const hTypeSelect = document.getElementById('apiAuthHeaderType');
 
             const presets = {
+                'JSONBin.io': { name: 'JSONBin.io', endpoint: 'https://api.jsonbin.io/v3/b', resource: JSONBIN_BIN_ID || '', header: 'X-Master-Key' },
                 'OpenAI': { name: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', resource: 'gpt-4o', header: 'Bearer' },
                 'Anthropic': { name: 'Anthropic', endpoint: 'https://api.anthropic.com/v1/messages', resource: 'claude-3-5-sonnet-20241022', header: 'x-api-key' },
                 'Google Gemini': { name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', resource: 'gemini-1.5-flash', header: 'Bearer' },
@@ -3409,7 +3551,6 @@
                 'NVIDIA NIM': { name: 'NVIDIA NIM', endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions', resource: 'meta/llama-3.1-8b-instruct', header: 'Bearer' },
                 'AI21 Labs': { name: 'AI21 Labs', endpoint: 'https://api.ai21.com/studio/v1/chat/completions', resource: 'jamba-1.5-mini', header: 'Bearer' },
                 'Cerebras': { name: 'Cerebras', endpoint: 'https://api.cerebras.ai/v1/chat/completions', resource: 'llama3.1-8b', header: 'Bearer' },
-                'JSONBin.io': { name: 'JSONBin.io', endpoint: 'https://api.jsonbin.io/v3/b', resource: '', header: 'X-Master-Key' },
                 'OpenRouter': { name: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', resource: 'meta-llama/llama-3-8b-instruct', header: 'Bearer' },
                 'Firebase Realtime Database': { name: 'Firebase Realtime DB', endpoint: 'https://your-project.firebaseio.com', resource: '', header: 'None' }
             };
@@ -3445,6 +3586,13 @@
             const apiKey = document.getElementById('apiKeyInput').value.trim();
             const headerType = document.getElementById('apiAuthHeaderType').value;
             const presetKey = document.getElementById('apiProviderPresetSelect').value;
+
+            if (providerName.toLowerCase().includes('jsonbin')) {
+                JSONBIN_MASTER_KEY = apiKey;
+                JSONBIN_BIN_ID = resourceId;
+                localStorage.setItem('JSONBIN_MASTER_KEY', apiKey);
+                localStorage.setItem('JSONBIN_BIN_ID', resourceId);
+            }
 
             if (editId) {
                 const idx = apiConfigs.findIndex(c => c.id === Number(editId));
