@@ -1991,6 +1991,38 @@
         </div>
     </div>
 
+    <!-- MODAL: AUDITOR TEAM LEAD REVIEW -->
+    <div id="auditTlReviewModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Auditor Team Lead Final Review</h3>
+            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="atlChartId">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Errors:</strong> <span id="atlLoggedErrors">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Coder:</strong> <span id="atlCoderName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Auditor:</strong> <span id="atlAuditorName">-</span></div>
+                </div>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                    <strong style="color: var(--text-muted);">Auditor Justification:</strong>
+                    <p id="atlAuditorRemarks" style="margin-top: 4px; color: var(--text-primary); background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px dashed var(--accent-cyan); padding: 12px; border-radius: var(--radius-md); margin-bottom: 14px;">
+                <label style="color: var(--accent-cyan); font-weight: 700; font-size: 10.5px; text-transform: uppercase;">Errors to remove</label>
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                    <input type="number" id="atlDeductErrorCount" min="1" style="flex: 1;">
+                    <button type="button" class="btn btn-success" onclick="handleAuditTlAcceptDeduction()">Accept & Remove Errors</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-danger" style="flex: 1;" onclick="handleAuditTlUpholdErrors()">Reject Rebuttal (Upheld)</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAuditTlModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: EDIT USER DIALOG -->
     <div id="editUserModal" class="modal-overlay hidden">
         <div class="modal-card">
@@ -2213,7 +2245,8 @@
         const JSONBIN_ENDPOINT = "https://api.jsonbin.io/v3/b";
 
         // API Usage Quota & Limit State
-        let API_KEY_LIMIT = parseInt(localStorage.getItem('API_KEY_LIMIT') || '10000');
+        let rawLimit = parseInt(localStorage.getItem('API_KEY_LIMIT') || '10000');
+        let API_KEY_LIMIT = (!isNaN(rawLimit) && rawLimit > 0) ? rawLimit : 10000;
         let API_USAGE_STATS = {};
         try {
             API_USAGE_STATS = JSON.parse(localStorage.getItem('API_USAGE_STATS') || '{}');
@@ -2239,6 +2272,7 @@
         let selectedAuditChartObj = null;
         let activeViewAuditChartId = null;
         let activeAuditorRebuttalChartId = null;
+        let activeAuditTlChartId = null;
 
         function parseKeysList(raw) {
             if (!raw) return [];
@@ -2268,7 +2302,6 @@
             return JSONBIN_KEYS_POOL[JSONBIN_CURRENT_KEY_IDX];
         }
 
-        // Record every API request made and update metrics
         function recordApiCallUsage(key, headers = null) {
             if (!key) return;
             const kId = getKeyIdentifier(key);
@@ -2279,11 +2312,11 @@
             API_USAGE_STATS[kId].used = (API_USAGE_STATS[kId].used || 0) + 1;
             API_USAGE_STATS[kId].lastUsed = new Date().toISOString();
 
-            if (headers) {
+            if (headers && typeof headers.get === 'function') {
                 const rem = headers.get('x-ratelimit-remaining');
                 const lim = headers.get('x-ratelimit-limit');
-                if (rem !== null) API_USAGE_STATS[kId].remainingServer = parseInt(rem);
-                if (lim !== null) API_KEY_LIMIT = parseInt(lim);
+                if (rem !== null && !isNaN(parseInt(rem))) API_USAGE_STATS[kId].remainingServer = parseInt(rem);
+                if (lim !== null && !isNaN(parseInt(lim)) && parseInt(lim) > 0) API_KEY_LIMIT = parseInt(lim);
             }
 
             localStorage.setItem('API_USAGE_STATS', JSON.stringify(API_USAGE_STATS));
@@ -2303,9 +2336,11 @@
                 }
             }
 
-            const limit = API_KEY_LIMIT || 10000;
+            const limit = (!isNaN(API_KEY_LIMIT) && API_KEY_LIMIT > 0) ? API_KEY_LIMIT : 10000;
             const pending = Math.max(0, limit - totalUsed);
-            const percent = Math.min(100, parseFloat(((totalUsed / limit) * 100).toFixed(1)));
+            let percent = parseFloat(((totalUsed / limit) * 100).toFixed(1));
+            if (isNaN(percent)) percent = 0;
+            percent = Math.min(100, percent);
 
             return { totalUsed, limit, pending, percent };
         }
@@ -2412,7 +2447,7 @@
                 pill.className = 'cloud-sync-pill';
                 icon.textContent = '🟢';
                 const keyNum = JSONBIN_KEYS_POOL.length > 1 ? ` (#${JSONBIN_CURRENT_KEY_IDX + 1})` : '';
-                text.textContent = (label || 'JSONBin: Multi-Active') + keyNum;
+                text.textContent = (label || 'JSONBin: Live') + keyNum;
             } else {
                 pill.className = 'cloud-sync-pill unconfigured';
                 icon.textContent = '⚠️';
@@ -2494,6 +2529,7 @@
                             localStorage.setItem('JSONBIN_BIN_ID', JSONBIN_BIN_ID);
                         }
                         const provider = getActiveApiProvider();
+                        provider.resourceId = JSONBIN_BIN_ID;
                         provider.lastVerified = new Date().toISOString();
                         savePersistentData(false);
 
@@ -2735,7 +2771,485 @@
                     savePersistentData(false);
                     fetchFromCloud(false);
                 }
+
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
             }
+        }
+
+        // ==========================================
+        // STORAGE & LIFECYCLE
+        // ==========================================
+        function loadPersistentData() {
+            const raw = localStorage.getItem(MASTER_STORE_KEY);
+            if (raw) {
+                try {
+                    applyParsedData(JSON.parse(raw));
+                } catch (e) {
+                    initFreshBaseline();
+                }
+            } else {
+                initFreshBaseline();
+            }
+            ensureApiProviderBaseline();
+        }
+
+        function ensureApiProviderBaseline() {
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
+                apiConfigs = [{
+                    id: 101,
+                    providerName: "JSONBin.io",
+                    presetKey: "JSONBin.io",
+                    endpoint: JSONBIN_ENDPOINT,
+                    resourceId: JSONBIN_BIN_ID,
+                    apiKey: JSONBIN_KEYS_POOL.join(', '),
+                    headerType: "X-Master-Key",
+                    isActive: true,
+                    lastVerified: null
+                }];
+                savePersistentData(false);
+            }
+            updateCloudBannerInfo();
+        }
+
+        function initFreshBaseline() {
+            users = [
+                { empId: "EMP101", userName: "admin", empName: "System Administrator", role: "Admin", designation: "Admin", status: "Active", tl: "Self", manager: "Self", password: "admin" }
+            ];
+            projects = [];
+            roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+            designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
+            deletedUserNames = [];
+            productionLogs = [];
+            qualityLogs = [];
+            apiConfigs = [{
+                id: 101,
+                providerName: "JSONBin.io",
+                presetKey: "JSONBin.io",
+                endpoint: JSONBIN_ENDPOINT,
+                resourceId: JSONBIN_BIN_ID,
+                apiKey: JSONBIN_KEYS_POOL.join(', '),
+                headerType: "X-Master-Key",
+                isActive: true,
+                lastVerified: null
+            }];
+            savePersistentData(false);
+        }
+
+        function applyParsedData(data) {
+            if (!data) return;
+            deletedUserNames = data.deletedUserNames || [];
+            
+            const legacyDemoUsers = ['subadmin', 'team_lead', 'manager_user', 'auditor_user', 'coder_alex', 'user_c'];
+            
+            users = (data.users || []).filter(u => {
+                const uname = (u.userName || '').toLowerCase().trim();
+                return !deletedUserNames.includes(uname) && !legacyDemoUsers.includes(uname);
+            });
+
+            if (users.length === 0) {
+                users.push({ empId: "EMP101", userName: "admin", empName: "System Administrator", role: "Admin", designation: "Admin", status: "Active", tl: "Self", manager: "Self", password: "admin" });
+            }
+
+            projects = data.projects || [];
+            
+            const baseRoles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+            roles = Array.from(new Set([...baseRoles, ...(data.roles || [])]));
+
+            const baseDesigs = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
+            designations = Array.from(new Set([...baseDesigs, ...(data.designations || [])]));
+
+            productionLogs = data.productionLogs || [];
+            qualityLogs = data.qualityLogs || [];
+            if (Array.isArray(data.apiConfigs) && data.apiConfigs.length > 0) {
+                apiConfigs = data.apiConfigs;
+            }
+        }
+
+        function savePersistentData(syncCloud = true) {
+            const dataToPersist = {
+                initialized: true,
+                savedAt: new Date().toISOString(),
+                users,
+                deletedUserNames,
+                projects,
+                roles,
+                designations,
+                productionLogs,
+                qualityLogs,
+                apiConfigs
+            };
+
+            localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(dataToPersist));
+            
+            if (BACKUP_STRATEGY === 'HighFrequency') {
+                localStorage.setItem(`${MASTER_STORE_KEY}_BACKUP`, JSON.stringify(dataToPersist));
+            }
+
+            if (syncCloud && AUTO_SYNC_ENABLED) {
+                autoSyncToJsonBin();
+            }
+            updateCloudBannerInfo();
+        }
+
+        function updateCloudBannerInfo() {
+            const bannerName = document.getElementById('bannerProviderName');
+            const bannerEndpoint = document.getElementById('bannerProviderEndpoint');
+            const btnPush = document.getElementById('btnPushCloud');
+            const btnPull = document.getElementById('btnPullCloud');
+            const counter = document.getElementById('activeProviderCounterBadge');
+
+            const active = getActiveApiProvider();
+            if (active && JSONBIN_KEYS_POOL.length > 0) {
+                if (bannerName) bannerName.textContent = `JSONBin (${JSONBIN_KEYS_POOL.length} Keys Active)`;
+                if (bannerEndpoint) bannerEndpoint.textContent = `${JSONBIN_ENDPOINT}/${JSONBIN_BIN_ID || ''}`;
+                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Multi-Key)`;
+                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Multi-Key)`;
+                if (counter) counter.textContent = `1 Active / ${apiConfigs.length} Total`;
+                updateSyncStatusUI('active', 'JSONBin: Multi-Active');
+            } else {
+                if (bannerName) bannerName.textContent = "No Cloud Provider Configured";
+                if (bannerEndpoint) bannerEndpoint.textContent = "Local-Only Operation";
+                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Disabled)`;
+                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Disabled)`;
+                if (counter) counter.textContent = `0 Active / ${apiConfigs.length} Total`;
+                updateSyncStatusUI('unconfigured', 'JSONBin: Setup Keys');
+            }
+            refreshLocalStorageDiagnostics();
+            updateUsageMetricsUI();
+        }
+
+        async function testActiveCloudConnection() {
+            await pushToCloud(true);
+        }
+
+        function executeLocalStorageClear() {
+            if (confirm("Reset everything to initial installation defaults?")) {
+                localStorage.clear();
+                window.location.reload();
+            }
+        }
+
+        function exportDatabaseFile() {
+            savePersistentData(false);
+            const data = localStorage.getItem(MASTER_STORE_KEY);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Production_DB_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importDatabaseFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.users) return alert("Invalid database structure.");
+                    applyParsedData(parsed);
+                    savePersistentData(true);
+                    populateDropdowns();
+                    renderUsers();
+                    renderProjects();
+                    renderDesignations();
+                    renderRoles();
+                    renderApiConfigs();
+                    alert("Database imported and auto-synced across active keys.");
+                } catch {
+                    alert("Error parsing file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadUserCsvTemplate() {
+            const headers = ["User Name", "EMP ID", "EMP Name", "Role", "Designation", "Reporting TL", "Reporting Manager", "Password"];
+            const sampleRow = ["alex_coder", "EMP102", "Alex Morgan", "Coder", "Senior Coder", "Nill", "Nill", "Temp@123"];
+            const csvContent = headers.join(",") + "\n" + sampleRow.join(",");
+            downloadCSV(csvContent, "User_Bulk_Onboard_Template.csv");
+        }
+
+        function handleBulkUserFileSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('bulkUploadStatus');
+            statusEl.textContent = `Reading ${file.name}...`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    if (file.name.endsWith('.json')) {
+                        const parsed = JSON.parse(content);
+                        const arr = Array.isArray(parsed) ? parsed : (parsed.users || []);
+                        processParsedBulkUsers(arr);
+                    } else {
+                        const arr = parseCSVToUserObjects(content);
+                        processParsedBulkUsers(arr);
+                    }
+                } catch (err) {
+                    alert(`Error parsing file: ${err.message}`);
+                    statusEl.textContent = "Error parsing file.";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSVToUserObjects(csvText) {
+            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) return [];
+
+            const parseRow = (row) => {
+                const regex = /(?:,|\n|^)("(?:(?:"")*[^"]*)*"|[^",\n]*|(?:\n|$))/g;
+                const cells = [];
+                let match;
+                while ((match = regex.exec(row)) !== null && cells.length < 8) {
+                    let cell = match[1] || '';
+                    if (cell.startsWith('"') && cell.endsWith('"')) cell = cell.slice(1, -1).replace(/""/g, '"');
+                    cells.push(cell.trim());
+                    if (regex.lastIndex >= row.length) break;
+                }
+                return cells;
+            };
+
+            const usersList = [];
+            for (let i = 1; i < lines.length; i++) {
+                const row = parseRow(lines[i]);
+                if (row.length === 0 || !row[0]) continue;
+
+                usersList.push({
+                    userName: row[0] || '',
+                    empId: row[1] || '',
+                    empName: row[2] || '',
+                    role: row[3] || 'Coder',
+                    designation: row[4] || 'Senior Coder',
+                    tl: row[5] || 'Nill',
+                    manager: row[6] || 'Nill',
+                    password: row[7] || 'Temp@123'
+                });
+            }
+            return usersList;
+        }
+
+        function processParsedBulkUsers(rawUsers) {
+            const container = document.getElementById('bulkPreviewContainer');
+            const tbody = document.getElementById('bulkStagingTableBody');
+            const countBadge = document.getElementById('bulkStagedCountBadge');
+            const commitBtn = document.getElementById('btnExecuteBulkCommit');
+            const clearBtn = document.getElementById('btnClearBulkStaging');
+            const statusEl = document.getElementById('bulkUploadStatus');
+
+            stagedBulkUsers = [];
+            let validCount = 0;
+
+            tbody.innerHTML = rawUsers.map((u, idx) => {
+                const uName = (u.userName || u.UserName || '').trim();
+                const eId = (u.empId || u.EmpId || u['EMP ID'] || '').trim();
+                const eName = (u.empName || u.EmpName || u['EMP Name'] || '').trim();
+                const r = (u.role || u.Role || 'Coder').trim();
+                const d = (u.designation || u.Designation || 'Senior Coder').trim();
+                const tl = (u.tl || u.ReportingTL || u['Reporting TL'] || 'Nill').trim();
+                const mgr = (u.manager || u.ReportingManager || u['Reporting Manager'] || 'Nill').trim();
+                const pass = (u.password || u.Password || 'Temp@123').trim();
+
+                let isError = false;
+                let errMsg = "Valid";
+
+                if (!uName || !eId || !eName) {
+                    isError = true;
+                    errMsg = "Missing Required Info";
+                } else if (users.some(existing => existing.userName.toLowerCase() === uName.toLowerCase())) {
+                    isError = true;
+                    errMsg = "Duplicate Username";
+                } else if (users.some(existing => existing.empId.toLowerCase() === eId.toLowerCase())) {
+                    isError = true;
+                    errMsg = "Duplicate EMP ID";
+                }
+
+                if (!isError) {
+                    validCount++;
+                    stagedBulkUsers.push({ userName: uName, empId: eId, empName: eName, role: r, designation: d, tl, manager: mgr, password: pass, status: 'Active' });
+                }
+
+                return `
+                    <tr style="${isError ? 'background: rgba(244, 63, 94, 0.08);' : ''}">
+                        <td>${idx + 1}</td>
+                        <td><strong>${uName}</strong></td>
+                        <td>${eId}</td>
+                        <td>${eName}</td>
+                        <td>${r}</td>
+                        <td>${d}</td>
+                        <td>${tl}</td>
+                        <td>${mgr}</td>
+                        <td style="font-family: var(--font-mono);">••••••••</td>
+                        <td><span class="badge ${isError ? 'badge-inactive' : 'badge-active'}">${errMsg}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.style.display = 'block';
+            clearBtn.style.display = 'inline-flex';
+            countBadge.textContent = `${validCount} Valid / ${rawUsers.length} Total`;
+            commitBtn.disabled = (validCount === 0);
+            statusEl.textContent = `${validCount} records ready to commit.`;
+        }
+
+        function executeBulkUserCommit() {
+            if (!stagedBulkUsers || stagedBulkUsers.length === 0) return;
+
+            stagedBulkUsers.forEach(u => {
+                if (!roles.includes(u.role)) roles.push(u.role);
+                if (!designations.includes(u.designation)) designations.push(u.designation);
+                users.push(u);
+            });
+
+            savePersistentData(true);
+            populateDropdowns();
+            renderUsers();
+            calculateAdminDashboardMetrics();
+            alert(`Onboarded ${stagedBulkUsers.length} users! Auto-synced to cloud.`);
+            clearBulkUserStaging();
+        }
+
+        function clearBulkUserStaging() {
+            stagedBulkUsers = [];
+            document.getElementById('bulkPreviewContainer').style.display = 'none';
+            document.getElementById('btnExecuteBulkCommit').disabled = true;
+            document.getElementById('btnClearBulkStaging').style.display = 'none';
+            document.getElementById('bulkUploadStatus').textContent = '';
+            document.getElementById('bulkUserInputFile').value = '';
+        }
+
+        function refreshLocalStorageDiagnostics() {
+            const primarySizeElem = document.getElementById('lsPrimarySize');
+            const totalUsageElem = document.getElementById('lsTotalUsage');
+            const keyCountElem = document.getElementById('lsKeyCount');
+            const quotaStatusElem = document.getElementById('lsQuotaStatus');
+            const keysTbody = document.getElementById('localStorageKeysTableBody');
+            
+            if (!primarySizeElem || !keysTbody) return;
+
+            let totalBytes = 0;
+            let primaryBytes = 0;
+            const keyRows = [];
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                const v = localStorage.getItem(k) || '';
+                const size = (k.length + v.length) * 2;
+                totalBytes += size;
+
+                if (k === MASTER_STORE_KEY) primaryBytes = size;
+
+                let entryType = "Application Cache";
+                if (k === MASTER_STORE_KEY) entryType = "Primary JSON Database";
+                else if (k.includes('BACKUP')) entryType = "Backup Snapshot";
+                else if (k === 'activeUser' || k === 'isLoggedIn') entryType = "Auth Credentials";
+
+                keyRows.push({ key: k, type: entryType, sizeKB: (size / 1024).toFixed(2) });
+            }
+
+            primarySizeElem.textContent = `${(primaryBytes / 1024).toFixed(2)} KB`;
+            totalUsageElem.textContent = `${(totalBytes / 1024).toFixed(2)} KB`;
+            keyCountElem.textContent = localStorage.length;
+
+            const usageKB = totalBytes / 1024;
+            if (usageKB > 3500) {
+                quotaStatusElem.textContent = "Warning (>3.5MB)";
+                quotaStatusElem.style.color = "var(--accent-warning)";
+            } else {
+                quotaStatusElem.textContent = "Normal";
+                quotaStatusElem.style.color = "var(--accent-success)";
+            }
+
+            document.getElementById('cfgStorageKeyInput').value = MASTER_STORE_KEY;
+            document.getElementById('cfgAutoSyncSelect').value = AUTO_SYNC_ENABLED ? "true" : "false";
+            document.getElementById('cfgBackupStrategy').value = BACKUP_STRATEGY;
+
+            keysTbody.innerHTML = keyRows.map((r, idx) => `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td><strong style="font-family: var(--font-mono);">${r.key}</strong></td>
+                    <td><span class="badge badge-status">${r.type}</span></td>
+                    <td style="font-family: var(--font-mono);">${r.sizeKB} KB</td>
+                    <td>
+                        ${r.key !== MASTER_STORE_KEY && r.key !== 'isLoggedIn' && r.key !== 'activeUser' ? 
+                            `<button class="btn btn-danger btn-sm" onclick="removeSpecificStorageKey('${r.key}')">Remove</button>` : 
+                            `<span style="color:var(--text-muted); font-size:11px;">Protected</span>`
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function handleSaveStorageConfig(e) {
+            e.preventDefault();
+            const newKey = document.getElementById('cfgStorageKeyInput').value.trim();
+            const autoSync = document.getElementById('cfgAutoSyncSelect').value === 'true';
+            const backupStrategy = document.getElementById('cfgBackupStrategy').value;
+
+            if (!newKey) return;
+
+            if (newKey !== MASTER_STORE_KEY) {
+                const currentData = localStorage.getItem(MASTER_STORE_KEY);
+                if (currentData) localStorage.setItem(newKey, currentData);
+                localStorage.removeItem(MASTER_STORE_KEY);
+                MASTER_STORE_KEY = newKey;
+                localStorage.setItem('CUSTOM_STORAGE_KEY', newKey);
+            }
+
+            AUTO_SYNC_ENABLED = autoSync;
+            BACKUP_STRATEGY = backupStrategy;
+            localStorage.setItem('AUTO_SYNC_ENABLED', autoSync ? 'true' : 'false');
+            localStorage.setItem('BACKUP_STRATEGY', backupStrategy);
+
+            savePersistentData(false);
+            refreshLocalStorageDiagnostics();
+            alert("Storage settings saved!");
+        }
+
+        function runStorageIntegrityCheck() {
+            const raw = localStorage.getItem(MASTER_STORE_KEY);
+            if (!raw) return alert("Storage is empty.");
+            try {
+                const data = JSON.parse(raw);
+                alert(`Storage OK:\nUsers: ${data.users?.length || 0}\nProjects: ${data.projects?.length || 0}\nLogs: ${data.productionLogs?.length || 0}`);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function createLocalBackupSnapshot() {
+            const raw = localStorage.getItem(MASTER_STORE_KEY);
+            if (!raw) return alert("No active data to snapshot.");
+            const snapKey = `${MASTER_STORE_KEY}_SNAP_${Date.now()}`;
+            localStorage.setItem(snapKey, raw);
+            refreshLocalStorageDiagnostics();
+            alert(`Snapshot created: [${snapKey}]`);
+        }
+
+        function removeSpecificStorageKey(key) {
+            if (confirm(`Remove storage key "${key}"?`)) {
+                localStorage.removeItem(key);
+                refreshLocalStorageDiagnostics();
+            }
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         // ==========================================
@@ -2747,7 +3261,12 @@
             updateUsageMetricsUI();
             
             if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
-                try { await fetchFromCloud(false); } catch (e) {}
+                try {
+                    await Promise.race([
+                        fetchFromCloud(false),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+                    ]);
+                } catch (e) {}
             }
             initAppFlow();
 
@@ -2775,6 +3294,11 @@
             if (!isLoggedIn) {
                 document.getElementById('loginOverlay').classList.remove('hidden');
                 document.getElementById('dashboardLayout').classList.add('hidden');
+                // Ensure telemetry is hidden when not logged in
+                const telemetryGroup = document.getElementById('adminTelemetryGroup');
+                const profUsageBtn = document.getElementById('profAdminUsageBtn');
+                if (telemetryGroup) telemetryGroup.classList.add('hidden');
+                if (profUsageBtn) profUsageBtn.classList.add('hidden');
             } else {
                 const storedUser = localStorage.getItem('activeUser');
                 if (storedUser) {
@@ -2837,7 +3361,12 @@
             if (btn) btn.textContent = 'Verifying...';
 
             if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
-                try { await fetchFromCloud(false); } catch (err) {}
+                try {
+                    await Promise.race([
+                        fetchFromCloud(false),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2500))
+                    ]);
+                } catch (err) {}
             }
             loadPersistentData();
 
@@ -2882,6 +3411,12 @@
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('activeUser');
             localStorage.removeItem('activeTab');
+            
+            const telemetryGroup = document.getElementById('adminTelemetryGroup');
+            const profUsageBtn = document.getElementById('profAdminUsageBtn');
+            if (telemetryGroup) telemetryGroup.classList.add('hidden');
+            if (profUsageBtn) profUsageBtn.classList.add('hidden');
+
             document.getElementById('dashboardLayout').classList.add('hidden');
             document.getElementById('loginOverlay').classList.remove('hidden');
             document.getElementById('loginUser').value = '';
@@ -3631,9 +4166,21 @@
         }
 
         function exportAdminReportToCSV() {
-            let csv = ["Chart ID,Date,Status"];
-            productionLogs.forEach(p => csv.push(`"${p.chartId}","${p.date}","${p.status}"`));
-            downloadCSV(csv.join("\n"), `Admin_Report.csv`);
+            const rType = document.getElementById('reportTypeSelect').value;
+            let csv = [];
+            if (rType === 'userMgmtReport') {
+                csv.push("S.No,EMP ID,User Name,EMP Name,Role,Designation,Reporting TL,Reporting Mgr,Status");
+                users.forEach((u, idx) => {
+                    csv.push(`${idx + 1},"${u.empId}","${u.userName}","${u.empName}","${u.role}","${u.designation}","${u.tl}","${u.manager}","${u.status}"`);
+                });
+            } else if (rType === 'prodReport') {
+                csv.push("Date,Project,Sub-Project,Chart ID,Login,Pages,ICD,Status");
+                productionLogs.forEach(p => csv.push(`"${p.date}","${p.projName}","${p.subProjName}","${p.chartId}","${p.loginName}","${p.pageNo}","${p.totalIcd}","${p.status}"`));
+            } else {
+                csv.push("Chart ID,Coder,QA Login,Pages,Errors,Quality %");
+                qualityLogs.forEach(q => csv.push(`"${q.chartId}","${q.completedByUserId}","${q.qaLoginId}","${q.totalPages}","${q.totalError}","${q.qualityPercentage}"`));
+            }
+            downloadCSV(csv.join("\n"), `Admin_Report_${rType}.csv`);
         }
 
         function calculateCoderDashboardMetrics() {
@@ -3831,9 +4378,53 @@
             openDisagreeModal(cid, 'LEVEL3_AUDITOR_REJECT');
         }
 
+        function openAuditTlReviewModal(chartId) {
+            const q = qualityLogs.find(item => item.chartId === chartId);
+            if (!q) return;
+            activeAuditTlChartId = chartId;
+            document.getElementById('atlChartId').textContent = q.chartId;
+            document.getElementById('atlLoggedErrors').textContent = q.totalError;
+            document.getElementById('atlCoderName').textContent = q.completedByUserId;
+            document.getElementById('atlAuditorName').textContent = q.auditorEmpName || q.qaLoginId;
+            document.getElementById('atlAuditorRemarks').textContent = q.auditorRemarks || q.comment || '-';
+            document.getElementById('atlDeductErrorCount').value = q.totalError;
+            document.getElementById('auditTlReviewModal').classList.remove('hidden');
+        }
+
+        function closeAuditTlModal() {
+            const modal = document.getElementById('auditTlReviewModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function handleAuditTlAcceptDeduction() {
+            const q = qualityLogs.find(item => item.chartId === activeAuditTlChartId);
+            if (!q) return;
+            const removeCount = parseInt(document.getElementById('atlDeductErrorCount').value) || 0;
+            const remaining = Math.max(0, (parseInt(q.totalError) || 0) - removeCount);
+            const totalAud = parseInt(q.totalAuditedCodes) || 1;
+            q.totalError = remaining;
+            q.qualityPercentage = `${Math.max(0, ((totalAud - remaining) / totalAud) * 100).toFixed(1)}%`;
+            q.workflowStage = "Completed - Audit TL Accepted Rebuttal";
+            savePersistentData(true);
+            closeAuditTlModal();
+            renderAuditorAuditReport();
+            renderSupervisorTeamQuality();
+        }
+
+        function handleAuditTlUpholdErrors() {
+            const q = qualityLogs.find(item => item.chartId === activeAuditTlChartId);
+            if (q) {
+                q.workflowStage = "Completed - Audit TL Upheld Errors";
+                savePersistentData(true);
+            }
+            closeAuditTlModal();
+            renderAuditorAuditReport();
+            renderSupervisorTeamQuality();
+        }
+
         function exportAuditReportToCSV() {
             let csv = ["Chart ID,QA Login,Score"];
-            qualityLogs.forEach(q => csv.push(`"${q.chartId}","${q.qaLoginId}","${q.qualityPercentage}"`));
+            qualityLogs.forEach(q => csv.push(`"${q.chartId}","${q.qaLoginId}"`));
             downloadCSV(csv.join("\n"), `Audit_Report.csv`);
         }
 
