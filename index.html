@@ -62,29 +62,15 @@
 
         .hidden { display: none !important; }
 
-        /* SCROLLBARS */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-canvas);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-card);
-            border-radius: var(--radius-pill);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+        ::-webkit-scrollbar-thumb { background: var(--border-card); border-radius: var(--radius-pill); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        /* AUTH & SETUP OVERLAYS */
         .auth-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
             background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-canvas) 70%);
             display: flex;
             justify-content: center;
@@ -106,9 +92,7 @@
         .auth-card::before {
             content: "";
             position: absolute;
-            top: 0;
-            left: 15%;
-            right: 15%;
+            top: 0; left: 15%; right: 15%;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
         }
@@ -129,7 +113,6 @@
             text-align: center;
         }
 
-        /* DASHBOARD LAYOUT */
         .dashboard-layout {
             display: flex;
             height: 100vh;
@@ -305,7 +288,6 @@
             flex: 1;
         }
 
-        /* BENTO CARDS */
         .card {
             background: var(--bg-card);
             padding: 18px 22px;
@@ -341,7 +323,6 @@
             background: rgba(244, 63, 94, 0.05);
         }
 
-        /* BENTO METRICS GRID */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -365,10 +346,8 @@
         .metric-card::after {
             content: "";
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
             background: linear-gradient(90deg, var(--accent-primary), transparent);
         }
 
@@ -409,9 +388,7 @@
             margin-bottom: 4px;
         }
 
-        .form-group-full {
-            grid-column: 1 / -1;
-        }
+        .form-group-full { grid-column: 1 / -1; }
 
         .password-wrapper {
             position: relative;
@@ -420,9 +397,7 @@
             width: 100%;
         }
 
-        .password-wrapper input {
-            padding-right: 40px;
-        }
+        .password-wrapper input { padding-right: 40px; }
 
         .pwd-toggle-btn {
             position: absolute;
@@ -440,9 +415,7 @@
             transition: color 0.15s ease;
         }
 
-        .pwd-toggle-btn:hover {
-            color: var(--text-primary);
-        }
+        .pwd-toggle-btn:hover { color: var(--text-primary); }
 
         label {
             font-size: 10.5px;
@@ -482,7 +455,6 @@
             box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
         }
 
-        /* BUTTONS (TACTILE PILLS) */
         .btn {
             padding: 7px 16px;
             background-color: var(--accent-primary);
@@ -505,56 +477,19 @@
             transform: translateY(-1px);
         }
 
-        .btn:active {
-            transform: translateY(0);
-        }
+        .btn:active { transform: translateY(0); }
+        .btn-success { background-color: var(--accent-success); }
+        .btn-success:hover { background-color: var(--accent-success-hover); }
+        .btn-danger { background-color: var(--accent-danger); }
+        .btn-danger:hover { background-color: var(--accent-danger-hover); }
+        .btn-warning { background-color: var(--accent-warning); color: #1e1b4b; font-weight: 700; }
+        .btn-warning:hover { background-color: var(--accent-warning-hover); }
+        .btn-export { background-color: #059669; }
+        .btn-export:hover { background-color: #047857; }
+        .btn-secondary { background-color: #334155; color: var(--text-primary); border-color: #475569; }
+        .btn-secondary:hover { background-color: #475569; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; border-radius: var(--radius-pill); }
 
-        .btn-success {
-            background-color: var(--accent-success);
-        }
-        .btn-success:hover {
-            background-color: var(--accent-success-hover);
-        }
-
-        .btn-danger {
-            background-color: var(--accent-danger);
-        }
-        .btn-danger:hover {
-            background-color: var(--accent-danger-hover);
-        }
-
-        .btn-warning {
-            background-color: var(--accent-warning);
-            color: #1e1b4b;
-            font-weight: 700;
-        }
-        .btn-warning:hover {
-            background-color: var(--accent-warning-hover);
-        }
-
-        .btn-export {
-            background-color: #059669;
-        }
-        .btn-export:hover {
-            background-color: #047857;
-        }
-
-        .btn-secondary {
-            background-color: #334155;
-            color: var(--text-primary);
-            border-color: #475569;
-        }
-        .btn-secondary:hover {
-            background-color: #475569;
-        }
-
-        .btn-sm {
-            padding: 4px 10px;
-            font-size: 11px;
-            border-radius: var(--radius-pill);
-        }
-
-        /* TABLES */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -587,15 +522,14 @@
             border-bottom: 1px solid var(--border-card);
         }
 
-        tbody tr:last-child td {
-            border-bottom: none;
+        tbody tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+
+        .row-active-provider {
+            background: rgba(16, 185, 129, 0.06);
+            border-left: 3px solid var(--accent-success);
         }
 
-        tr:hover td {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
-        /* BADGES */
         .badge {
             padding: 3px 8px;
             border-radius: var(--radius-pill);
@@ -648,7 +582,6 @@
             align-items: center;
         }
 
-        /* MODALS */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -685,6 +618,19 @@
             border-radius: 4px;
             border: 1px solid var(--border-card);
             color: #a5b4fc;
+        }
+
+        .active-provider-callout {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -984,13 +930,24 @@
                 <!-- REPORTS & STORAGE MANAGEMENT -->
                 <div id="reports" class="tab-content hidden">
                     <div class="card">
-                        <h3>⚡ Cloud (JSONBin.io) & LocalStorage Management</h3>
-                        <p style="color: var(--text-muted); font-size: 12.5px; margin-top: 4px; margin-bottom: 14px;">
-                            Configured with JSONBin.io (Bin: <code>6aa76837ffd5d16053035d34</code>) and persistent browser storage.
-                        </p>
+                        <div class="control-header">
+                            <h3>⚡ Cloud & LocalStorage Data Hub</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="switchTab('apiConfigTab')">⚙️ Manage API Providers</button>
+                        </div>
+
+                        <!-- Active Provider Visual Callout -->
+                        <div class="active-provider-callout" id="activeProviderBanner">
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Current Active Cloud Provider</span>
+                                <strong id="bannerProviderName" style="color: #6ee7b7; font-size: 13px;">JSONBin.io (Default)</strong>
+                                <span id="bannerProviderEndpoint" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; margin-left: 8px;">https://api.jsonbin.io/v3/b/6aa76837ffd5d16053035d34</span>
+                            </div>
+                            <span class="badge badge-active">Active Cloud Provider</span>
+                        </div>
+
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-success btn-sm" onclick="pushToCloud(true)">☁️ Push to Cloud (JSONBin)</button>
-                            <button class="btn btn-sm" onclick="fetchFromCloud(true)">🔄 Pull from Cloud (JSONBin)</button>
+                            <button class="btn btn-success btn-sm" id="btnPushCloud" onclick="pushToCloud(true)">☁️ Push to Cloud</button>
+                            <button class="btn btn-sm" id="btnPullCloud" onclick="fetchFromCloud(true)">🔄 Pull from Cloud</button>
                             <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export JSON File</button>
                             <label class="btn btn-warning btn-sm" style="cursor: pointer; margin-bottom: 0;">
                                 📂 Import JSON File
@@ -1048,92 +1005,85 @@
                 <div id="apiConfigTab" class="tab-content hidden">
                     <div class="card">
                         <div class="control-header">
-                            <h3 id="apiConfigFormTitle">⚡ Add New API Provider</h3>
+                            <h3 id="apiConfigFormTitle">⚡ Add API Provider</h3>
+                            <span class="badge badge-status" id="activeProviderCounterBadge">1 Active</span>
                         </div>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+                            Configure cloud backends (JSONBin, Firebase, MockAPI, REST). Only <strong>ONE</strong> provider can be active at a time. All cloud push/pull sync tasks will route to the active provider.
+                        </p>
+
                         <form id="apiConfigForm" onsubmit="handleApiConfigSubmit(event)">
                             <input type="hidden" id="apiConfigEditId" value="">
+
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label>API Provider Name</label>
-                                    <select id="apiProviderSelect" onchange="handleApiProviderSelectChange()">
-                                        <option value="Google AI / Gemini" selected>Google AI / Gemini</option>
-                                        <option value="OpenAI">OpenAI</option>
-                                        <option value="Anthropic">Anthropic</option>
-                                        <option value="Mistral AI">Mistral AI</option>
-                                        <option value="Cohere">Cohere</option>
-                                        <option value="Groq">Groq</option>
-                                        <option value="xAI">xAI</option>
-                                        <option value="DeepSeek">DeepSeek</option>
-                                        <option value="Together AI">Together AI</option>
-                                        <option value="Fireworks AI">Fireworks AI</option>
-                                        <option value="Perplexity">Perplexity</option>
-                                        <option value="OpenRouter">OpenRouter</option>
-                                        <option value="Hugging Face">Hugging Face</option>
-                                        <option value="Replicate">Replicate</option>
-                                        <option value="Azure OpenAI">Azure OpenAI</option>
-                                        <option value="AWS Bedrock">AWS Bedrock</option>
-                                        <option value="Google Vertex AI">Google Vertex AI</option>
-                                        <option value="NVIDIA NIM">NVIDIA NIM</option>
-                                        <option value="Cerebras">Cerebras</option>
-                                        <option value="SambaNova">SambaNova</option>
-                                        <option value="JSONBin.io">JSONBin.io</option>
+                                    <label>Preset Provider / Type</label>
+                                    <select id="apiProviderPresetSelect" onchange="handlePresetProviderSelectChange()">
+                                        <option value="JSONBin.io" selected>JSONBin.io (Cloud JSON)</option>
+                                        <option value="Firebase Realtime Database">Firebase Realtime Database</option>
+                                        <option value="Generic REST / MockAPI">Generic REST / MockAPI</option>
                                         <option value="Custom / Other API Provider">Custom / Other API Provider</option>
                                     </select>
                                 </div>
-                                <div class="form-group hidden" id="apiCustomNameGroup">
-                                    <label>Custom Provider Name</label>
-                                    <input type="text" id="apiCustomProviderName" placeholder="e.g. My Internal LLM API">
-                                </div>
+
                                 <div class="form-group">
-                                    <label>API Key</label>
+                                    <label>Provider Name</label>
+                                    <input type="text" id="apiProviderNameInput" required placeholder="e.g. JSONBin.io, Firebase, Primary Cloud">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>API Endpoint URL</label>
+                                    <input type="url" id="apiEndpointInput" required placeholder="e.g. https://api.jsonbin.io/v3/b/">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Bin ID / Resource ID / Collection</label>
+                                    <input type="text" id="apiResourceIdInput" placeholder="e.g. 6aa76837ffd5d16053035d34 or /production_db">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>API Key / Secret Token</label>
                                     <div class="password-wrapper">
-                                        <input type="password" id="apiKeyInput" required placeholder="Paste the API key">
+                                        <input type="password" id="apiKeyInput" placeholder="Enter API Key / Master Key (Stored securely in localStorage)">
                                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('apiKeyInput', this)">👁</button>
                                     </div>
                                 </div>
+
                                 <div class="form-group">
-                                    <label id="apiModelInputLabel">Model / Version (Optional)</label>
-                                    <input type="text" id="apiModelInput" placeholder="e.g. gemini-2.5-flash, gemini-1.5-flash">
-                                </div>
-                                <div class="form-group hidden" id="apiCustomEndpointGroup">
-                                    <label>API Endpoint URL</label>
-                                    <input type="text" id="apiCustomEndpoint" placeholder="e.g. https://api.example.com/v1/models">
-                                </div>
-                                <div class="form-group hidden" id="apiCustomHeaderNameGroup">
-                                    <label>Auth Header Name</label>
-                                    <input type="text" id="apiCustomHeaderName" value="Authorization">
-                                </div>
-                                <div class="form-group hidden" id="apiCustomHeaderPrefixGroup">
-                                    <label>Auth Header Prefix</label>
-                                    <input type="text" id="apiCustomHeaderPrefix" value="Bearer ">
+                                    <label>Auth Header Format</label>
+                                    <select id="apiAuthHeaderType">
+                                        <option value="X-Master-Key">X-Master-Key (JSONBin style)</option>
+                                        <option value="Bearer">Bearer Token (Authorization: Bearer ...)</option>
+                                        <option value="x-api-key">x-api-key (Standard REST)</option>
+                                        <option value="None">None / URL Query / Public</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <button type="submit" id="apiConfigSubmitBtn" class="btn btn-success">+ Add API Provider</button>
-                                <button type="button" id="apiConfigCancelBtn" class="btn btn-secondary hidden" onclick="resetApiConfigForm()">Cancel Edit</button>
+
+                            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                <button type="submit" id="apiConfigSubmitBtn" class="btn btn-success">+ Add Provider</button>
+                                <button type="button" id="apiConfigCancelBtn" class="btn btn-secondary hidden" onclick="resetApiConfigForm()">Cancel</button>
                             </div>
                         </form>
                     </div>
 
                     <div class="card">
                         <div class="control-header">
-                            <h3>⚡ Configured API Providers</h3>
+                            <h3>⚡ Configured Cloud API Providers</h3>
+                            <button class="btn btn-sm" onclick="testActiveCloudConnection()">⚡ Test Active Connection</button>
                         </div>
-                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-                            Each provider is verified live upon saving. <span class="badge badge-active">Active</span> confirms authentication succeeded; <span class="badge badge-inactive">Failed</span> indicates credential or network rejection.
-                        </p>
-                        <div class="table-responsive">
+                        <div class="table-responsive" style="margin-top: 10px;">
                             <table>
                                 <thead>
                                     <tr>
                                         <th>S.No</th>
-                                        <th>API Provider Name</th>
+                                        <th>Active Status</th>
+                                        <th>Provider Name</th>
+                                        <th>API Endpoint</th>
+                                        <th>Bin ID / Resource ID</th>
                                         <th>API Key</th>
-                                        <th>Model / Version</th>
-                                        <th>Status</th>
-                                        <th>Usage / Credits</th>
-                                        <th>Last Checked</th>
-                                        <th>Actions</th>
+                                        <th>Last Verified</th>
+                                        <th>Actions (Activate, Edit, Delete)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="apiConfigTableBody"></tbody>
@@ -1146,7 +1096,7 @@
                 <div id="coderDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Coder Workflow Analytics Dashboard</h3>
-                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time overview of personal production throughput and quality audit performance[cite: 1].</p>
+                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time overview of personal production throughput and quality audit performance.</p>
                     </div>
 
                     <div class="metrics-grid">
@@ -1173,7 +1123,7 @@
                 <div id="auditorDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Auditor Workflow Analytics Dashboard</h3>
-                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time throughput metrics showcasing production counts and quality percentages[cite: 1].</p>
+                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time throughput metrics showcasing production counts and quality percentages.</p>
                     </div>
 
                     <div class="metrics-grid">
@@ -1201,7 +1151,7 @@
                     <div class="card">
                         <h3>Entry Production</h3>
                         <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px; margin-bottom: 14px;">
-                            Enter chart details below. Unique Chart ID validation is enforced automatically[cite: 1].
+                            Enter chart details below. Unique Chart ID validation is enforced automatically.
                         </p>
                         <form id="entryProdForm" onsubmit="handleUniversalAddEntry(event)">
                             <div class="form-grid">
@@ -1262,7 +1212,7 @@
                     <div class="card">
                         <h3>Quality Review Entry (Completed Charts Only)</h3>
                         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
-                            Enter a Completed Chart ID. The system will automatically identify and display matching production metadata[cite: 1].
+                            Enter a Completed Chart ID. The system will automatically identify and display matching production metadata.
                         </p>
 
                         <div class="form-grid">
@@ -2083,9 +2033,10 @@
 
     <script>
         const MASTER_STORE_KEY = 'ENTERPRISE_SYSTEM_STORE_V1';
-        const JSONBIN_BIN_ID = '6aa76837ffd5d16053035d34';
-        const JSONBIN_BASE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
-        let JSONBIN_API_KEY = '$2a$10$defaultMasterKey';
+
+        // Baseline Default Fallback (JSONBin.io)
+        const DEFAULT_JSONBIN_BIN_ID = '6aa76837ffd5d16053035d34';
+        const DEFAULT_JSONBIN_KEY = '$2a$10$defaultMasterKey';
 
         let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
         let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
@@ -2103,11 +2054,103 @@
         let activeAuditorRebuttalChartId = null;
         let activeAuditTlChartId = null;
 
-        function getEffectiveJsonBinKey() {
-            const cfg = apiConfigs.find(c => c.presetKey === 'JSONBin.io' || c.providerName === 'JSONBin.io');
-            return (cfg && cfg.apiKey) ? cfg.apiKey : JSONBIN_API_KEY;
+        // ═══════════════════════════════════════════════════════════════════
+        // DYNAMIC ACTIVE API PROVIDER HELPER ENGINE
+        // ═══════════════════════════════════════════════════════════════════
+        function getActiveApiProvider() {
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
+                return {
+                    id: 999999,
+                    providerName: "JSONBin.io",
+                    endpoint: `https://api.jsonbin.io/v3/b/`,
+                    resourceId: DEFAULT_JSONBIN_BIN_ID,
+                    apiKey: DEFAULT_JSONBIN_KEY,
+                    headerType: "X-Master-Key",
+                    isActive: true
+                };
+            }
+            const active = apiConfigs.find(c => c.isActive === true);
+            if (active) return active;
+            apiConfigs[0].isActive = true;
+            savePersistentData(false);
+            return apiConfigs[0];
         }
 
+        function updateCloudBannerInfo() {
+            const bannerName = document.getElementById('bannerProviderName');
+            const bannerEndpoint = document.getElementById('bannerProviderEndpoint');
+            const btnPush = document.getElementById('btnPushCloud');
+            const btnPull = document.getElementById('btnPullCloud');
+            const counter = document.getElementById('activeProviderCounterBadge');
+
+            const active = getActiveApiProvider();
+            if (bannerName) bannerName.textContent = active.providerName + (active.isActive ? " (Active)" : "");
+            if (bannerEndpoint) {
+                const fullUrl = buildProviderRequestUrl(active);
+                bannerEndpoint.textContent = fullUrl;
+            }
+            if (btnPush) btnPush.textContent = `☁️ Push to Cloud (${active.providerName})`;
+            if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (${active.providerName})`;
+            if (counter) counter.textContent = `1 Active / ${apiConfigs.length} Total`;
+        }
+
+        function buildProviderRequestUrl(provider, isGet = false) {
+            let ep = (provider.endpoint || '').trim();
+            const resId = (provider.resourceId || '').trim();
+
+            if (provider.providerName.toLowerCase().includes('jsonbin') || ep.includes('jsonbin.io')) {
+                if (!ep.endsWith('/')) ep += '/';
+                const bin = resId || DEFAULT_JSONBIN_BIN_ID;
+                return isGet ? `${ep}${bin}/latest` : `${ep}${bin}`;
+            }
+
+            if (provider.providerName.toLowerCase().includes('firebase') || ep.includes('firebaseio.com')) {
+                let cleanEp = ep.replace(/\/+$/, '');
+                let path = resId ? (resId.startsWith('/') ? resId : `/${resId}`) : '/production_store';
+                if (!path.endsWith('.json')) path += '.json';
+                let url = `${cleanEp}${path}`;
+                if (provider.apiKey && provider.apiKey.trim()) {
+                    url += `?auth=${encodeURIComponent(provider.apiKey.trim())}`;
+                }
+                return url;
+            }
+
+            if (resId) {
+                if (ep.endsWith('/') || resId.startsWith('/')) {
+                    return `${ep}${resId}`;
+                } else {
+                    return `${ep}/${resId}`;
+                }
+            }
+            return ep;
+        }
+
+        function buildProviderHeaders(provider) {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            const key = (provider.apiKey || '').trim();
+            const hType = provider.headerType || 'X-Master-Key';
+
+            if (!key) return headers;
+
+            if (hType === 'X-Master-Key') {
+                headers['X-Master-Key'] = key;
+            } else if (hType === 'Bearer') {
+                headers['Authorization'] = `Bearer ${key}`;
+            } else if (hType === 'x-api-key') {
+                headers['x-api-key'] = key;
+            } else if (hType === 'None') {
+                // query param handled or public
+            } else {
+                headers[hType] = key;
+            }
+            return headers;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // DATA PERSISTENCE & INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════
         function loadPersistentData() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
             if (raw) {
@@ -2115,6 +2158,27 @@
             } else {
                 initFreshBaseline();
             }
+            ensureApiProviderBaseline();
+        }
+
+        function ensureApiProviderBaseline() {
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
+                apiConfigs = [
+                    {
+                        id: 101,
+                        providerName: "JSONBin.io",
+                        presetKey: "JSONBin.io",
+                        endpoint: "https://api.jsonbin.io/v3/b/",
+                        resourceId: DEFAULT_JSONBIN_BIN_ID,
+                        apiKey: DEFAULT_JSONBIN_KEY,
+                        headerType: "X-Master-Key",
+                        isActive: true,
+                        lastVerified: new Date().toISOString()
+                    }
+                ];
+                savePersistentData(false);
+            }
+            updateCloudBannerInfo();
         }
 
         function initFreshBaseline() {
@@ -2134,7 +2198,19 @@
             deletedUserNames = [];
             productionLogs = [];
             qualityLogs = [];
-            apiConfigs = [];
+            apiConfigs = [
+                {
+                    id: 101,
+                    providerName: "JSONBin.io",
+                    presetKey: "JSONBin.io",
+                    endpoint: "https://api.jsonbin.io/v3/b/",
+                    resourceId: DEFAULT_JSONBIN_BIN_ID,
+                    apiKey: DEFAULT_JSONBIN_KEY,
+                    headerType: "X-Master-Key",
+                    isActive: true,
+                    lastVerified: new Date().toISOString()
+                }
+            ];
             savePersistentData();
         }
 
@@ -2146,7 +2222,9 @@
             designations = data.designations || designations;
             productionLogs = data.productionLogs || [];
             qualityLogs = data.qualityLogs || [];
-            apiConfigs = data.apiConfigs || [];
+            if (Array.isArray(data.apiConfigs) && data.apiConfigs.length > 0) {
+                apiConfigs = data.apiConfigs;
+            }
         }
 
         function savePersistentData(syncCloud = true) {
@@ -2169,59 +2247,65 @@
             if (syncCloud) {
                 pushToCloud(false);
             }
+            updateCloudBannerInfo();
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // CLOUD SYNC FUNCTIONS (JSONBIN.IO)
+        // DYNAMIC CLOUD SYNC OPERATIONS (ACTIVE PROVIDER ENGINE)
         // ═══════════════════════════════════════════════════════════════════
         async function pushToCloud(showAlert = true) {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
             if (!raw) return;
 
+            const provider = getActiveApiProvider();
             const indicator = document.getElementById('syncStatusIndicator');
-            if (indicator) indicator.textContent = "Syncing to JSONBin.io...";
+            if (indicator) indicator.textContent = `Syncing to Active Provider (${provider.providerName})...`;
+
+            const targetUrl = buildProviderRequestUrl(provider, false);
+            const headers = buildProviderHeaders(provider);
+            const method = (provider.providerName.toLowerCase().includes('firebase')) ? 'PUT' : 'PUT';
 
             try {
-                const response = await fetch(JSONBIN_BASE_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': getEffectiveJsonBinKey()
-                    },
+                const response = await fetch(targetUrl, {
+                    method: method,
+                    headers: headers,
                     body: raw
                 });
 
                 if (response.ok) {
-                    if (indicator) indicator.textContent = `Cloud sync success: ${new Date().toLocaleTimeString()}`;
-                    if (showAlert) alert("Database pushed to JSONBin.io cloud successfully!");
+                    provider.lastVerified = new Date().toISOString();
+                    if (indicator) indicator.textContent = `Synced successfully with [${provider.providerName}]: ${new Date().toLocaleTimeString()}`;
+                    if (showAlert) alert(`Database pushed successfully to Active Provider: "${provider.providerName}"!`);
+                    renderApiConfigs();
                 } else {
                     const errText = await response.text();
-                    if (indicator) indicator.textContent = "Cloud sync failed.";
-                    if (showAlert) alert(`Failed to push to JSONBin: ${errText}`);
+                    if (indicator) indicator.textContent = `Sync failed with [${provider.providerName}].`;
+                    if (showAlert) alert(`Failed to push to ${provider.providerName} (${response.status}):\n${errText}`);
                 }
             } catch (err) {
-                if (indicator) indicator.textContent = "Network error during sync.";
-                if (showAlert) alert(`Network error pushing to JSONBin: ${err.message}`);
+                if (indicator) indicator.textContent = `Network error syncing with [${provider.providerName}].`;
+                if (showAlert) alert(`Network error pushing to ${provider.providerName}:\n${err.message}`);
             }
         }
 
         async function fetchFromCloud(showAlert = true) {
+            const provider = getActiveApiProvider();
             const indicator = document.getElementById('syncStatusIndicator');
-            if (indicator) indicator.textContent = "Fetching from JSONBin.io...";
+            if (indicator) indicator.textContent = `Pulling from Active Provider (${provider.providerName})...`;
+
+            const targetUrl = buildProviderRequestUrl(provider, true);
+            const headers = buildProviderHeaders(provider);
 
             try {
-                const response = await fetch(`${JSONBIN_BASE_URL}/latest`, {
+                const response = await fetch(targetUrl, {
                     method: 'GET',
-                    headers: {
-                        'X-Master-Key': getEffectiveJsonBinKey()
-                    }
+                    headers: headers
                 });
 
                 if (response.ok) {
                     const resJson = await response.json();
                     const record = resJson.record || resJson;
 
-                    // Guard: Prevent overwriting newer local edits with an older cloud record
                     const localRaw = localStorage.getItem(MASTER_STORE_KEY);
                     if (localRaw) {
                         const localData = JSON.parse(localRaw);
@@ -2229,30 +2313,38 @@
                         const remoteTime = new Date(record.savedAt || 0).getTime();
 
                         if (!showAlert && localTime >= remoteTime) {
-                            if (indicator) indicator.textContent = "Local data is up to date.";
+                            if (indicator) indicator.textContent = `Local data is already up to date with [${provider.providerName}].`;
                             return;
                         }
                     }
 
-                    if (record && record.users) {
+                    if (record && (record.users || record.projects)) {
                         applyParsedData(record);
                         localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
+                        provider.lastVerified = new Date().toISOString();
                         populateDropdowns();
                         renderUsers();
                         renderProjects();
                         renderApiConfigs();
-                        if (indicator) indicator.textContent = `Pulled from cloud: ${new Date().toLocaleTimeString()}`;
-                        if (showAlert) alert("Database successfully pulled from JSONBin.io!");
+                        updateCloudBannerInfo();
+                        if (indicator) indicator.textContent = `Pulled from [${provider.providerName}]: ${new Date().toLocaleTimeString()}`;
+                        if (showAlert) alert(`Database successfully pulled from Active Provider: "${provider.providerName}"!`);
                     } else {
-                        if (showAlert) alert("Invalid or empty data structure in remote bin.");
+                        if (showAlert) alert(`Connected to ${provider.providerName}, but no valid database structure was found.`);
                     }
                 } else {
                     const errText = await response.text();
-                    if (showAlert) alert(`Failed to fetch from JSONBin: ${errText}`);
+                    if (showAlert) alert(`Failed to fetch from ${provider.providerName} (${response.status}):\n${errText}`);
                 }
             } catch (err) {
-                if (showAlert) alert(`Network error fetching from JSONBin: ${err.message}`);
+                if (showAlert) alert(`Network error fetching from ${provider.providerName}:\n${err.message}`);
             }
+        }
+
+        async function testActiveCloudConnection() {
+            const provider = getActiveApiProvider();
+            alert(`Testing Active Provider: "${provider.providerName}"\nTarget URL: ${buildProviderRequestUrl(provider, true)}`);
+            await fetchFromCloud(true);
         }
 
         function checkLocalStorageStatus() {
@@ -2633,7 +2725,10 @@
             if (tabId === 'roleMgmt') renderRoles();
             if (tabId === 'coderDashboard') calculateCoderDashboardMetrics();
             if (tabId === 'auditorDashboard') calculateAnalyticsDashboardMetrics();
-            if (tabId === 'reports') renderAdminReports();
+            if (tabId === 'reports') {
+                updateCloudBannerInfo();
+                renderAdminReports();
+            }
             if (tabId === 'apiConfigTab') renderApiConfigs();
             if (tabId === 'entryProdTab') setupEntryProductionInterface();
             if (tabId === 'qualityReviewTab') setupAuditorInterface();
@@ -3092,410 +3187,153 @@
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // API CONFIGURATION (ADMIN ONLY) - PRESETS & USAGE ENDPOINTS
+        // COMPLETE API CONFIGURATION TAB MANAGEMENT (CRUD + ACTIVATION)
         // ═══════════════════════════════════════════════════════════════════
-        const API_PROVIDER_PRESETS = {
-            "Google AI / Gemini": {
-                modelPlaceholder: "e.g. gemini-2.5-flash, gemini-1.5-flash, gemini-1.5-pro",
-                buildTestRequest(apiKey, config) {
-                    const model = (config && config.model) ? config.model.trim() : '';
-                    const url = model 
-                        ? `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}?key=${encodeURIComponent(apiKey)}`
-                        : `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
-                    return {
-                        url,
-                        options: { 
-                            method: 'GET',
-                            headers: { 'x-goog-api-key': apiKey }
-                        },
-                        parseUsage: (data) => data.models ? `${data.models.length} models ready` : 'Active'
-                    };
-                }
-            },
-            "OpenRouter": {
-                modelPlaceholder: "e.g. auto, openai/gpt-4o, anthropic/claude-3.5-sonnet",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://openrouter.ai/api/v1/auth/key`,
-                        options: {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${apiKey}`,
-                                'HTTP-Referer': window.location.origin || 'http://localhost'
-                            }
-                        },
-                        parseUsage: (data) => {
-                            if (data && data.data) {
-                                const used = Number(data.data.usage || 0).toFixed(4);
-                                const limit = data.data.limit ? `$${Number(data.data.limit).toFixed(2)}` : 'Unlimited';
-                                return `$${used} used / ${limit}`;
-                            }
-                            return 'Active';
-                        }
-                    };
-                }
-            },
-            "OpenAI": {
-                modelPlaceholder: "e.g. gpt-4o, gpt-4o-mini",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.openai.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: (data) => data.data ? `${data.data.length} models ready` : 'Active'
-                    };
-                }
-            },
-            "Anthropic": {
-                modelPlaceholder: "e.g. claude-3-5-sonnet-20241022",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.anthropic.com/v1/models`,
-                        options: { method: 'GET', headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Mistral AI": {
-                modelPlaceholder: "e.g. mistral-large-latest",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.mistral.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Cohere": {
-                modelPlaceholder: "e.g. command-r-plus",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.cohere.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Groq": {
-                modelPlaceholder: "e.g. llama-3.3-70b-versatile",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.groq.com/openai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: (data) => data.data ? `${data.data.length} models ready` : 'Active'
-                    };
-                }
-            },
-            "xAI": {
-                modelPlaceholder: "e.g. grok-2-latest",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.x.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "DeepSeek": {
-                modelPlaceholder: "e.g. deepseek-chat, deepseek-reasoner",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.deepseek.com/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Together AI": {
-                modelPlaceholder: "e.g. meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.together.xyz/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Fireworks AI": {
-                modelPlaceholder: "e.g. accounts/fireworks/models/llama-v3p1-70b-instruct",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.fireworks.ai/inference/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Perplexity": {
-                modelPlaceholder: "e.g. sonar-pro, sonar",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.perplexity.ai/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Hugging Face": {
-                modelPlaceholder: "e.g. meta-llama/Meta-Llama-3-8B-Instruct",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://huggingface.co/api/whoami-v2`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: (data) => data.name ? `User: ${data.name}` : 'Active'
-                    };
-                }
-            },
-            "Replicate": {
-                modelPlaceholder: "e.g. meta/meta-llama-3-70b-instruct",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.replicate.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Azure OpenAI": {
-                modelPlaceholder: "e.g. gpt-4o (Endpoint required in Custom URL)",
-                buildTestRequest(apiKey, config) {
-                    const endpoint = config && config.endpoint ? config.endpoint : '';
-                    return {
-                        url: endpoint || `https://models.inference.ai.azure.com/models`,
-                        options: { method: 'GET', headers: { 'api-key': apiKey, 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "AWS Bedrock": {
-                modelPlaceholder: "e.g. anthropic.claude-3-5-sonnet-20240620-v1:0",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://bedrock.us-east-1.amazonaws.com`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Google Vertex AI": {
-                modelPlaceholder: "e.g. gemini-1.5-pro",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://us-central1-aiplatform.googleapis.com/v1/projects`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "NVIDIA NIM": {
-                modelPlaceholder: "e.g. meta/llama-3.1-70b-instruct",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://integrate.api.nvidia.com/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "Cerebras": {
-                modelPlaceholder: "e.g. llama3.1-70b",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.cerebras.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "SambaNova": {
-                modelPlaceholder: "e.g. Meta-Llama-3.1-70B-Instruct",
-                buildTestRequest(apiKey) {
-                    return {
-                        url: `https://api.sambanova.ai/v1/models`,
-                        options: { method: 'GET', headers: { 'Authorization': `Bearer ${apiKey}` } },
-                        parseUsage: () => 'Active'
-                    };
-                }
-            },
-            "JSONBin.io": {
-                modelPlaceholder: "Bin ID: 6aa76837ffd5d16053035d34 (Optional)",
-                buildTestRequest(apiKey, config) {
-                    const bin = (config && config.model) ? config.model.trim() : JSONBIN_BIN_ID;
-                    return {
-                        url: `https://api.jsonbin.io/v3/b/${bin}/latest`,
-                        options: { method: 'GET', headers: { 'X-Master-Key': apiKey } },
-                        parseUsage: () => 'Connected'
-                    };
-                }
+        function handlePresetProviderSelectChange() {
+            const preset = document.getElementById('apiProviderPresetSelect').value;
+            const nameInput = document.getElementById('apiProviderNameInput');
+            const epInput = document.getElementById('apiEndpointInput');
+            const resInput = document.getElementById('apiResourceIdInput');
+            const hTypeSelect = document.getElementById('apiAuthHeaderType');
+
+            if (preset === 'JSONBin.io') {
+                nameInput.value = 'JSONBin.io';
+                epInput.value = 'https://api.jsonbin.io/v3/b/';
+                resInput.placeholder = 'e.g. 6aa76837ffd5d16053035d34 (Bin ID)';
+                hTypeSelect.value = 'X-Master-Key';
+            } else if (preset === 'Firebase Realtime Database') {
+                nameInput.value = 'Firebase Realtime DB';
+                epInput.value = 'https://your-project-id.firebaseio.com';
+                resInput.placeholder = 'e.g. /production_data (Resource Path)';
+                hTypeSelect.value = 'None';
+            } else if (preset === 'Generic REST / MockAPI') {
+                nameInput.value = 'Generic REST API';
+                epInput.value = 'https://api.mockapi.io/v1/';
+                resInput.placeholder = 'e.g. /records (Collection/Resource ID)';
+                hTypeSelect.value = 'Bearer';
+            } else {
+                nameInput.value = '';
+                epInput.value = '';
+                resInput.placeholder = 'Resource ID / Bin ID / Collection';
+                hTypeSelect.value = 'Bearer';
             }
-        };
-
-        function handleApiProviderSelectChange() {
-            const provider = document.getElementById('apiProviderSelect').value;
-            const isCustom = provider === 'Custom / Other API Provider';
-
-            document.getElementById('apiCustomNameGroup').classList.toggle('hidden', !isCustom);
-            document.getElementById('apiCustomEndpointGroup').classList.toggle('hidden', !isCustom);
-            document.getElementById('apiCustomHeaderNameGroup').classList.toggle('hidden', !isCustom);
-            document.getElementById('apiCustomHeaderPrefixGroup').classList.toggle('hidden', !isCustom);
-
-            const preset = API_PROVIDER_PRESETS[provider];
-            document.getElementById('apiModelInput').placeholder = preset ? preset.modelPlaceholder : 'e.g. model or version name';
         }
 
         function resetApiConfigForm() {
             document.getElementById('apiConfigForm').reset();
             document.getElementById('apiConfigEditId').value = '';
-            document.getElementById('apiProviderSelect').value = 'Google AI / Gemini';
-            document.getElementById('apiCustomHeaderName').value = 'Authorization';
-            document.getElementById('apiCustomHeaderPrefix').value = 'Bearer ';
-            document.getElementById('apiConfigSubmitBtn').textContent = '+ Add API Provider';
-            document.getElementById('apiConfigFormTitle').textContent = '⚡ Add New API Provider';
+            document.getElementById('apiProviderPresetSelect').value = 'JSONBin.io';
+            document.getElementById('apiAuthHeaderType').value = 'X-Master-Key';
+            document.getElementById('apiConfigSubmitBtn').textContent = '+ Add Provider';
+            document.getElementById('apiConfigFormTitle').textContent = '⚡ Add API Provider';
             document.getElementById('apiConfigCancelBtn').classList.add('hidden');
-            handleApiProviderSelectChange();
-        }
-
-        function buildApiTestRequest(config) {
-            const preset = API_PROVIDER_PRESETS[config.providerName];
-            if (preset) return preset.buildTestRequest(config.apiKey, config);
-
-            const headerName = config.headerName || 'Authorization';
-            const headerPrefix = config.headerPrefix || '';
-            return {
-                url: config.endpoint,
-                options: { method: 'GET', headers: { [headerName]: `${headerPrefix}${config.apiKey}` } },
-                parseUsage: () => 'Active'
-            };
-        }
-
-        async function testApiProviderConnection(id) {
-            const config = apiConfigs.find(c => c.id === id);
-            if (!config) return;
-
-            config.status = 'Checking...';
-            config.usageCount = (config.usageCount || 0) + 1;
-            renderApiConfigs();
-
-            try {
-                const req = buildApiTestRequest(config);
-                if (!req.url) throw new Error('Missing API endpoint URL');
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                const response = await fetch(req.url, { ...req.options, signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    config.status = 'Active';
-                    try {
-                        const resJson = await response.json();
-                        if (typeof req.parseUsage === 'function') {
-                            config.usageInfo = req.parseUsage(resJson);
-                        } else {
-                            config.usageInfo = `${config.usageCount} calls verified`;
-                        }
-                    } catch (err) {
-                        config.usageInfo = `${config.usageCount} calls verified`;
-                    }
-                } else {
-                    config.status = 'Failed';
-                    config.usageInfo = `HTTP ${response.status}`;
-                }
-            } catch (err) {
-                config.status = 'Failed';
-                config.usageInfo = err.name === 'AbortError' ? 'Timeout' : 'Network/CORS Error';
-            }
-
-            config.lastChecked = new Date().toISOString();
-            savePersistentData(true);
-            renderApiConfigs();
+            handlePresetProviderSelectChange();
         }
 
         function handleApiConfigSubmit(e) {
             e.preventDefault();
 
             const editId = document.getElementById('apiConfigEditId').value;
-            const providerName = document.getElementById('apiProviderSelect').value;
-            const isCustom = providerName === 'Custom / Other API Provider';
-            const customName = document.getElementById('apiCustomProviderName').value.trim();
+            const providerName = document.getElementById('apiProviderNameInput').value.trim();
+            const endpoint = document.getElementById('apiEndpointInput').value.trim();
+            const resourceId = document.getElementById('apiResourceIdInput').value.trim();
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const headerType = document.getElementById('apiAuthHeaderType').value;
+            const presetKey = document.getElementById('apiProviderPresetSelect').value;
 
-            if (isCustom && !customName) {
-                alert('Please enter the custom provider name.');
-                return;
-            }
-
-            const config = {
-                id: editId ? Number(editId) : Date.now(),
-                providerName: isCustom ? customName : providerName,
-                presetKey: providerName,
-                apiKey: document.getElementById('apiKeyInput').value.trim(),
-                model: document.getElementById('apiModelInput').value.trim(),
-                endpoint: isCustom ? document.getElementById('apiCustomEndpoint').value.trim() : '',
-                headerName: isCustom ? (document.getElementById('apiCustomHeaderName').value.trim() || 'Authorization') : '',
-                headerPrefix: isCustom ? document.getElementById('apiCustomHeaderPrefix').value : '',
-                status: 'Checking...',
-                usageInfo: 'Verifying...',
-                usageCount: 0,
-                lastChecked: null
-            };
-
-            if (isCustom && !config.endpoint) {
-                alert('Please enter the API endpoint URL for the custom provider.');
+            if (!providerName || !endpoint) {
+                alert('Provider Name and API Endpoint URL are required.');
                 return;
             }
 
             if (editId) {
                 const idx = apiConfigs.findIndex(c => c.id === Number(editId));
-                if (idx >= 0) apiConfigs[idx] = config;
+                if (idx >= 0) {
+                    apiConfigs[idx].providerName = providerName;
+                    apiConfigs[idx].endpoint = endpoint;
+                    apiConfigs[idx].resourceId = resourceId;
+                    apiConfigs[idx].apiKey = apiKey;
+                    apiConfigs[idx].headerType = headerType;
+                    apiConfigs[idx].presetKey = presetKey;
+                }
             } else {
-                apiConfigs.push(config);
+                // Rule: If this is the first provider added, activate automatically
+                const isFirst = apiConfigs.length === 0;
+                const newProvider = {
+                    id: Date.now(),
+                    providerName: providerName,
+                    endpoint: endpoint,
+                    resourceId: resourceId,
+                    apiKey: apiKey,
+                    headerType: headerType,
+                    presetKey: presetKey,
+                    isActive: isFirst,
+                    lastVerified: null
+                };
+                apiConfigs.push(newProvider);
             }
 
             savePersistentData(true);
             resetApiConfigForm();
             renderApiConfigs();
-            testApiProviderConnection(config.id);
+            updateCloudBannerInfo();
+            alert(`API Provider "${providerName}" saved successfully!`);
+        }
+
+        function activateApiProvider(id) {
+            // Rule: Only ONE provider can be active at a time
+            apiConfigs.forEach(c => {
+                c.isActive = (c.id === id);
+            });
+            savePersistentData(true);
+            renderApiConfigs();
+            updateCloudBannerInfo();
+
+            const active = apiConfigs.find(c => c.id === id);
+            alert(`Activated Provider: "${active ? active.providerName : ''}"!\nAll cloud push/pull operations will now route to this backend.`);
         }
 
         function editApiConfig(id) {
             const config = apiConfigs.find(c => c.id === id);
             if (!config) return;
 
-            const isCustom = config.presetKey === 'Custom / Other API Provider';
-
             document.getElementById('apiConfigEditId').value = config.id;
-            document.getElementById('apiProviderSelect').value = config.presetKey || 'Custom / Other API Provider';
-            document.getElementById('apiCustomProviderName').value = isCustom ? config.providerName : '';
-            document.getElementById('apiKeyInput').value = config.apiKey;
-            document.getElementById('apiModelInput').value = config.model || '';
-            document.getElementById('apiCustomEndpoint').value = config.endpoint || '';
-            document.getElementById('apiCustomHeaderName').value = config.headerName || 'Authorization';
-            document.getElementById('apiCustomHeaderPrefix').value = config.headerPrefix || 'Bearer ';
+            document.getElementById('apiProviderPresetSelect').value = config.presetKey || 'Custom / Other API Provider';
+            document.getElementById('apiProviderNameInput').value = config.providerName;
+            document.getElementById('apiEndpointInput').value = config.endpoint;
+            document.getElementById('apiResourceIdInput').value = config.resourceId || '';
+            document.getElementById('apiKeyInput').value = config.apiKey || '';
+            document.getElementById('apiAuthHeaderType').value = config.headerType || 'X-Master-Key';
 
-            handleApiProviderSelectChange();
-
-            document.getElementById('apiConfigSubmitBtn').textContent = 'Update API Provider';
-            document.getElementById('apiConfigFormTitle').textContent = `⚡ Edit API Provider: ${config.providerName}`;
+            document.getElementById('apiConfigSubmitBtn').textContent = 'Update Provider';
+            document.getElementById('apiConfigFormTitle').textContent = `⚡ Edit Provider: ${config.providerName}`;
             document.getElementById('apiConfigCancelBtn').classList.remove('hidden');
             document.getElementById('apiConfigForm').scrollIntoView({ behavior: 'smooth' });
         }
 
         function deleteApiConfig(id) {
-            if (!confirm('Are you sure you want to delete this API provider configuration?')) return;
-            apiConfigs = apiConfigs.filter(c => c.id !== id);
-            savePersistentData(true);
-            renderApiConfigs();
+            const config = apiConfigs.find(c => c.id === id);
+            if (!config) return;
+
+            if (confirm(`Are you sure you want to delete API Provider "${config.providerName}"?`)) {
+                const wasActive = config.isActive;
+                apiConfigs = apiConfigs.filter(c => c.id !== id);
+
+                // If active provider was deleted, automatically re-assign active to the first remaining provider
+                if (wasActive && apiConfigs.length > 0) {
+                    apiConfigs[0].isActive = true;
+                }
+
+                savePersistentData(true);
+                renderApiConfigs();
+                updateCloudBannerInfo();
+            }
         }
 
         function maskApiKey(key) {
-            if (!key) return '-';
+            if (!key) return '<span style="color:var(--text-muted);">None</span>';
             if (key.length <= 8) return '••••••••';
-            return `${key.slice(0, 4)}${'•'.repeat(8)}${key.slice(-4)}`;
-        }
-
-        function apiStatusBadge(status) {
-            if (status === 'Active') return `<span class="badge badge-active">Active</span>`;
-            if (status === 'Failed') return `<span class="badge badge-inactive">Failed</span>`;
-            return `<span class="badge badge-pending">${status || 'Not Tested'}</span>`;
+            return `${key.slice(0, 4)}••••••••${key.slice(-4)}`;
         }
 
         function renderApiConfigs() {
@@ -3503,28 +3341,39 @@
             if (!tbody) return;
 
             if (apiConfigs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No API providers configured yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No API providers configured. Add one above.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = apiConfigs.map((c, idx) => `
-                <tr>
-                    <td>${idx + 1}</td>
-                    <td><strong>${c.providerName}</strong></td>
-                    <td style="font-family: var(--font-mono);">${maskApiKey(c.apiKey)}</td>
-                    <td style="font-family: var(--font-mono);">${c.model || '-'}</td>
-                    <td>${apiStatusBadge(c.status)}</td>
-                    <td style="font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-cyan);">
-                        ${c.usageInfo || `${c.usageCount || 0} calls verified`}
-                    </td>
-                    <td>${c.lastChecked ? new Date(c.lastChecked).toLocaleString() : 'Never'}</td>
-                    <td class="action-btns">
-                        <button class="btn btn-sm" onclick="testApiProviderConnection(${c.id})">🔄 Test</button>
-                        <button class="btn btn-warning btn-sm" onclick="editApiConfig(${c.id})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteApiConfig(${c.id})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = apiConfigs.map((c, idx) => {
+                const isActive = !!c.isActive;
+                return `
+                    <tr class="${isActive ? 'row-active-provider' : ''}">
+                        <td>${idx + 1}</td>
+                        <td>
+                            ${isActive 
+                                ? `<span class="badge badge-active">● ACTIVE PROVIDER</span>` 
+                                : `<span class="badge badge-inactive">Inactive</span>`
+                            }
+                        </td>
+                        <td><strong>${c.providerName}</strong></td>
+                        <td style="font-family: var(--font-mono); font-size: 11.5px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${c.endpoint}</td>
+                        <td style="font-family: var(--font-mono);">${c.resourceId || '-'}</td>
+                        <td style="font-family: var(--font-mono);">${maskApiKey(c.apiKey)}</td>
+                        <td>${c.lastVerified ? new Date(c.lastVerified).toLocaleString() : '<span style="color:var(--text-muted);">Never</span>'}</td>
+                        <td>
+                            <div class="action-btns">
+                                ${!isActive 
+                                    ? `<button class="btn btn-success btn-sm" onclick="activateApiProvider(${c.id})">⚡ Activate</button>`
+                                    : `<button class="btn btn-sm btn-secondary" disabled style="opacity:0.6;">Current Active</button>`
+                                }
+                                <button class="btn btn-warning btn-sm" onclick="editApiConfig(${c.id})">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteApiConfig(${c.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function formatToMMDDYYYY(dateInput) {
@@ -4738,7 +4587,6 @@
         // ═══════════════════════════════════════════════════════════════════
         // SUPERVISOR / TEAM LEAD WORKFLOW LOGIC
         // ═══════════════════════════════════════════════════════════════════
-
         function setupSupervisorInterface() { 
             calculateSupervisorMetrics(); 
         }
