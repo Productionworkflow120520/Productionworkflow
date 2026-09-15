@@ -753,16 +753,16 @@
                         <form id="userForm" onsubmit="handleUserSubmit(event)">
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label>User Name (Login Name)</label>
-                                    <input type="text" id="uName" required placeholder="e.g. coder_alex">
+                                    <label>User Name</label>
+                                    <input type="text" id="uName" required placeholder>
                                 </div>
                                 <div class="form-group">
                                     <label>EMP ID</label>
-                                    <input type="text" id="uEmpId" required placeholder="e.g. EMP202">
+                                    <input type="text" id="uEmpId" required placeholder>
                                 </div>
                                 <div class="form-group">
                                     <label>EMP Name</label>
-                                    <input type="text" id="uEmpName" required placeholder="Full Name">
+                                    <input type="text" id="uEmpName" required placeholder=>
                                 </div>
                                 <div class="form-group">
                                     <label>Role</label>
@@ -789,7 +789,7 @@
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px; margin-top: 6px;">
-                                <button type="submit" id="userSubmitBtn" class="btn btn-success">+ Create User</button>
+                                <button type="submit" id="userSubmitBtn" class="btn btn-success">Create User</button>
                                 <button type="button" class="btn btn-secondary" onclick="forceFormDefaultPassword()">Set Default Password</button>
                             </div>
                         </form>
@@ -803,7 +803,7 @@
 
                     <div class="card">
                         <div class="control-header">
-                            <h3 id="userTableSectionTitle">⚡ System Users Management</h3>
+                            <h3 id="userTableSectionTitle">Users Management</h3>
                             <button class="btn btn-export btn-sm" onclick="exportUserMgmtTableToCSV()">Export Report</button>
                         </div>
                         <div class="table-responsive" style="margin-top: 10px;">
@@ -819,7 +819,7 @@
                                         <th>Reporting TL</th>
                                         <th>Reporting Mgr</th>
                                         <th>Status</th>
-                                        <th>Actions (Edit, Disable, Deleted, Rest Password)</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="userTableBody"></tbody>
@@ -836,14 +836,14 @@
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Project Name</label>
-                                    <input type="text" id="pName" placeholder="e.g. Aetna" required>
+                                    <input type="text" id="pName" placeholder required>
                                 </div>
                                 <div class="form-group">
                                     <label>Sub - Project Name</label>
-                                    <input type="text" id="subPName" placeholder="e.g. Aetna MRA" required>
+                                    <input type="text" id="subPName" placeholder required>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success" style="margin-top: 4px;">+ Add New Project Name</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 4px;">Add</button>
                         </form>
                     </div>
 
@@ -1005,11 +1005,10 @@
                 <div id="apiConfigTab" class="tab-content hidden">
                     <div class="card">
                         <div class="control-header">
-                            <h3 id="apiConfigFormTitle">⚡ Add API Provider</h3>
+                            <h3 id="apiConfigFormTitle">Add API Provider</h3>
                             <span class="badge badge-status" id="activeProviderCounterBadge">1 Active</span>
                         </div>
                         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-                            Configure cloud backends (JSONBin, Firebase, MockAPI, REST). Only <strong>ONE</strong> provider can be active at a time. All cloud push/pull sync tasks will route to the active provider.
                         </p>
 
                         <form id="apiConfigForm" onsubmit="handleApiConfigSubmit(event)">
@@ -1028,23 +1027,23 @@
 
                                 <div class="form-group">
                                     <label>Provider Name</label>
-                                    <input type="text" id="apiProviderNameInput" required placeholder="e.g. JSONBin.io, Firebase, Primary Cloud">
+                                    <input type="text" id="apiProviderNameInput" required placeholder>
                                 </div>
 
                                 <div class="form-group">
                                     <label>API Endpoint URL</label>
-                                    <input type="url" id="apiEndpointInput" required placeholder="e.g. https://api.jsonbin.io/v3/b/">
+                                    <input type="url" id="apiEndpointInput" required placeholder>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Bin ID / Resource ID / Collection</label>
-                                    <input type="text" id="apiResourceIdInput" placeholder="e.g. 6aa76837ffd5d16053035d34 or /production_db">
+                                    <input type="text" id="apiResourceIdInput" placeholder>
                                 </div>
 
                                 <div class="form-group">
                                     <label>API Key / Secret Token</label>
                                     <div class="password-wrapper">
-                                        <input type="password" id="apiKeyInput" placeholder="Enter API Key / Master Key (Stored securely in localStorage)">
+                                        <input type="password" id="apiKeyInput" placeholder>
                                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('apiKeyInput', this)">👁</button>
                                     </div>
                                 </div>
@@ -1061,7 +1060,7 @@
                             </div>
 
                             <div style="display: flex; gap: 8px; margin-top: 10px;">
-                                <button type="submit" id="apiConfigSubmitBtn" class="btn btn-success">+ Add Provider</button>
+                                <button type="submit" id="apiConfigSubmitBtn" class="btn btn-success">Add Provider</button>
                                 <button type="button" id="apiConfigCancelBtn" class="btn btn-secondary hidden" onclick="resetApiConfigForm()">Cancel</button>
                             </div>
                         </form>
@@ -1096,7 +1095,7 @@
                 <div id="coderDashboard" class="tab-content hidden">
                     <div class="card">
                         <h3>Coder Workflow Dashboard</h3>
-                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;">Real-time overview of personal production throughput and quality audit performance.</p>
+                        <p style="color: var(--text-muted); margin-top: 4px; font-size: 12.5px;"></p>
                     </div>
 
                     <div class="metrics-grid">
@@ -1348,7 +1347,7 @@
                 <!-- CODER: MY QUALITY REPORT -->
                 <div id="qualityReportTab" class="tab-content hidden">
                     <div class="card">
-                        <h3>⚡ Coder Workflow Quality Report</h3>
+                        <h3>My Quality Report</h3>
                         <div class="form-grid" style="margin-top: 12px;">
                             <div class="form-group">
                                 <label>Start Date</label>
