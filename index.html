@@ -78,7 +78,7 @@
             padding: 32px 28px;
             border-radius: 18px;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             box-shadow: var(--shadow-float);
             position: relative;
         }
@@ -103,8 +103,9 @@
         .auth-subtitle {
             font-size: 12px;
             color: var(--text-muted);
-            margin-bottom: 22px;
+            margin-bottom: 20px;
             text-align: center;
+            line-height: 1.4;
         }
 
         .dashboard-layout {
@@ -550,7 +551,44 @@
 </head>
 <body>
 
-    <div id="setupWizardOverlay" class="auth-overlay hidden"></div>
+    <!-- FIRST-TIME BROWSER SETUP WIZARD OVERLAY -->
+    <div id="setupWizardOverlay" class="auth-overlay hidden">
+        <div class="auth-card">
+            <div class="auth-title">☁️ Connect Cloud Database</div>
+            <div class="auth-subtitle">
+                New browser detected. Connect your shared cloud storage to load all registered users, settings, and workflows automatically.
+            </div>
+
+            <form id="wizardCloudForm" onsubmit="handleWizardCloudConnect(event)">
+                <div class="form-group">
+                    <label>Provider Type</label>
+                    <select id="wizProviderSelect" onchange="handleWizardProviderChange()">
+                        <option value="JSONBin.io" selected>JSONBin.io (Recommended)</option>
+                        <option value="Firebase Realtime Database">Firebase Realtime Database</option>
+                        <option value="Generic REST / MockAPI">Generic REST / MockAPI</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 6px;">
+                    <label id="wizBinLabel">JSONBin Bin ID</label>
+                    <input type="text" id="wizBinId" required placeholder="e.g. 660fe8d...">
+                </div>
+                <div class="form-group" style="margin-top: 6px;">
+                    <label id="wizKeyLabel">Master Key / API Key</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="wizApiKey" required placeholder="$2a$10$...">
+                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('wizApiKey', this)">👁</button>
+                    </div>
+                </div>
+
+                <div id="wizStatusMsg" style="margin-top: 10px; font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); min-height: 16px;"></div>
+
+                <div style="display: flex; gap: 8px; margin-top: 14px;">
+                    <button type="submit" id="wizConnectBtn" class="btn btn-success" style="flex: 1;">⚡ Connect & Sync</button>
+                    <button type="button" class="btn btn-secondary" onclick="skipWizardCloudSetup()">Skip / Local Only</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- LOGIN SCREEN -->
     <div id="loginOverlay" class="auth-overlay">
@@ -571,8 +609,10 @@
                     </div>
                 </div>
                 <button type="submit" id="loginSubmitBtn" class="btn btn-success" style="width:100%; margin-top: 16px; padding: 9px;">Sign In</button>
-                <div style="margin-top: 14px; text-align: center;">
-                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); font-size: 12px; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                <div style="margin-top: 14px; display: flex; justify-content: center; gap: 14px; font-size: 12px;">
+                    <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+                    <span style="color: var(--border-card);">|</span>
+                    <a href="javascript:void(0)" onclick="openCloudSetupWizard()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">☁️ Connect Cloud DB</a>
                 </div>
             </form>
 
@@ -932,7 +972,6 @@
 
                 <!-- INDEPENDENT CLOUD & STORAGE HUB TAB (ADMIN INTERFACE ONLY) -->
                 <div id="cloudStorageTab" class="tab-content hidden">
-                    <!-- Cloud Backend Card -->
                     <div class="card" id="cloudDataHubCard">
                         <div class="control-header">
                             <h3>⚡ Cloud & Remote Backend Data Hub</h3>
@@ -950,9 +989,9 @@
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn btn-success btn-sm" id="btnPushCloud" onclick="pushToCloud(true)">☁️ Push to Cloud</button>
                             <button class="btn btn-sm" id="btnPullCloud" onclick="fetchFromCloud(true)">🔄 Pull from Cloud</button>
-                            <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export openrouter File</button>
+                            <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export Backup JSON</button>
                             <label class="btn btn-warning btn-sm" style="cursor: pointer; margin-bottom: 0;">
-                                📂 Import openrouter File
+                                📂 Import Backup JSON
                                 <input type="file" id="dbFileInput" accept=".json" style="display: none;" onchange="importDatabaseFile(event)">
                             </label>
                             <button class="btn btn-danger btn-sm" onclick="executeLocalStorageClear()">🧹 Reset All Data</button>
@@ -1959,7 +1998,7 @@
     <!-- MODAL: REMARKS PROMPT -->
     <div id="disagreeModal" class="modal-overlay hidden">
         <div class="modal-card">
-            <h3 id="disagreeModalTitle" style="margin-mb: 8px; color: var(--accent-cyan);">Submit Remarks</h3>
+            <h3 id="disagreeModalTitle" style="margin-bottom: 8px; color: var(--accent-cyan);">Submit Remarks</h3>
             <div class="form-group">
                 <label>Remarks</label>
                 <textarea id="disagreeRemarksInput" required placeholder="Enter remarks..."></textarea>
@@ -2154,8 +2193,7 @@
         }
 
         function ensureApiProviderBaseline() {
-            const alreadyInitialized = localStorage.getItem('API_CONFIG_INITIALIZED');
-            if (!alreadyInitialized) {
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
                 apiConfigs = [{
                     id: 101,
                     providerName: "JSONBin.io",
@@ -2167,7 +2205,6 @@
                     isActive: true,
                     lastVerified: new Date().toISOString()
                 }];
-                localStorage.setItem('API_CONFIG_INITIALIZED', 'true');
                 savePersistentData(false);
             }
             updateCloudBannerInfo();
@@ -2184,23 +2221,17 @@
             productionLogs = [];
             qualityLogs = [];
             
-            const alreadyInitialized = localStorage.getItem('API_CONFIG_INITIALIZED');
-            if (!alreadyInitialized) {
-                apiConfigs = [{
-                    id: 101,
-                    providerName: "JSONBin.io",
-                    presetKey: "JSONBin.io",
-                    endpoint: "https://api.jsonbin.io/v3/b/",
-                    resourceId: "",
-                    apiKey: "",
-                    headerType: "X-Master-Key",
-                    isActive: true,
-                    lastVerified: new Date().toISOString()
-                }];
-                localStorage.setItem('API_CONFIG_INITIALIZED', 'true');
-            } else {
-                apiConfigs = [];
-            }
+            apiConfigs = [{
+                id: 101,
+                providerName: "JSONBin.io",
+                presetKey: "JSONBin.io",
+                endpoint: "https://api.jsonbin.io/v3/b/",
+                resourceId: "",
+                apiKey: "",
+                headerType: "X-Master-Key",
+                isActive: true,
+                lastVerified: new Date().toISOString()
+            }];
             savePersistentData(false);
         }
 
@@ -2235,7 +2266,7 @@
 
             productionLogs = data.productionLogs || [];
             qualityLogs = data.qualityLogs || [];
-            if (Array.isArray(data.apiConfigs)) {
+            if (Array.isArray(data.apiConfigs) && data.apiConfigs.length > 0) {
                 apiConfigs = data.apiConfigs;
             }
         }
@@ -2271,8 +2302,8 @@
             if (!raw) return;
 
             const provider = getActiveApiProvider();
-            if (!provider || !provider.apiKey) {
-                if (showAlert) alert(`No active cloud provider with an API key is configured.`);
+            if (!provider || !provider.apiKey || !provider.resourceId) {
+                if (showAlert) alert(`No active cloud provider with an API key and Resource/Bin ID is configured.`);
                 return;
             }
 
@@ -2318,11 +2349,11 @@
 
         async function fetchFromCloud(showAlert = true) {
             const provider = getActiveApiProvider();
-            if (!provider || !provider.apiKey) return;
+            if (!provider || !provider.apiKey || !provider.resourceId) return false;
 
             if (provider.providerName.toLowerCase().includes('openrouter')) {
                 if (showAlert) alert(`OpenRouter API active and verified.`);
-                return;
+                return true;
             }
 
             try {
@@ -2346,15 +2377,143 @@
                         renderApiConfigs();
                         updateCloudBannerInfo();
                         if (showAlert) alert(`Data loaded from ${provider.providerName}`);
+                        return true;
                     }
                 }
             } catch (err) {
                 if (showAlert) alert(`Fetch error: ${err.message}`);
             }
+            return false;
         }
 
         async function testActiveCloudConnection() {
             await pushToCloud(true);
+        }
+
+        // --- FIRST TIME BROWSER CLOUD SETUP WIZARD ---
+        function checkFirstTimeBrowserCloud() {
+            const params = new URLSearchParams(window.location.search);
+            const urlBin = params.get('bin');
+            const urlKey = params.get('key');
+            if (urlBin && urlKey) {
+                saveUrlCloudConfig(urlBin, urlKey);
+                return;
+            }
+
+            const active = getActiveApiProvider();
+            const hasCloudConfig = active && active.apiKey && active.resourceId;
+            const setupDone = localStorage.getItem('CLOUD_SYNC_SETUP_COMPLETED') === 'true';
+
+            if (!hasCloudConfig && !setupDone) {
+                openCloudSetupWizard();
+            }
+        }
+
+        function saveUrlCloudConfig(bin, key) {
+            let active = getActiveApiProvider();
+            if (!active) {
+                active = {
+                    id: 101,
+                    providerName: "JSONBin.io",
+                    presetKey: "JSONBin.io",
+                    endpoint: "https://api.jsonbin.io/v3/b/",
+                    resourceId: bin,
+                    apiKey: key,
+                    headerType: "X-Master-Key",
+                    isActive: true
+                };
+                apiConfigs = [active];
+            } else {
+                active.resourceId = bin;
+                active.apiKey = key;
+                active.headerType = "X-Master-Key";
+            }
+            localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
+            savePersistentData(false);
+            fetchFromCloud(false);
+        }
+
+        function openCloudSetupWizard() {
+            const active = getActiveApiProvider();
+            if (active) {
+                document.getElementById('wizBinId').value = active.resourceId || '';
+                document.getElementById('wizApiKey').value = active.apiKey || '';
+            }
+            document.getElementById('wizStatusMsg').textContent = '';
+            document.getElementById('setupWizardOverlay').classList.remove('hidden');
+        }
+
+        function closeCloudSetupWizard() {
+            document.getElementById('setupWizardOverlay').classList.add('hidden');
+        }
+
+        function skipWizardCloudSetup() {
+            localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
+            closeCloudSetupWizard();
+        }
+
+        function handleWizardProviderChange() {
+            const p = document.getElementById('wizProviderSelect').value;
+            const bLabel = document.getElementById('wizBinLabel');
+            const kLabel = document.getElementById('wizKeyLabel');
+            if (p === 'JSONBin.io') {
+                bLabel.textContent = 'JSONBin Bin ID';
+                kLabel.textContent = 'Master Key / API Key';
+            } else if (p === 'Firebase Realtime Database') {
+                bLabel.textContent = 'Resource Path (/production_store)';
+                kLabel.textContent = 'Database Secret / Auth (Optional)';
+            } else {
+                bLabel.textContent = 'Resource Path / Endpoint Subpath';
+                kLabel.textContent = 'API Key';
+            }
+        }
+
+        async function handleWizardCloudConnect(e) {
+            e.preventDefault();
+            const pType = document.getElementById('wizProviderSelect').value;
+            const binId = document.getElementById('wizBinId').value.trim();
+            const apiKey = document.getElementById('wizApiKey').value.trim();
+            const statusEl = document.getElementById('wizStatusMsg');
+
+            statusEl.textContent = "Verifying and downloading database...";
+
+            let active = getActiveApiProvider();
+            if (!active) {
+                active = {
+                    id: 101,
+                    providerName: pType,
+                    presetKey: pType,
+                    endpoint: pType === 'JSONBin.io' ? "https://api.jsonbin.io/v3/b/" : "",
+                    resourceId: binId,
+                    apiKey: apiKey,
+                    headerType: pType === 'JSONBin.io' ? "X-Master-Key" : "Bearer",
+                    isActive: true
+                };
+                apiConfigs = [active];
+            } else {
+                active.providerName = pType;
+                active.presetKey = pType;
+                if (pType === 'JSONBin.io') {
+                    active.endpoint = "https://api.jsonbin.io/v3/b/";
+                    active.headerType = "X-Master-Key";
+                }
+                active.resourceId = binId;
+                active.apiKey = apiKey;
+            }
+
+            savePersistentData(false);
+            const success = await fetchFromCloud(false);
+
+            if (success) {
+                statusEl.textContent = "Connected successfully!";
+                localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
+                setTimeout(() => {
+                    closeCloudSetupWizard();
+                    alert("Database synchronized! You can now sign in with your credentials on this browser.");
+                }, 600);
+            } else {
+                statusEl.textContent = "Error: Could not retrieve database. Check your Bin ID and API Key.";
+            }
         }
 
         function executeLocalStorageClear() {
@@ -2737,6 +2896,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
+            loadPersistentData();
+            checkFirstTimeBrowserCloud();
             try {
                 await fetchFromCloud(false);
             } catch (e) {}
@@ -2846,7 +3007,7 @@
                 }
             }
 
-            alert(`No account found matching "${uInput}".`);
+            alert(`No account found matching "${uInput}".\n\nIf you created this account in another browser, ensure you connect your shared Cloud Database by clicking '☁️ Connect Cloud DB' below.`);
         }
 
         function handleLogout() {
@@ -3417,153 +3578,27 @@
             const hTypeSelect = document.getElementById('apiAuthHeaderType');
 
             const providerPresets = {
-                'OpenAI': {
-                    name: 'OpenAI',
-                    endpoint: 'https://api.openai.com/v1/chat/completions',
-                    resource: 'gpt-4o',
-                    placeholder: 'e.g. gpt-4o or gpt-4o-mini',
-                    header: 'Bearer'
-                },
-                'Anthropic': {
-                    name: 'Anthropic',
-                    endpoint: 'https://api.anthropic.com/v1/messages',
-                    resource: 'claude-3-5-sonnet-20241022',
-                    placeholder: 'e.g. claude-3-5-sonnet-20241022',
-                    header: 'x-api-key'
-                },
-                'Google Gemini': {
-                    name: 'Google Gemini',
-                    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-                    resource: 'gemini-1.5-flash',
-                    placeholder: 'e.g. gemini-1.5-flash',
-                    header: 'Bearer'
-                },
-                'Cohere': {
-                    name: 'Cohere',
-                    endpoint: 'https://api.cohere.com/v2/chat',
-                    resource: 'command-r-plus',
-                    placeholder: 'e.g. command-r-plus',
-                    header: 'Bearer'
-                },
-                'Mistral AI': {
-                    name: 'Mistral AI',
-                    endpoint: 'https://api.mistral.ai/v1/chat/completions',
-                    resource: 'mistral-large-latest',
-                    placeholder: 'e.g. mistral-large-latest',
-                    header: 'Bearer'
-                },
-                'Groq': {
-                    name: 'Groq',
-                    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-                    resource: 'llama-3.3-70b-versatile',
-                    placeholder: 'e.g. llama-3.3-70b-versatile',
-                    header: 'Bearer'
-                },
-                'Together AI': {
-                    name: 'Together AI',
-                    endpoint: 'https://api.together.xyz/v1/chat/completions',
-                    resource: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
-                    placeholder: 'e.g. meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
-                    header: 'Bearer'
-                },
-                'Perplexity': {
-                    name: 'Perplexity',
-                    endpoint: 'https://api.perplexity.ai/chat/completions',
-                    resource: 'sonar',
-                    placeholder: 'e.g. sonar or sonar-pro',
-                    header: 'Bearer'
-                },
-                'Replicate': {
-                    name: 'Replicate',
-                    endpoint: 'https://api.replicate.com/v1/predictions',
-                    resource: 'meta/meta-llama-3-70b-instruct',
-                    placeholder: 'e.g. meta/meta-llama-3-70b-instruct',
-                    header: 'Bearer'
-                },
-                'Hugging Face': {
-                    name: 'Hugging Face',
-                    endpoint: 'https://api-inference.huggingface.co/models/',
-                    resource: 'meta-llama/Meta-Llama-3-8B-Instruct',
-                    placeholder: 'e.g. meta-llama/Meta-Llama-3-8B-Instruct',
-                    header: 'Bearer'
-                },
-                'DeepSeek': {
-                    name: 'DeepSeek',
-                    endpoint: 'https://api.deepseek.com/chat/completions',
-                    resource: 'deepseek-chat',
-                    placeholder: 'e.g. deepseek-chat or deepseek-reasoner',
-                    header: 'Bearer'
-                },
-                'xAI': {
-                    name: 'xAI',
-                    endpoint: 'https://api.x.ai/v1/chat/completions',
-                    resource: 'grok-beta',
-                    placeholder: 'e.g. grok-beta',
-                    header: 'Bearer'
-                },
-                'Amazon Bedrock': {
-                    name: 'Amazon Bedrock',
-                    endpoint: 'https://bedrock-runtime.us-east-1.amazonaws.com',
-                    resource: 'anthropic.claude-3-sonnet-20240229-v1:0',
-                    placeholder: 'e.g. Model ARN or ID',
-                    header: 'Bearer'
-                },
-                'Microsoft Azure AI': {
-                    name: 'Microsoft Azure AI',
-                    endpoint: 'https://your-resource-name.openai.azure.com/openai/deployments/your-deployment-name/chat/completions?api-version=2024-02-15-preview',
-                    resource: 'gpt-4o',
-                    placeholder: 'e.g. Deployment / Model Name',
-                    header: 'Bearer'
-                },
-                'IBM watsonx': {
-                    name: 'IBM watsonx',
-                    endpoint: 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29',
-                    resource: 'ibm/granite-13b-chat-v2',
-                    placeholder: 'e.g. ibm/granite-13b-chat-v2',
-                    header: 'Bearer'
-                },
-                'NVIDIA NIM': {
-                    name: 'NVIDIA NIM',
-                    endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions',
-                    resource: 'meta/llama-3.1-8b-instruct',
-                    placeholder: 'e.g. meta/llama-3.1-8b-instruct',
-                    header: 'Bearer'
-                },
-                'AI21 Labs': {
-                    name: 'AI21 Labs',
-                    endpoint: 'https://api.ai21.com/studio/v1/chat/completions',
-                    resource: 'jamba-1.5-mini',
-                    placeholder: 'e.g. jamba-1.5-mini',
-                    header: 'Bearer'
-                },
-                'Cerebras': {
-                    name: 'Cerebras',
-                    endpoint: 'https://api.cerebras.ai/v1/chat/completions',
-                    resource: 'llama3.1-8b',
-                    placeholder: 'e.g. llama3.1-8b',
-                    header: 'Bearer'
-                },
-                'JSONBin.io': {
-                    name: 'JSONBin.io',
-                    endpoint: 'https://api.jsonbin.io/v3/b/',
-                    resource: '',
-                    placeholder: 'Bin ID (e.g. 660f...)',
-                    header: 'X-Master-Key'
-                },
-                'OpenRouter': {
-                    name: 'OpenRouter',
-                    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-                    resource: 'meta-llama/llama-3-8b-instruct',
-                    placeholder: 'e.g. meta-llama/llama-3-8b-instruct',
-                    header: 'Bearer'
-                },
-                'Firebase Realtime Database': {
-                    name: 'Firebase Realtime DB',
-                    endpoint: 'https://your-project.firebaseio.com',
-                    resource: '',
-                    placeholder: '/production_store',
-                    header: 'None'
-                }
+                'OpenAI': { name: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', resource: 'gpt-4o', placeholder: 'e.g. gpt-4o or gpt-4o-mini', header: 'Bearer' },
+                'Anthropic': { name: 'Anthropic', endpoint: 'https://api.anthropic.com/v1/messages', resource: 'claude-3-5-sonnet-20241022', placeholder: 'e.g. claude-3-5-sonnet-20241022', header: 'x-api-key' },
+                'Google Gemini': { name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', resource: 'gemini-1.5-flash', placeholder: 'e.g. gemini-1.5-flash', header: 'Bearer' },
+                'Cohere': { name: 'Cohere', endpoint: 'https://api.cohere.com/v2/chat', resource: 'command-r-plus', placeholder: 'e.g. command-r-plus', header: 'Bearer' },
+                'Mistral AI': { name: 'Mistral AI', endpoint: 'https://api.mistral.ai/v1/chat/completions', resource: 'mistral-large-latest', placeholder: 'e.g. mistral-large-latest', header: 'Bearer' },
+                'Groq': { name: 'Groq', endpoint: 'https://api.groq.com/openai/v1/chat/completions', resource: 'llama-3.3-70b-versatile', placeholder: 'e.g. llama-3.3-70b-versatile', header: 'Bearer' },
+                'Together AI': { name: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', resource: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', placeholder: 'e.g. meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', header: 'Bearer' },
+                'Perplexity': { name: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', resource: 'sonar', placeholder: 'e.g. sonar or sonar-pro', header: 'Bearer' },
+                'Replicate': { name: 'Replicate', endpoint: 'https://api.replicate.com/v1/predictions', resource: 'meta/meta-llama-3-70b-instruct', placeholder: 'e.g. meta/meta-llama-3-70b-instruct', header: 'Bearer' },
+                'Hugging Face': { name: 'Hugging Face', endpoint: 'https://api-inference.huggingface.co/models/', resource: 'meta-llama/Meta-Llama-3-8B-Instruct', placeholder: 'e.g. meta-llama/Meta-Llama-3-8B-Instruct', header: 'Bearer' },
+                'DeepSeek': { name: 'DeepSeek', endpoint: 'https://api.deepseek.com/chat/completions', resource: 'deepseek-chat', placeholder: 'e.g. deepseek-chat or deepseek-reasoner', header: 'Bearer' },
+                'xAI': { name: 'xAI', endpoint: 'https://api.x.ai/v1/chat/completions', resource: 'grok-beta', placeholder: 'e.g. grok-beta', header: 'Bearer' },
+                'Amazon Bedrock': { name: 'Amazon Bedrock', endpoint: 'https://bedrock-runtime.us-east-1.amazonaws.com', resource: 'anthropic.claude-3-sonnet-20240229-v1:0', placeholder: 'e.g. Model ARN or ID', header: 'Bearer' },
+                'Microsoft Azure AI': { name: 'Microsoft Azure AI', endpoint: 'https://your-resource-name.openai.azure.com/openai/deployments/your-deployment-name/chat/completions?api-version=2024-02-15-preview', resource: 'gpt-4o', placeholder: 'e.g. Deployment / Model Name', header: 'Bearer' },
+                'IBM watsonx': { name: 'IBM watsonx', endpoint: 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29', resource: 'ibm/granite-13b-chat-v2', placeholder: 'e.g. ibm/granite-13b-chat-v2', header: 'Bearer' },
+                'NVIDIA NIM': { name: 'NVIDIA NIM', endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions', resource: 'meta/llama-3.1-8b-instruct', placeholder: 'e.g. meta/llama-3.1-8b-instruct', header: 'Bearer' },
+                'AI21 Labs': { name: 'AI21 Labs', endpoint: 'https://api.ai21.com/studio/v1/chat/completions', resource: 'jamba-1.5-mini', placeholder: 'e.g. jamba-1.5-mini', header: 'Bearer' },
+                'Cerebras': { name: 'Cerebras', endpoint: 'https://api.cerebras.ai/v1/chat/completions', resource: 'llama3.1-8b', placeholder: 'e.g. llama3.1-8b', header: 'Bearer' },
+                'JSONBin.io': { name: 'JSONBin.io', endpoint: 'https://api.jsonbin.io/v3/b/', resource: '', placeholder: 'Bin ID (e.g. 660f...)', header: 'X-Master-Key' },
+                'OpenRouter': { name: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', resource: 'meta-llama/llama-3-8b-instruct', placeholder: 'e.g. meta-llama/llama-3-8b-instruct', header: 'Bearer' },
+                'Firebase Realtime Database': { name: 'Firebase Realtime DB', endpoint: 'https://your-project.firebaseio.com', resource: '', placeholder: '/production_store', header: 'None' }
             };
 
             const config = providerPresets[preset];
