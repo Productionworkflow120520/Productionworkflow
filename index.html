@@ -1151,12 +1151,11 @@
                     <div class="card">
                         <h3>Entry Production</h3>
                         <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px; margin-bottom: 14px;">
-                            Enter chart details below. Unique Chart ID validation is enforced automatically.
                         </p>
                         <form id="entryProdForm" onsubmit="handleUniversalAddEntry(event)">
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label>Date (No Edit)</label>
+                                    <label>Date</label>
                                     <input type="date" id="entryDate" disabled>
                                 </div>
                                 <div class="form-group">
@@ -1172,20 +1171,20 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Login Name (Enabled)</label>
-                                    <input type="text" id="entryLoginNameEdit" required placeholder="Enter Login Name">
+                                    <label>Login Name</label>
+                                    <input type="text" id="entryLoginNameEdit" required placeholder>
                                 </div>
                                 <div class="form-group">
-                                    <label>Chart ID (Unique Tracking)</label>
-                                    <input type="text" id="entryChartId" required placeholder="Enter Unique Chart ID">
+                                    <label>Chart ID</label>
+                                    <input type="text" id="entryChartId" required placeholder>
                                 </div>
                                 <div class="form-group">
                                     <label>Page No</label>
-                                    <input type="number" id="entryPageNo" required min="1" placeholder="e.g. 15">
+                                    <input type="number" id="entryPageNo" required min="1" placeholder>
                                 </div>
                                 <div class="form-group">
                                     <label>Total No ICD</label>
-                                    <input type="number" id="entryTotalIcd" required min="0" placeholder="e.g. 8">
+                                    <input type="number" id="entryTotalIcd" required min="1" placeholder>
                                 </div>
                                 <div class="form-group">
                                     <label>Status</label>
@@ -1198,11 +1197,11 @@
                                     </select>
                                 </div>
                                 <div class="form-group form-group-full">
-                                    <label>Comment (Required Detailed Notes)</label>
-                                    <textarea id="entryComment" required placeholder="Provide clinical documentation notes here..."></textarea>
+                                    <label>Comment</label>
+                                    <textarea id="entryComment" required placeholder></textarea>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success" style="margin-top: 6px;">+ Submitted</button>
+                            <button type="submit" class="btn btn-success" style="margin-top: 6px;">Submit</button>
                         </form>
                     </div>
                 </div>
