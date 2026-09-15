@@ -584,36 +584,40 @@
 </head>
 <body>
 
-    <!-- DEDICATED JSONBIN AUTO-API INTEGRATION MODAL -->
+    <!-- MULTI-KEY JSONBIN AUTO-API SETTINGS MODAL -->
     <div id="jsonbinAutoModal" class="modal-overlay hidden">
-        <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-card" style="max-width: 520px;">
             <div class="control-header" style="margin-bottom: 8px;">
-                <h3 style="color: var(--accent-cyan);">⚡ JSONBin.io Auto-Sync Configuration</h3>
+                <h3 style="color: var(--accent-cyan);">⚡ Multi-Key JSONBin Auto-API Pool</h3>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="closeJsonbinAutoModal()">✕</button>
             </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
-                Changes auto-sync across browsers using JSONBin. Provide your <strong>Master Key</strong>. If you don't have a Bin ID yet, leave it blank and click <strong>Auto-Create New Bin</strong>.
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+                Enter one or multiple <strong>JSONBin Master Keys</strong> (separated by comma, semicolon, or new line). If a key hits rate limits or expires, the engine automatically switches to the next available key.
             </p>
 
             <form id="jsonbinAutoForm" onsubmit="handleSaveJsonbinAutoConfig(event)">
                 <div class="form-group">
-                    <label>JSONBin Master Key (X-Master-Key)</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="jbinMasterKeyInput" required placeholder="$2a$10$...">
-                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('jbinMasterKeyInput', this)">👁</button>
-                    </div>
+                    <label>JSONBin Master Keys (Multiple Keys Supported)</label>
+                    <textarea id="jbinMultiKeysInput" placeholder="$2a$10$key1...&#10;$2a$10$key2...&#10;$2a$10$key3..." required style="min-height: 85px; font-family: var(--font-mono); font-size: 11.5px;"></textarea>
                 </div>
                 <div class="form-group" style="margin-top: 8px;">
-                    <label>JSONBin Bin ID (Leave blank to auto-create)</label>
-                    <input type="text" id="jbinBinIdInput" placeholder="e.g. 660f... or empty">
+                    <label>JSONBin Bin ID (Leave blank to auto-create on next push)</label>
+                    <input type="text" id="jbinBinIdInput" placeholder="e.g. 660fe8d..." style="font-family: var(--font-mono);">
+                </div>
+
+                <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-card); margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11.5px;">
+                        <span>Pool Count: <strong id="poolCountBadge" style="color: #6ee7b7;">0 Keys</strong></span>
+                        <span>Active Key Index: <strong id="activeKeyIndexBadge" style="color: var(--accent-cyan);">#1</strong></span>
+                    </div>
                 </div>
 
                 <div id="jbinModalStatus" style="font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 10px; min-height: 18px;"></div>
 
                 <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-success btn-sm" style="flex: 1;">💾 Save & Sync Now</button>
-                    <button type="button" class="btn btn-warning btn-sm" onclick="autoCreateNewJsonbin()">✨ Auto-Create New Bin</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyAutoShareUrl()">📋 Copy Auto-Connect URL</button>
+                    <button type="submit" class="btn btn-success btn-sm" style="flex: 1;">💾 Save & Auto-Sync</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="autoCreateNewJsonbin()">✨ Auto-Create Bin</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyAutoShareUrl()">📋 Copy Multi-Key URL</button>
                 </div>
             </form>
         </div>
@@ -642,7 +646,7 @@
                 <div style="margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 12px;">
                     <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Forgot Password?</a>
                     <span style="color: var(--border-card);">•</span>
-                    <a href="javascript:void(0)" onclick="openJsonbinAutoModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">⚙️ JSONBin Auto-API</a>
+                    <a href="javascript:void(0)" onclick="openJsonbinAutoModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">⚙️ Multi-Key JSONBin</a>
                 </div>
             </form>
 
@@ -677,9 +681,9 @@
             <div class="top-bar">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <h1 id="tabTitle" class="page-title">Dashboard</h1>
-                    <div id="topBarSyncPill" class="cloud-sync-pill unconfigured" onclick="openJsonbinAutoModal()" title="Click to manage JSONBin Auto-Sync settings">
+                    <div id="topBarSyncPill" class="cloud-sync-pill unconfigured" onclick="openJsonbinAutoModal()" title="Click to manage Multi-Key JSONBin settings">
                         <span id="topBarSyncIcon">⚠️</span>
-                        <span id="topBarSyncText">JSONBin: Setup API</span>
+                        <span id="topBarSyncText">JSONBin: Setup Keys</span>
                     </div>
                 </div>
 
@@ -699,7 +703,7 @@
                         
                         <div class="profile-actions">
                             <button class="btn btn-warning" style="width: 100%;" onclick="openPassChangeModal()">Password Change</button>
-                            <button class="btn btn-secondary" style="width: 100%;" onclick="openJsonbinAutoModal()">JSONBin Settings</button>
+                            <button class="btn btn-secondary" style="width: 100%;" onclick="openJsonbinAutoModal()">Multi-Key Settings</button>
                             <button class="btn btn-danger" style="width: 100%;" onclick="handleLogout()">Logout</button>
                         </div>
                     </div>
@@ -1006,12 +1010,12 @@
                     </div>
                 </div>
 
-                <!-- INDEPENDENT CLOUD & STORAGE HUB TAB -->
+                <!-- CLOUD & STORAGE HUB TAB -->
                 <div id="cloudStorageTab" class="tab-content hidden">
                     <div class="card" id="cloudDataHubCard">
                         <div class="control-header">
-                            <h3>⚡ Cloud & Remote Backend Data Hub</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ JSONBin Auto-API Settings</button>
+                            <h3>⚡ Multi-Key Cloud & Remote Backend Data Hub</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ Multi-Key JSONBin Settings</button>
                         </div>
                         <div class="active-provider-callout" id="activeProviderBanner">
                             <div>
@@ -1019,7 +1023,7 @@
                                 <strong id="bannerProviderName" style="color: #6ee7b7; font-size: 13px;">JSONBin.io (Auto-Sync Active)</strong>
                                 <span id="bannerProviderEndpoint" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; margin-left: 8px;">-</span>
                             </div>
-                            <span class="badge badge-active">Live Sync</span>
+                            <span class="badge badge-active">Live Multi-Key</span>
                         </div>
 
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1156,9 +1160,9 @@
                                     <input type="text" id="apiResourceIdInput" placeholder="Bin ID (e.g. 660f...)" value="">
                                 </div>
                                 <div class="form-group">
-                                    <label>API Key / Master Key</label>
+                                    <label>API Key / Master Keys</label>
                                     <div class="password-wrapper">
-                                        <input type="password" id="apiKeyInput" placeholder="Enter API Key / Master Key">
+                                        <input type="password" id="apiKeyInput" placeholder="Key 1, Key 2...">
                                         <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('apiKeyInput', this)">👁</button>
                                     </div>
                                 </div>
@@ -2068,14 +2072,16 @@
 
     <script>
         // ==========================================
-        // CONSTANTS & AUTO-API ENGINE CONFIGURATION
+        // MULTI-KEY ACTIVE API ENGINE
         // ==========================================
         let MASTER_STORE_KEY = localStorage.getItem('CUSTOM_STORAGE_KEY') || 'ENTERPRISE_SYSTEM_STORE_V1';
         let AUTO_SYNC_ENABLED = localStorage.getItem('AUTO_SYNC_ENABLED') !== 'false';
         let BACKUP_STRATEGY = localStorage.getItem('BACKUP_STRATEGY') || 'Standard';
 
-        // Direct JSONBin Configuration (stored in localStorage or auto-discovered)
-        let JSONBIN_MASTER_KEY = localStorage.getItem('JSONBIN_MASTER_KEY') || '';
+        // Load active multiple keys as an array
+        let jsonbinKeysRaw = localStorage.getItem('JSONBIN_KEYS_POOL') || localStorage.getItem('JSONBIN_MASTER_KEY') || '';
+        let JSONBIN_KEYS_POOL = parseKeysList(jsonbinKeysRaw);
+        let JSONBIN_CURRENT_KEY_IDX = parseInt(localStorage.getItem('JSONBIN_CURRENT_KEY_IDX') || '0');
         let JSONBIN_BIN_ID = localStorage.getItem('JSONBIN_BIN_ID') || '';
         const JSONBIN_ENDPOINT = "https://api.jsonbin.io/v3/b";
 
@@ -2098,9 +2104,36 @@
         let activeViewAuditChartId = null;
         let activeAuditorRebuttalChartId = null;
 
-        // ==========================================
-        // AUTO JSONBIN API INTEGRATION
-        // ==========================================
+        function parseKeysList(raw) {
+            if (!raw) return [];
+            return raw.split(/[\n,;]+/)
+                      .map(k => k.trim())
+                      .filter(k => k.length > 5);
+        }
+
+        function getActiveKey() {
+            if (JSONBIN_KEYS_POOL.length === 0) return '';
+            if (JSONBIN_CURRENT_KEY_IDX >= JSONBIN_KEYS_POOL.length) {
+                JSONBIN_CURRENT_KEY_IDX = 0;
+            }
+            return JSONBIN_KEYS_POOL[JSONBIN_CURRENT_KEY_IDX];
+        }
+
+        function rotateToNextKey() {
+            if (JSONBIN_KEYS_POOL.length <= 1) return getActiveKey();
+            JSONBIN_CURRENT_KEY_IDX = (JSONBIN_CURRENT_KEY_IDX + 1) % JSONBIN_KEYS_POOL.length;
+            localStorage.setItem('JSONBIN_CURRENT_KEY_IDX', String(JSONBIN_CURRENT_KEY_IDX));
+            updateMultiKeyUI();
+            return JSONBIN_KEYS_POOL[JSONBIN_CURRENT_KEY_IDX];
+        }
+
+        function updateMultiKeyUI() {
+            const poolBadge = document.getElementById('poolCountBadge');
+            const activeIdxBadge = document.getElementById('activeKeyIndexBadge');
+            if (poolBadge) poolBadge.textContent = `${JSONBIN_KEYS_POOL.length} Key(s) Active`;
+            if (activeIdxBadge) activeIdxBadge.textContent = JSONBIN_KEYS_POOL.length ? `#${JSONBIN_CURRENT_KEY_IDX + 1}` : 'None';
+        }
+
         function updateSyncStatusUI(status, label) {
             const pill = document.getElementById('topBarSyncPill');
             const icon = document.getElementById('topBarSyncIcon');
@@ -2114,11 +2147,12 @@
             } else if (status === 'active') {
                 pill.className = 'cloud-sync-pill';
                 icon.textContent = '🟢';
-                text.textContent = label || 'JSONBin: Live';
+                const keyNum = JSONBIN_KEYS_POOL.length > 1 ? ` (Key #${JSONBIN_CURRENT_KEY_IDX + 1})` : '';
+                text.textContent = (label || 'JSONBin: Multi-Active') + keyNum;
             } else {
                 pill.className = 'cloud-sync-pill unconfigured';
                 icon.textContent = '⚠️';
-                text.textContent = label || 'JSONBin: Setup API';
+                text.textContent = label || 'JSONBin: Setup Keys';
             }
         }
 
@@ -2130,14 +2164,14 @@
                     presetKey: "JSONBin.io",
                     endpoint: JSONBIN_ENDPOINT,
                     resourceId: JSONBIN_BIN_ID,
-                    apiKey: JSONBIN_MASTER_KEY,
+                    apiKey: JSONBIN_KEYS_POOL.join(', '),
                     headerType: "X-Master-Key",
                     isActive: true,
                     lastVerified: null
                 }];
             }
             const active = apiConfigs.find(c => c.isActive === true) || apiConfigs[0];
-            active.apiKey = JSONBIN_MASTER_KEY || active.apiKey || '';
+            active.apiKey = JSONBIN_KEYS_POOL.join(', ');
             active.resourceId = JSONBIN_BIN_ID || active.resourceId || '';
             return active;
         }
@@ -2150,30 +2184,34 @@
             }, 350);
         }
 
+        // Auto-Failover Cloud Push Across Active Keys
         async function pushToCloud(showAlert = true) {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
             if (!raw) return;
 
-            const provider = getActiveApiProvider();
-            const key = (JSONBIN_MASTER_KEY || provider.apiKey || '').trim();
-            const binId = (JSONBIN_BIN_ID || provider.resourceId || '').trim();
-
-            if (!key) {
-                updateSyncStatusUI('unconfigured', 'JSONBin: Key Missing');
-                if (showAlert) alert("Please configure your JSONBin Master Key to enable cloud sync.");
+            if (JSONBIN_KEYS_POOL.length === 0) {
+                updateSyncStatusUI('unconfigured', 'Keys Missing');
+                if (showAlert) alert("Please enter at least one JSONBin Master Key in settings.");
                 return;
             }
 
-            updateSyncStatusUI('syncing', 'Syncing...');
+            updateSyncStatusUI('syncing', 'Pushing...');
             isSyncingNow = true;
 
-            try {
+            let attempts = 0;
+            let maxAttempts = JSONBIN_KEYS_POOL.length;
+            let success = false;
+
+            while (attempts < maxAttempts) {
+                const currentKey = getActiveKey();
+                const binId = (JSONBIN_BIN_ID || '').trim();
+
                 let url = binId ? `${JSONBIN_ENDPOINT}/${binId}` : JSONBIN_ENDPOINT;
                 let method = binId ? 'PUT' : 'POST';
 
                 const headers = {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': key
+                    'X-Master-Key': currentKey
                 };
 
                 if (!binId) {
@@ -2181,98 +2219,123 @@
                     headers['X-Bin-Private'] = 'true';
                 }
 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: headers,
-                    body: raw
-                });
+                try {
+                    const response = await fetch(url, { method, headers, body: raw });
 
-                if (response.ok) {
-                    const resJson = await response.json();
-                    if (!binId && resJson.metadata && resJson.metadata.id) {
-                        JSONBIN_BIN_ID = resJson.metadata.id;
-                        localStorage.setItem('JSONBIN_BIN_ID', JSONBIN_BIN_ID);
-                        provider.resourceId = JSONBIN_BIN_ID;
+                    if (response.ok) {
+                        const resJson = await response.json();
+                        if (!binId && resJson.metadata && resJson.metadata.id) {
+                            JSONBIN_BIN_ID = resJson.metadata.id;
+                            localStorage.setItem('JSONBIN_BIN_ID', JSONBIN_BIN_ID);
+                        }
+                        const provider = getActiveApiProvider();
+                        provider.lastVerified = new Date().toISOString();
+                        savePersistentData(false);
+
+                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        updateSyncStatusUI('active', `Synced ${timeStr}`);
+                        if (showAlert) alert(`Synced using Key #${JSONBIN_CURRENT_KEY_IDX + 1}!\nBin ID: ${JSONBIN_BIN_ID}`);
+                        renderApiConfigs();
+                        success = true;
+                        break;
+                    } else if (response.status === 429 || response.status === 401 || response.status === 403) {
+                        // Rate limit or authentication failure -> rotate to next key in pool
+                        rotateToNextKey();
+                        attempts++;
+                    } else {
+                        const err = await response.text();
+                        if (showAlert) alert(`Sync failed (${response.status}): ${err}`);
+                        break;
                     }
-                    provider.lastVerified = new Date().toISOString();
-                    savePersistentData(false);
-
-                    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    updateSyncStatusUI('active', `Synced ${timeStr}`);
-                    if (showAlert) alert(`Successfully saved to JSONBin!\nBin ID: ${JSONBIN_BIN_ID}`);
-                    renderApiConfigs();
-                } else {
-                    const err = await response.text();
-                    updateSyncStatusUI('unconfigured', 'Sync Failed');
-                    if (showAlert) alert(`Sync failed (${response.status}):\n${err}`);
+                } catch (err) {
+                    rotateToNextKey();
+                    attempts++;
                 }
-            } catch (err) {
-                updateSyncStatusUI('unconfigured', 'Offline');
-                if (showAlert) alert(`Connection error: ${err.message}`);
-            } finally {
-                isSyncingNow = false;
+            }
+
+            isSyncingNow = false;
+            if (!success && showAlert) {
+                updateSyncStatusUI('unconfigured', 'Pool Failed');
+                alert("All JSONBin keys in the pool were tried and failed. Check key validity or rate limits.");
             }
         }
 
+        // Auto-Failover Cloud Pull Across Active Keys
         async function fetchFromCloud(showAlert = true) {
-            const provider = getActiveApiProvider();
-            const key = (JSONBIN_MASTER_KEY || provider.apiKey || '').trim();
-            const binId = (JSONBIN_BIN_ID || provider.resourceId || '').trim();
-
-            if (!key || !binId) {
-                updateSyncStatusUI('unconfigured', 'JSONBin: Setup API');
+            if (JSONBIN_KEYS_POOL.length === 0 || !JSONBIN_BIN_ID) {
+                updateSyncStatusUI('unconfigured', 'Setup Keys');
                 return false;
             }
 
             updateSyncStatusUI('syncing', 'Pulling...');
             isSyncingNow = true;
 
-            try {
-                const response = await fetch(`${JSONBIN_ENDPOINT}/${binId}/latest`, {
-                    method: 'GET',
-                    headers: { 'X-Master-Key': key }
-                });
+            let attempts = 0;
+            let maxAttempts = JSONBIN_KEYS_POOL.length;
+            let success = false;
 
-                if (response.ok) {
-                    const resJson = await response.json();
-                    const record = resJson.record || resJson;
-                    if (record && (record.users || record.projects)) {
-                        applyParsedData(record);
-                        localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
-                        provider.lastVerified = new Date().toISOString();
-                        populateDropdowns();
-                        renderUsers();
-                        renderProjects();
-                        renderDesignations();
-                        renderRoles();
-                        renderApiConfigs();
-                        updateCloudBannerInfo();
+            while (attempts < maxAttempts) {
+                const currentKey = getActiveKey();
+                try {
+                    const response = await fetch(`${JSONBIN_ENDPOINT}/${JSONBIN_BIN_ID}/latest`, {
+                        method: 'GET',
+                        headers: { 'X-Master-Key': currentKey }
+                    });
 
-                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        updateSyncStatusUI('active', `Synced ${timeStr}`);
-                        if (showAlert) alert("Database loaded successfully from JSONBin!");
-                        return true;
+                    if (response.ok) {
+                        const resJson = await response.json();
+                        const record = resJson.record || resJson;
+                        if (record && (record.users || record.projects)) {
+                            applyParsedData(record);
+                            localStorage.setItem(MASTER_STORE_KEY, JSON.stringify(record));
+                            const provider = getActiveApiProvider();
+                            provider.lastVerified = new Date().toISOString();
+                            populateDropdowns();
+                            renderUsers();
+                            renderProjects();
+                            renderDesignations();
+                            renderRoles();
+                            renderApiConfigs();
+                            updateCloudBannerInfo();
+
+                            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            updateSyncStatusUI('active', `Synced ${timeStr}`);
+                            if (showAlert) alert(`Database loaded using Key #${JSONBIN_CURRENT_KEY_IDX + 1}!`);
+                            success = true;
+                            break;
+                        }
+                    } else if (response.status === 429 || response.status === 401 || response.status === 403) {
+                        rotateToNextKey();
+                        attempts++;
+                    } else {
+                        break;
                     }
-                } else {
-                    updateSyncStatusUI('unconfigured', 'Fetch Error');
+                } catch (err) {
+                    rotateToNextKey();
+                    attempts++;
                 }
-            } catch (err) {
-                updateSyncStatusUI('unconfigured', 'Offline');
-            } finally {
-                isSyncingNow = false;
             }
-            return false;
+
+            isSyncingNow = false;
+            if (!success) {
+                updateSyncStatusUI('unconfigured', 'Pull Failed');
+            }
+            return success;
         }
 
         async function autoCreateNewJsonbin() {
-            const key = document.getElementById('jbinMasterKeyInput').value.trim();
+            const rawKeys = document.getElementById('jbinMultiKeysInput').value.trim();
+            const keysList = parseKeysList(rawKeys);
             const statusEl = document.getElementById('jbinModalStatus');
-            if (!key) return alert("Please enter your JSONBin Master Key first.");
+
+            if (keysList.length === 0) return alert("Please enter at least one valid JSONBin Master Key.");
 
             statusEl.textContent = "Creating fresh shared Bin on JSONBin.io...";
-            JSONBIN_MASTER_KEY = key;
-            localStorage.setItem('JSONBIN_MASTER_KEY', key);
+            JSONBIN_KEYS_POOL = keysList;
+            localStorage.setItem('JSONBIN_KEYS_POOL', JSONBIN_KEYS_POOL.join('\n'));
+            localStorage.setItem('JSONBIN_MASTER_KEY', JSONBIN_KEYS_POOL[0]);
 
+            const currentKey = getActiveKey();
             try {
                 const raw = localStorage.getItem(MASTER_STORE_KEY) || JSON.stringify({
                     initialized: true,
@@ -2283,7 +2346,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Master-Key': key,
+                        'X-Master-Key': currentKey,
                         'X-Bin-Name': 'ProductionWorkFlowDB',
                         'X-Bin-Private': 'true'
                     },
@@ -2298,13 +2361,14 @@
                     document.getElementById('jbinBinIdInput').value = newBinId;
 
                     let active = getActiveApiProvider();
-                    active.apiKey = key;
+                    active.apiKey = JSONBIN_KEYS_POOL.join(', ');
                     active.resourceId = newBinId;
                     savePersistentData(false);
 
                     statusEl.textContent = `Bin created: ${newBinId}`;
-                    alert(`Created new JSONBin! Bin ID: ${newBinId}\n\nAuto-sync is now active for all browsers connecting to this Bin.`);
-                    updateSyncStatusUI('active', 'JSONBin: Live');
+                    alert(`Created new JSONBin! Bin ID: ${newBinId}\nActive Pool: ${JSONBIN_KEYS_POOL.length} keys loaded.`);
+                    updateSyncStatusUI('active', 'JSONBin: Multi-Active');
+                    updateMultiKeyUI();
                 } else {
                     const err = await response.text();
                     statusEl.textContent = "Creation failed: " + err;
@@ -2316,20 +2380,28 @@
 
         function handleSaveJsonbinAutoConfig(e) {
             e.preventDefault();
-            const key = document.getElementById('jbinMasterKeyInput').value.trim();
+            const rawKeys = document.getElementById('jbinMultiKeysInput').value.trim();
             const bin = document.getElementById('jbinBinIdInput').value.trim();
 
-            JSONBIN_MASTER_KEY = key;
+            const parsed = parseKeysList(rawKeys);
+            if (parsed.length === 0) return alert("Please provide at least one Master Key.");
+
+            JSONBIN_KEYS_POOL = parsed;
+            JSONBIN_CURRENT_KEY_IDX = 0;
             JSONBIN_BIN_ID = bin;
-            localStorage.setItem('JSONBIN_MASTER_KEY', key);
+
+            localStorage.setItem('JSONBIN_KEYS_POOL', JSONBIN_KEYS_POOL.join('\n'));
+            localStorage.setItem('JSONBIN_MASTER_KEY', JSONBIN_KEYS_POOL[0]);
+            localStorage.setItem('JSONBIN_CURRENT_KEY_IDX', '0');
             localStorage.setItem('JSONBIN_BIN_ID', bin);
 
             let active = getActiveApiProvider();
-            active.apiKey = key;
+            active.apiKey = JSONBIN_KEYS_POOL.join(', ');
             active.resourceId = bin;
             savePersistentData(false);
 
-            document.getElementById('jbinModalStatus').textContent = "Saved. Connecting...";
+            updateMultiKeyUI();
+            document.getElementById('jbinModalStatus').textContent = `Saved ${JSONBIN_KEYS_POOL.length} keys. Syncing...`;
             
             if (bin) {
                 fetchFromCloud(true).then(ok => {
@@ -2342,21 +2414,22 @@
 
         function copyAutoShareUrl() {
             const bin = JSONBIN_BIN_ID || document.getElementById('jbinBinIdInput').value.trim();
-            const key = JSONBIN_MASTER_KEY || document.getElementById('jbinMasterKeyInput').value.trim();
-            if (!bin || !key) return alert("Configure Master Key and Bin ID first.");
+            const keys = JSONBIN_KEYS_POOL.join(',') || document.getElementById('jbinMultiKeysInput').value.trim().replace(/\n+/g, ',');
+            if (!bin || !keys) return alert("Configure Master Keys and Bin ID first.");
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(bin)}&key=${encodeURIComponent(key)}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(bin)}&keys=${encodeURIComponent(keys)}`;
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("Auto-Connect URL copied to clipboard!\n\nOpen this link on any new browser or device to auto-sync immediately without typing keys.");
+                alert("Multi-Key Auto-Connect URL copied!\n\nOpen this link on other browsers to instantly load all active keys and auto-sync.");
             }).catch(() => {
-                prompt("Copy this URL to open on other browsers:", shareUrl);
+                prompt("Copy this URL for multi-browser sync:", shareUrl);
             });
         }
 
         function openJsonbinAutoModal() {
-            document.getElementById('jbinMasterKeyInput').value = JSONBIN_MASTER_KEY || '';
+            document.getElementById('jbinMultiKeysInput').value = JSONBIN_KEYS_POOL.join('\n');
             document.getElementById('jbinBinIdInput').value = JSONBIN_BIN_ID || '';
             document.getElementById('jbinModalStatus').textContent = '';
+            updateMultiKeyUI();
             document.getElementById('jsonbinAutoModal').classList.remove('hidden');
         }
 
@@ -2367,23 +2440,28 @@
         function checkUrlParametersForAutoConfig() {
             const params = new URLSearchParams(window.location.search);
             const urlBin = params.get('bin');
-            const urlKey = params.get('key');
-            if (urlBin && urlKey) {
-                JSONBIN_BIN_ID = urlBin;
-                JSONBIN_MASTER_KEY = urlKey;
-                localStorage.setItem('JSONBIN_BIN_ID', urlBin);
-                localStorage.setItem('JSONBIN_MASTER_KEY', urlKey);
+            const urlKeys = params.get('keys') || params.get('key');
+            if (urlBin && urlKeys) {
+                const parsed = parseKeysList(urlKeys);
+                if (parsed.length > 0) {
+                    JSONBIN_BIN_ID = urlBin;
+                    JSONBIN_KEYS_POOL = parsed;
+                    JSONBIN_CURRENT_KEY_IDX = 0;
+                    localStorage.setItem('JSONBIN_BIN_ID', urlBin);
+                    localStorage.setItem('JSONBIN_KEYS_POOL', JSONBIN_KEYS_POOL.join('\n'));
+                    localStorage.setItem('JSONBIN_MASTER_KEY', JSONBIN_KEYS_POOL[0]);
 
-                let active = getActiveApiProvider();
-                active.resourceId = urlBin;
-                active.apiKey = urlKey;
-                savePersistentData(false);
-                fetchFromCloud(false);
+                    let active = getActiveApiProvider();
+                    active.resourceId = urlBin;
+                    active.apiKey = JSONBIN_KEYS_POOL.join(', ');
+                    savePersistentData(false);
+                    fetchFromCloud(false);
+                }
             }
         }
 
         // ==========================================
-        // CORE STORAGE & PARSING
+        // STORAGE & LIFECYCLE
         // ==========================================
         function loadPersistentData() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
@@ -2407,7 +2485,7 @@
                     presetKey: "JSONBin.io",
                     endpoint: JSONBIN_ENDPOINT,
                     resourceId: JSONBIN_BIN_ID,
-                    apiKey: JSONBIN_MASTER_KEY,
+                    apiKey: JSONBIN_KEYS_POOL.join(', '),
                     headerType: "X-Master-Key",
                     isActive: true,
                     lastVerified: null
@@ -2433,7 +2511,7 @@
                 presetKey: "JSONBin.io",
                 endpoint: JSONBIN_ENDPOINT,
                 resourceId: JSONBIN_BIN_ID,
-                apiKey: JSONBIN_MASTER_KEY,
+                apiKey: JSONBIN_KEYS_POOL.join(', '),
                 headerType: "X-Master-Key",
                 isActive: true,
                 lastVerified: null
@@ -2505,20 +2583,20 @@
             const counter = document.getElementById('activeProviderCounterBadge');
 
             const active = getActiveApiProvider();
-            if (active && (active.apiKey || JSONBIN_MASTER_KEY)) {
-                if (bannerName) bannerName.textContent = `JSONBin.io (${JSONBIN_BIN_ID || 'Pending ID'})`;
+            if (active && JSONBIN_KEYS_POOL.length > 0) {
+                if (bannerName) bannerName.textContent = `JSONBin (${JSONBIN_KEYS_POOL.length} Keys Active)`;
                 if (bannerEndpoint) bannerEndpoint.textContent = `${JSONBIN_ENDPOINT}/${JSONBIN_BIN_ID || ''}`;
-                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (JSONBin)`;
-                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (JSONBin)`;
+                if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Multi-Key)`;
+                if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Multi-Key)`;
                 if (counter) counter.textContent = `1 Active / ${apiConfigs.length} Total`;
-                updateSyncStatusUI('active', 'JSONBin: Live');
+                updateSyncStatusUI('active', 'JSONBin: Multi-Active');
             } else {
                 if (bannerName) bannerName.textContent = "No Cloud Provider Configured";
                 if (bannerEndpoint) bannerEndpoint.textContent = "Local-Only Operation";
                 if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Disabled)`;
                 if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Disabled)`;
                 if (counter) counter.textContent = `0 Active / ${apiConfigs.length} Total`;
-                updateSyncStatusUI('unconfigured', 'JSONBin: Setup API');
+                updateSyncStatusUI('unconfigured', 'JSONBin: Setup Keys');
             }
             refreshLocalStorageDiagnostics();
         }
@@ -2563,7 +2641,7 @@
                     renderDesignations();
                     renderRoles();
                     renderApiConfigs();
-                    alert("Database imported and auto-synced successfully.");
+                    alert("Database imported and auto-synced across active keys.");
                 } catch {
                     alert("Error parsing file.");
                 }
@@ -2856,31 +2934,29 @@
         }
 
         // ==========================================
-        // INITIALIZATION & LIFECYCLE
+        // INIT & MULTI-BROWSER AUTO POLLING
         // ==========================================
         window.addEventListener('DOMContentLoaded', async () => {
             loadPersistentData();
             checkUrlParametersForAutoConfig();
             
-            // Auto-pull from cloud on startup
-            if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+            if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
                 try { await fetchFromCloud(false); } catch (e) {}
             }
             initAppFlow();
 
-            // Background Auto-Sync Polling every 20 seconds
+            // Background polling across active keys every 20 seconds
             setInterval(() => {
-                if (!isSyncingNow && JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                if (!isSyncingNow && JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
                     fetchFromCloud(false);
                 }
             }, 20000);
 
-            // Auto-sync when returning to tab
             window.addEventListener('focus', () => {
-                if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) fetchFromCloud(false);
+                if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) fetchFromCloud(false);
             });
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+                if (document.visibilityState === 'visible' && JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
                     fetchFromCloud(false);
                 }
             });
@@ -2945,7 +3021,7 @@
             const btn = document.getElementById('loginSubmitBtn');
             if (btn) btn.textContent = 'Verifying...';
 
-            if (JSONBIN_MASTER_KEY && JSONBIN_BIN_ID) {
+            if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
                 try { await fetchFromCloud(false); } catch (err) {}
             }
             loadPersistentData();
@@ -2983,7 +3059,7 @@
                 }
             }
 
-            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "⚙️ JSONBin Auto-API" below to sync with your shared database.`);
+            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "⚙️ Multi-Key JSONBin" below to verify your active key pool.`);
         }
 
         function handleLogout() {
@@ -3197,7 +3273,7 @@
 
             localStorage.setItem('activeUser', JSON.stringify(activeAdminUser));
             savePersistentData(true);
-            alert("Password updated and auto-synced!");
+            alert("Password updated and auto-synced across active keys!");
             closePassChangeModal();
         }
 
@@ -3588,10 +3664,16 @@
             const presetKey = document.getElementById('apiProviderPresetSelect').value;
 
             if (providerName.toLowerCase().includes('jsonbin')) {
-                JSONBIN_MASTER_KEY = apiKey;
+                const keys = parseKeysList(apiKey);
+                if (keys.length > 0) {
+                    JSONBIN_KEYS_POOL = keys;
+                    JSONBIN_CURRENT_KEY_IDX = 0;
+                    localStorage.setItem('JSONBIN_KEYS_POOL', JSONBIN_KEYS_POOL.join('\n'));
+                    localStorage.setItem('JSONBIN_MASTER_KEY', JSONBIN_KEYS_POOL[0]);
+                }
                 JSONBIN_BIN_ID = resourceId;
-                localStorage.setItem('JSONBIN_MASTER_KEY', apiKey);
                 localStorage.setItem('JSONBIN_BIN_ID', resourceId);
+                updateMultiKeyUI();
             }
 
             if (editId) {
