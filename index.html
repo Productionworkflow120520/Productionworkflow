@@ -233,6 +233,27 @@
             color: #fde68a;
         }
 
+        .usage-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            background: rgba(6, 182, 212, 0.12);
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            color: var(--accent-cyan);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+        }
+
+        .usage-pill:hover {
+            background: rgba(6, 182, 212, 0.25);
+            border-color: var(--accent-cyan);
+        }
+
         .profile-container {
             position: relative;
             cursor: pointer;
@@ -388,6 +409,22 @@
             color: var(--text-primary);
             font-family: var(--font-mono);
             letter-spacing: -0.02em;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+            margin: 8px 0;
+            border: 1px solid var(--border-card);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-success);
+            transition: width 0.3s ease, background-color 0.3s ease;
         }
 
         .control-header {
@@ -561,7 +598,7 @@
             border: 1px solid var(--border-card);
             padding: 24px;
             border-radius: var(--radius-bento);
-            width: 560px;
+            width: 580px;
             max-width: 94vw;
             box-shadow: var(--shadow-float);
         }
@@ -584,40 +621,67 @@
 </head>
 <body>
 
-    <!-- MULTI-KEY JSONBIN AUTO-API SETTINGS MODAL -->
+    <!-- MULTI-KEY JSONBIN SETTINGS & API USAGE TRACKER MODAL -->
     <div id="jsonbinAutoModal" class="modal-overlay hidden">
-        <div class="modal-card" style="max-width: 520px;">
+        <div class="modal-card">
             <div class="control-header" style="margin-bottom: 8px;">
-                <h3 style="color: var(--accent-cyan);">⚡ Multi-Key JSONBin Auto-API Pool</h3>
+                <h3 style="color: var(--accent-cyan);">⚡ JSONBin Multi-Key Pool & Usage Quotas</h3>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="closeJsonbinAutoModal()">✕</button>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
-                Enter one or multiple <strong>JSONBin Master Keys</strong> (separated by comma, semicolon, or new line). If a key hits rate limits or expires, the engine automatically switches to the next available key.
+                Configure multiple keys with automatic failover, monitor requests used, and track your remaining request limits.
             </p>
 
             <form id="jsonbinAutoForm" onsubmit="handleSaveJsonbinAutoConfig(event)">
-                <div class="form-group">
-                    <label>JSONBin Master Keys (Multiple Keys Supported)</label>
-                    <textarea id="jbinMultiKeysInput" placeholder="$2a$10$key1...&#10;$2a$10$key2...&#10;$2a$10$key3..." required style="min-height: 85px; font-family: var(--font-mono); font-size: 11.5px;"></textarea>
-                </div>
-                <div class="form-group" style="margin-top: 8px;">
-                    <label>JSONBin Bin ID (Leave blank to auto-create on next push)</label>
-                    <input type="text" id="jbinBinIdInput" placeholder="e.g. 660fe8d..." style="font-family: var(--font-mono);">
-                </div>
-
-                <div style="background: var(--bg-surface); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-card); margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 11.5px;">
-                        <span>Pool Count: <strong id="poolCountBadge" style="color: #6ee7b7;">0 Keys</strong></span>
-                        <span>Active Key Index: <strong id="activeKeyIndexBadge" style="color: var(--accent-cyan);">#1</strong></span>
+                <div class="form-grid">
+                    <div class="form-group form-group-full">
+                        <label>JSONBin Master Keys (Comma or line separated)</label>
+                        <textarea id="jbinMultiKeysInput" placeholder="$2a$10$key1...&#10;$2a$10$key2..." required style="min-height: 70px; font-family: var(--font-mono); font-size: 11.5px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>JSONBin Bin ID</label>
+                        <input type="text" id="jbinBinIdInput" placeholder="e.g. 660fe8d..." style="font-family: var(--font-mono);">
+                    </div>
+                    <div class="form-group">
+                        <label>Plan Request Limit Per Key</label>
+                        <input type="number" id="jbinQuotaLimitInput" min="100" value="10000" placeholder="Default: 10000">
                     </div>
                 </div>
 
-                <div id="jbinModalStatus" style="font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 10px; min-height: 18px;"></div>
+                <!-- Live Usage & Quota Box -->
+                <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-card); margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 11.5px; color: var(--text-secondary);">Request Consumption (Active Key Pool)</strong>
+                        <span id="modalQuotaPercentText" style="font-size: 11.5px; font-family: var(--font-mono); color: #6ee7b7;">0% Used</span>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <div id="modalQuotaProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; text-align: center;">
+                        <div style="background: var(--bg-card); padding: 6px; border-radius: var(--radius-sm);">
+                            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Limit</div>
+                            <strong id="modalStatTotalLimit" style="font-size: 13px; font-family: var(--font-mono);">10,000</strong>
+                        </div>
+                        <div style="background: var(--bg-card); padding: 6px; border-radius: var(--radius-sm);">
+                            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Requests Used</div>
+                            <strong id="modalStatTotalUsed" style="font-size: 13px; font-family: var(--font-mono); color: var(--accent-cyan);">0</strong>
+                        </div>
+                        <div style="background: var(--bg-card); padding: 6px; border-radius: var(--radius-sm);">
+                            <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Pending Limit</div>
+                            <strong id="modalStatTotalPending" style="font-size: 13px; font-family: var(--font-mono); color: #6ee7b7;">10,000</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="jbinModalStatus" style="font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 8px; min-height: 16px;"></div>
 
                 <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
                     <button type="submit" class="btn btn-success btn-sm" style="flex: 1;">💾 Save & Auto-Sync</button>
                     <button type="button" class="btn btn-warning btn-sm" onclick="autoCreateNewJsonbin()">✨ Auto-Create Bin</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyAutoShareUrl()">📋 Copy Multi-Key URL</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="resetUsageCounters()">🔄 Reset Counters</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyAutoShareUrl()">📋 Copy URL</button>
                 </div>
             </form>
         </div>
@@ -646,7 +710,7 @@
                 <div style="margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 12px;">
                     <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Forgot Password?</a>
                     <span style="color: var(--border-card);">•</span>
-                    <a href="javascript:void(0)" onclick="openJsonbinAutoModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">⚙️ Multi-Key JSONBin</a>
+                    <a href="javascript:void(0)" onclick="openJsonbinAutoModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">⚙️ Cloud Keys & Usage</a>
                 </div>
             </form>
 
@@ -679,11 +743,17 @@
 
         <div class="main-content">
             <div class="top-bar">
-                <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <h1 id="tabTitle" class="page-title">Dashboard</h1>
+                    
                     <div id="topBarSyncPill" class="cloud-sync-pill unconfigured" onclick="openJsonbinAutoModal()" title="Click to manage Multi-Key JSONBin settings">
                         <span id="topBarSyncIcon">⚠️</span>
                         <span id="topBarSyncText">JSONBin: Setup Keys</span>
+                    </div>
+
+                    <div id="topBarUsagePill" class="usage-pill" onclick="openJsonbinAutoModal()" title="Click to inspect API requests used and pending limits">
+                        <span>📊</span>
+                        <span id="topBarUsageText">Used: 0 | Left: 10,000</span>
                     </div>
                 </div>
 
@@ -703,7 +773,7 @@
                         
                         <div class="profile-actions">
                             <button class="btn btn-warning" style="width: 100%;" onclick="openPassChangeModal()">Password Change</button>
-                            <button class="btn btn-secondary" style="width: 100%;" onclick="openJsonbinAutoModal()">Multi-Key Settings</button>
+                            <button class="btn btn-secondary" style="width: 100%;" onclick="openJsonbinAutoModal()">API Usage & Keys</button>
                             <button class="btn btn-danger" style="width: 100%;" onclick="handleLogout()">Logout</button>
                         </div>
                     </div>
@@ -1012,10 +1082,66 @@
 
                 <!-- CLOUD & STORAGE HUB TAB -->
                 <div id="cloudStorageTab" class="tab-content hidden">
+                    <!-- API Telemetry Card -->
+                    <div class="card" id="cloudUsageStatsCard">
+                        <div class="control-header">
+                            <h3>⚡ Cloud API Request Telemetry & Quota Diagnostics</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ Manage API Keys & Quota</button>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
+                            Live monitoring of API requests, plan usage limits, and pending request quota across your key pool.
+                        </p>
+
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <span class="metric-title">Configured Quota Limit</span>
+                                <span class="metric-value" id="diagTotalLimit">10,000</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-title">Requests Used</span>
+                                <span class="metric-value" id="diagTotalUsed" style="color: var(--accent-cyan);">0</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-title">Pending Request Limit</span>
+                                <span class="metric-value" id="diagTotalPending" style="color: #6ee7b7;">10,000</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-title">Quota Consumed</span>
+                                <span class="metric-value" id="diagPercentUsed">0.0%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin: 10px 0 16px 0;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                                <span>Overall Consumption</span>
+                                <span id="diagProgressText" style="font-family: var(--font-mono); color: var(--accent-cyan);">0 / 10,000 requests</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div id="diagProgressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Key Pool Slot</th>
+                                        <th>Masked Key</th>
+                                        <th>Requests Used</th>
+                                        <th>Pending Limit</th>
+                                        <th>Last Active</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="perKeyUsageTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="card" id="cloudDataHubCard">
                         <div class="control-header">
                             <h3>⚡ Multi-Key Cloud & Remote Backend Data Hub</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ Multi-Key JSONBin Settings</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openJsonbinAutoModal()">⚙️ Multi-Key Settings</button>
                         </div>
                         <div class="active-provider-callout" id="activeProviderBanner">
                             <div>
@@ -2072,18 +2198,27 @@
 
     <script>
         // ==========================================
-        // MULTI-KEY ACTIVE API ENGINE
+        // MULTI-KEY & API USAGE TRACKING ENGINE
         // ==========================================
         let MASTER_STORE_KEY = localStorage.getItem('CUSTOM_STORAGE_KEY') || 'ENTERPRISE_SYSTEM_STORE_V1';
         let AUTO_SYNC_ENABLED = localStorage.getItem('AUTO_SYNC_ENABLED') !== 'false';
         let BACKUP_STRATEGY = localStorage.getItem('BACKUP_STRATEGY') || 'Standard';
 
-        // Load active multiple keys as an array
+        // Multi-Key Array & Storage
         let jsonbinKeysRaw = localStorage.getItem('JSONBIN_KEYS_POOL') || localStorage.getItem('JSONBIN_MASTER_KEY') || '';
         let JSONBIN_KEYS_POOL = parseKeysList(jsonbinKeysRaw);
         let JSONBIN_CURRENT_KEY_IDX = parseInt(localStorage.getItem('JSONBIN_CURRENT_KEY_IDX') || '0');
         let JSONBIN_BIN_ID = localStorage.getItem('JSONBIN_BIN_ID') || '';
         const JSONBIN_ENDPOINT = "https://api.jsonbin.io/v3/b";
+
+        // API Usage Quota & Limit State
+        let API_KEY_LIMIT = parseInt(localStorage.getItem('API_KEY_LIMIT') || '10000');
+        let API_USAGE_STATS = {};
+        try {
+            API_USAGE_STATS = JSON.parse(localStorage.getItem('API_USAGE_STATS') || '{}');
+        } catch (e) {
+            API_USAGE_STATS = {};
+        }
 
         let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
         let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
@@ -2111,6 +2246,11 @@
                       .filter(k => k.length > 5);
         }
 
+        function getKeyIdentifier(key) {
+            if (!key) return 'unknown';
+            return 'key_' + key.slice(0, 10).replace(/[^a-zA-Z0-9]/g, '');
+        }
+
         function getActiveKey() {
             if (JSONBIN_KEYS_POOL.length === 0) return '';
             if (JSONBIN_CURRENT_KEY_IDX >= JSONBIN_KEYS_POOL.length) {
@@ -2123,15 +2263,139 @@
             if (JSONBIN_KEYS_POOL.length <= 1) return getActiveKey();
             JSONBIN_CURRENT_KEY_IDX = (JSONBIN_CURRENT_KEY_IDX + 1) % JSONBIN_KEYS_POOL.length;
             localStorage.setItem('JSONBIN_CURRENT_KEY_IDX', String(JSONBIN_CURRENT_KEY_IDX));
-            updateMultiKeyUI();
+            updateUsageMetricsUI();
             return JSONBIN_KEYS_POOL[JSONBIN_CURRENT_KEY_IDX];
         }
 
-        function updateMultiKeyUI() {
-            const poolBadge = document.getElementById('poolCountBadge');
-            const activeIdxBadge = document.getElementById('activeKeyIndexBadge');
-            if (poolBadge) poolBadge.textContent = `${JSONBIN_KEYS_POOL.length} Key(s) Active`;
-            if (activeIdxBadge) activeIdxBadge.textContent = JSONBIN_KEYS_POOL.length ? `#${JSONBIN_CURRENT_KEY_IDX + 1}` : 'None';
+        // Record every API request made and update metrics
+        function recordApiCallUsage(key, headers = null) {
+            if (!key) return;
+            const kId = getKeyIdentifier(key);
+            if (!API_USAGE_STATS[kId]) {
+                API_USAGE_STATS[kId] = { used: 0, lastUsed: null, remainingServer: null };
+            }
+
+            API_USAGE_STATS[kId].used = (API_USAGE_STATS[kId].used || 0) + 1;
+            API_USAGE_STATS[kId].lastUsed = new Date().toISOString();
+
+            if (headers) {
+                const rem = headers.get('x-ratelimit-remaining');
+                const lim = headers.get('x-ratelimit-limit');
+                if (rem !== null) API_USAGE_STATS[kId].remainingServer = parseInt(rem);
+                if (lim !== null) API_KEY_LIMIT = parseInt(lim);
+            }
+
+            localStorage.setItem('API_USAGE_STATS', JSON.stringify(API_USAGE_STATS));
+            updateUsageMetricsUI();
+        }
+
+        function getUsageTotals() {
+            let totalUsed = 0;
+            const activeKey = getActiveKey();
+            const activeId = getKeyIdentifier(activeKey);
+
+            if (activeId && API_USAGE_STATS[activeId]) {
+                totalUsed = API_USAGE_STATS[activeId].used || 0;
+            } else {
+                for (const k in API_USAGE_STATS) {
+                    totalUsed += API_USAGE_STATS[k].used || 0;
+                }
+            }
+
+            const limit = API_KEY_LIMIT || 10000;
+            const pending = Math.max(0, limit - totalUsed);
+            const percent = Math.min(100, parseFloat(((totalUsed / limit) * 100).toFixed(1)));
+
+            return { totalUsed, limit, pending, percent };
+        }
+
+        function updateUsageMetricsUI() {
+            const { totalUsed, limit, pending, percent } = getUsageTotals();
+
+            // 1. Top bar indicator pill
+            const usagePill = document.getElementById('topBarUsagePill');
+            const usageText = document.getElementById('topBarUsageText');
+            if (usageText) {
+                usageText.textContent = `Used: ${totalUsed.toLocaleString()} | Left: ${pending.toLocaleString()}`;
+            }
+
+            // 2. Modal Quick Stats
+            const mLimit = document.getElementById('modalStatTotalLimit');
+            const mUsed = document.getElementById('modalStatTotalUsed');
+            const mPending = document.getElementById('modalStatTotalPending');
+            const mPercent = document.getElementById('modalQuotaPercentText');
+            const mBar = document.getElementById('modalQuotaProgressBar');
+
+            if (mLimit) mLimit.textContent = limit.toLocaleString();
+            if (mUsed) mUsed.textContent = totalUsed.toLocaleString();
+            if (mPending) mPending.textContent = pending.toLocaleString();
+            if (mPercent) mPercent.textContent = `${percent}% Used`;
+            if (mBar) {
+                mBar.style.width = `${percent}%`;
+                mBar.style.backgroundColor = percent > 90 ? 'var(--accent-danger)' : (percent > 70 ? 'var(--accent-warning)' : 'var(--accent-success)');
+            }
+
+            // 3. Cloud & Storage Hub Diagnostic Metrics
+            const dLimit = document.getElementById('diagTotalLimit');
+            const dUsed = document.getElementById('diagTotalUsed');
+            const dPending = document.getElementById('diagTotalPending');
+            const dPercent = document.getElementById('diagPercentUsed');
+            const dProgressText = document.getElementById('diagProgressText');
+            const dProgressBar = document.getElementById('diagProgressBarFill');
+
+            if (dLimit) dLimit.textContent = limit.toLocaleString();
+            if (dUsed) dUsed.textContent = totalUsed.toLocaleString();
+            if (dPending) dPending.textContent = pending.toLocaleString();
+            if (dPercent) dPercent.textContent = `${percent}%`;
+            if (dProgressText) dProgressText.textContent = `${totalUsed.toLocaleString()} / ${limit.toLocaleString()} requests`;
+            if (dProgressBar) {
+                dProgressBar.style.width = `${percent}%`;
+                dProgressBar.style.backgroundColor = percent > 90 ? 'var(--accent-danger)' : (percent > 70 ? 'var(--accent-warning)' : 'var(--accent-success)');
+            }
+
+            renderPerKeyUsageTable();
+        }
+
+        function renderPerKeyUsageTable() {
+            const tbody = document.getElementById('perKeyUsageTableBody');
+            if (!tbody) return;
+
+            if (JSONBIN_KEYS_POOL.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:12px;">No API keys configured yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = JSONBIN_KEYS_POOL.map((k, idx) => {
+                const kId = getKeyIdentifier(k);
+                const stats = API_USAGE_STATS[kId] || { used: 0, lastUsed: null };
+                const used = stats.used || 0;
+                const pending = Math.max(0, API_KEY_LIMIT - used);
+                const isActive = (idx === JSONBIN_CURRENT_KEY_IDX);
+                const masked = k.length > 12 ? `${k.slice(0, 7)}••••••••${k.slice(-4)}` : '••••••••';
+                const lastUsedStr = stats.lastUsed ? new Date(stats.lastUsed).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : 'Never';
+
+                return `
+                    <tr style="${isActive ? 'background: rgba(99, 102, 241, 0.08);' : ''}">
+                        <td><strong>Key #${idx + 1}</strong></td>
+                        <td style="font-family: var(--font-mono);">${masked}</td>
+                        <td style="font-family: var(--font-mono); color: var(--accent-cyan); font-weight:700;">${used.toLocaleString()}</td>
+                        <td style="font-family: var(--font-mono); color: #6ee7b7;">${pending.toLocaleString()}</td>
+                        <td style="font-size: 11px; color: var(--text-muted);">${lastUsedStr}</td>
+                        <td>
+                            ${isActive ? '<span class="badge badge-active">Active Key</span>' : '<span class="badge badge-status">Backup</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function resetUsageCounters() {
+            if (confirm("Reset all local API request usage counters to zero?")) {
+                API_USAGE_STATS = {};
+                localStorage.removeItem('API_USAGE_STATS');
+                updateUsageMetricsUI();
+                alert("API request usage counters reset successfully.");
+            }
         }
 
         function updateSyncStatusUI(status, label) {
@@ -2147,7 +2411,7 @@
             } else if (status === 'active') {
                 pill.className = 'cloud-sync-pill';
                 icon.textContent = '🟢';
-                const keyNum = JSONBIN_KEYS_POOL.length > 1 ? ` (Key #${JSONBIN_CURRENT_KEY_IDX + 1})` : '';
+                const keyNum = JSONBIN_KEYS_POOL.length > 1 ? ` (#${JSONBIN_CURRENT_KEY_IDX + 1})` : '';
                 text.textContent = (label || 'JSONBin: Multi-Active') + keyNum;
             } else {
                 pill.className = 'cloud-sync-pill unconfigured';
@@ -2184,7 +2448,7 @@
             }, 350);
         }
 
-        // Auto-Failover Cloud Push Across Active Keys
+        // Auto-Failover Cloud Push with Live Request & Quota Telemetry
         async function pushToCloud(showAlert = true) {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
             if (!raw) return;
@@ -2221,6 +2485,7 @@
 
                 try {
                     const response = await fetch(url, { method, headers, body: raw });
+                    recordApiCallUsage(currentKey, response.headers);
 
                     if (response.ok) {
                         const resJson = await response.json();
@@ -2239,7 +2504,6 @@
                         success = true;
                         break;
                     } else if (response.status === 429 || response.status === 401 || response.status === 403) {
-                        // Rate limit or authentication failure -> rotate to next key in pool
                         rotateToNextKey();
                         attempts++;
                     } else {
@@ -2256,11 +2520,11 @@
             isSyncingNow = false;
             if (!success && showAlert) {
                 updateSyncStatusUI('unconfigured', 'Pool Failed');
-                alert("All JSONBin keys in the pool were tried and failed. Check key validity or rate limits.");
+                alert("All JSONBin keys in the pool failed or exhausted. Check rate limits and key validity.");
             }
         }
 
-        // Auto-Failover Cloud Pull Across Active Keys
+        // Auto-Failover Cloud Pull with Live Request & Quota Telemetry
         async function fetchFromCloud(showAlert = true) {
             if (JSONBIN_KEYS_POOL.length === 0 || !JSONBIN_BIN_ID) {
                 updateSyncStatusUI('unconfigured', 'Setup Keys');
@@ -2281,6 +2545,7 @@
                         method: 'GET',
                         headers: { 'X-Master-Key': currentKey }
                     });
+                    recordApiCallUsage(currentKey, response.headers);
 
                     if (response.ok) {
                         const resJson = await response.json();
@@ -2352,6 +2617,7 @@
                     },
                     body: raw
                 });
+                recordApiCallUsage(currentKey, response.headers);
 
                 if (response.ok) {
                     const resJson = await response.json();
@@ -2368,7 +2634,7 @@
                     statusEl.textContent = `Bin created: ${newBinId}`;
                     alert(`Created new JSONBin! Bin ID: ${newBinId}\nActive Pool: ${JSONBIN_KEYS_POOL.length} keys loaded.`);
                     updateSyncStatusUI('active', 'JSONBin: Multi-Active');
-                    updateMultiKeyUI();
+                    updateUsageMetricsUI();
                 } else {
                     const err = await response.text();
                     statusEl.textContent = "Creation failed: " + err;
@@ -2382,6 +2648,7 @@
             e.preventDefault();
             const rawKeys = document.getElementById('jbinMultiKeysInput').value.trim();
             const bin = document.getElementById('jbinBinIdInput').value.trim();
+            const newLimit = parseInt(document.getElementById('jbinQuotaLimitInput').value) || 10000;
 
             const parsed = parseKeysList(rawKeys);
             if (parsed.length === 0) return alert("Please provide at least one Master Key.");
@@ -2389,19 +2656,21 @@
             JSONBIN_KEYS_POOL = parsed;
             JSONBIN_CURRENT_KEY_IDX = 0;
             JSONBIN_BIN_ID = bin;
+            API_KEY_LIMIT = newLimit;
 
             localStorage.setItem('JSONBIN_KEYS_POOL', JSONBIN_KEYS_POOL.join('\n'));
             localStorage.setItem('JSONBIN_MASTER_KEY', JSONBIN_KEYS_POOL[0]);
             localStorage.setItem('JSONBIN_CURRENT_KEY_IDX', '0');
             localStorage.setItem('JSONBIN_BIN_ID', bin);
+            localStorage.setItem('API_KEY_LIMIT', String(newLimit));
 
             let active = getActiveApiProvider();
             active.apiKey = JSONBIN_KEYS_POOL.join(', ');
             active.resourceId = bin;
             savePersistentData(false);
 
-            updateMultiKeyUI();
-            document.getElementById('jbinModalStatus').textContent = `Saved ${JSONBIN_KEYS_POOL.length} keys. Syncing...`;
+            updateUsageMetricsUI();
+            document.getElementById('jbinModalStatus').textContent = `Saved ${JSONBIN_KEYS_POOL.length} keys with ${newLimit.toLocaleString()} quota limit.`;
             
             if (bin) {
                 fetchFromCloud(true).then(ok => {
@@ -2417,9 +2686,9 @@
             const keys = JSONBIN_KEYS_POOL.join(',') || document.getElementById('jbinMultiKeysInput').value.trim().replace(/\n+/g, ',');
             if (!bin || !keys) return alert("Configure Master Keys and Bin ID first.");
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(bin)}&keys=${encodeURIComponent(keys)}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(bin)}&keys=${encodeURIComponent(keys)}&limit=${API_KEY_LIMIT}`;
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("Multi-Key Auto-Connect URL copied!\n\nOpen this link on other browsers to instantly load all active keys and auto-sync.");
+                alert("Multi-Key Auto-Connect URL copied with quota presets!\n\nOpen this link on other browsers to load all active keys and auto-sync immediately.");
             }).catch(() => {
                 prompt("Copy this URL for multi-browser sync:", shareUrl);
             });
@@ -2428,8 +2697,9 @@
         function openJsonbinAutoModal() {
             document.getElementById('jbinMultiKeysInput').value = JSONBIN_KEYS_POOL.join('\n');
             document.getElementById('jbinBinIdInput').value = JSONBIN_BIN_ID || '';
+            document.getElementById('jbinQuotaLimitInput').value = API_KEY_LIMIT;
             document.getElementById('jbinModalStatus').textContent = '';
-            updateMultiKeyUI();
+            updateUsageMetricsUI();
             document.getElementById('jsonbinAutoModal').classList.remove('hidden');
         }
 
@@ -2441,6 +2711,13 @@
             const params = new URLSearchParams(window.location.search);
             const urlBin = params.get('bin');
             const urlKeys = params.get('keys') || params.get('key');
+            const urlLimit = params.get('limit');
+
+            if (urlLimit) {
+                API_KEY_LIMIT = parseInt(urlLimit) || 10000;
+                localStorage.setItem('API_KEY_LIMIT', String(API_KEY_LIMIT));
+            }
+
             if (urlBin && urlKeys) {
                 const parsed = parseKeysList(urlKeys);
                 if (parsed.length > 0) {
@@ -2599,6 +2876,7 @@
                 updateSyncStatusUI('unconfigured', 'JSONBin: Setup Keys');
             }
             refreshLocalStorageDiagnostics();
+            updateUsageMetricsUI();
         }
 
         async function testActiveCloudConnection() {
@@ -2939,6 +3217,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             loadPersistentData();
             checkUrlParametersForAutoConfig();
+            updateUsageMetricsUI();
             
             if (JSONBIN_KEYS_POOL.length > 0 && JSONBIN_BIN_ID) {
                 try { await fetchFromCloud(false); } catch (e) {}
@@ -2982,6 +3261,7 @@
                 populateDropdowns();
                 setupProfileHeader();
                 setupNavigation();
+                updateUsageMetricsUI();
 
                 const role = activeAdminUser ? activeAdminUser.role : '';
                 if (role === 'Coder') {
@@ -3059,7 +3339,7 @@
                 }
             }
 
-            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "⚙️ Multi-Key JSONBin" below to verify your active key pool.`);
+            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "⚙️ Cloud Keys & Usage" below to verify your active key pool.`);
         }
 
         function handleLogout() {
@@ -3220,7 +3500,7 @@
             if (tabId === 'coderDashboard') calculateCoderDashboardMetrics();
             if (tabId === 'auditorDashboard') calculateAnalyticsDashboardMetrics();
             if (tabId === 'reports') renderAdminReports();
-            if (tabId === 'cloudStorageTab') updateCloudBannerInfo();
+            if (tabId === 'cloudStorageTab') { updateCloudBannerInfo(); updateUsageMetricsUI(); }
             if (tabId === 'apiConfigTab') renderApiConfigs();
             if (tabId === 'entryProdTab') setupEntryProductionInterface();
             if (tabId === 'qualityReviewTab') setupAuditorInterface();
@@ -3673,7 +3953,7 @@
                 }
                 JSONBIN_BIN_ID = resourceId;
                 localStorage.setItem('JSONBIN_BIN_ID', resourceId);
-                updateMultiKeyUI();
+                updateUsageMetricsUI();
             }
 
             if (editId) {
