@@ -520,7 +520,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 3000;
         }
 
         .modal-card {
@@ -551,40 +551,41 @@
 </head>
 <body>
 
-    <!-- FIRST-TIME BROWSER SETUP WIZARD OVERLAY -->
-    <div id="setupWizardOverlay" class="auth-overlay hidden">
-        <div class="auth-card">
-            <div class="auth-title">☁️ Connect Cloud Database</div>
-            <div class="auth-subtitle">
-                New browser detected. Connect your shared cloud storage to load all registered users, settings, and workflows automatically.
+    <!-- CLOUD CONNECT / SYNC MODAL (ON-DEMAND, NON-BLOCKING) -->
+    <div id="cloudConnectModal" class="modal-overlay hidden">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="control-header" style="margin-bottom: 8px;">
+                <h3 style="color: var(--accent-cyan);">☁️ Sync Shared Cloud Database</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeCloudConnectModal()">✕</button>
             </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                Opening on a new browser or device? Enter your JSONBin credentials to pull your shared users and records.
+            </p>
 
-            <form id="wizardCloudForm" onsubmit="handleWizardCloudConnect(event)">
+            <form id="cloudSyncForm" onsubmit="handleCloudSyncSubmit(event)">
                 <div class="form-group">
-                    <label>Provider Type</label>
-                    <select id="wizProviderSelect" onchange="handleWizardProviderChange()">
-                        <option value="JSONBin.io" selected>JSONBin.io (Recommended)</option>
-                        <option value="Firebase Realtime Database">Firebase Realtime Database</option>
-                        <option value="Generic REST / MockAPI">Generic REST / MockAPI</option>
+                    <label>Preset Provider</label>
+                    <select id="modalSyncProvider">
+                        <option value="JSONBin.io" selected>JSONBin.io</option>
                     </select>
                 </div>
                 <div class="form-group" style="margin-top: 6px;">
-                    <label id="wizBinLabel">JSONBin Bin ID</label>
-                    <input type="text" id="wizBinId" required placeholder="e.g. 660fe8d...">
+                    <label>JSONBin Bin ID</label>
+                    <input type="text" id="modalSyncBinId" placeholder="e.g. 660fe8d..." required>
                 </div>
                 <div class="form-group" style="margin-top: 6px;">
-                    <label id="wizKeyLabel">Master Key / API Key</label>
+                    <label>Master Key / API Key</label>
                     <div class="password-wrapper">
-                        <input type="password" id="wizApiKey" required placeholder="$2a$10$...">
-                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('wizApiKey', this)">👁</button>
+                        <input type="password" id="modalSyncApiKey" placeholder="$2a$10$..." required>
+                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('modalSyncApiKey', this)">👁</button>
                     </div>
                 </div>
 
-                <div id="wizStatusMsg" style="margin-top: 10px; font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono); min-height: 16px;"></div>
+                <div id="modalSyncStatus" style="font-size: 12px; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 10px; min-height: 18px;"></div>
 
                 <div style="display: flex; gap: 8px; margin-top: 14px;">
-                    <button type="submit" id="wizConnectBtn" class="btn btn-success" style="flex: 1;">⚡ Connect & Sync</button>
-                    <button type="button" class="btn btn-secondary" onclick="skipWizardCloudSetup()">Skip / Local Only</button>
+                    <button type="submit" id="btnSyncPull" class="btn btn-success" style="flex: 1;">🔄 Pull & Sync Now</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCloudConnectModal()">Cancel</button>
                 </div>
             </form>
         </div>
@@ -609,10 +610,11 @@
                     </div>
                 </div>
                 <button type="submit" id="loginSubmitBtn" class="btn btn-success" style="width:100%; margin-top: 16px; padding: 9px;">Sign In</button>
-                <div style="margin-top: 14px; display: flex; justify-content: center; gap: 14px; font-size: 12px;">
+                
+                <div style="margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 12px;">
                     <a href="javascript:void(0)" onclick="toggleLoginResetView(true)" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Forgot Password?</a>
-                    <span style="color: var(--border-card);">|</span>
-                    <a href="javascript:void(0)" onclick="openCloudSetupWizard()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">☁️ Connect Cloud DB</a>
+                    <span style="color: var(--border-card);">•</span>
+                    <a href="javascript:void(0)" onclick="openCloudConnectModal()" style="color: #6ee7b7; text-decoration: none; font-weight: 600;">☁️ Sync Cloud DB</a>
                 </div>
             </form>
 
@@ -745,15 +747,14 @@
                         </form>
                     </div>
 
-                    <!-- BULK USER ONBOARDING (ADMIN ONLY) -->
+                    <!-- BULK USER ONBOARDING -->
                     <div class="card" id="bulkUserOnboardCard">
                         <div class="control-header">
                             <h3>🚀 Bulk User Onboarding</h3>
                             <button class="btn btn-secondary btn-sm" onclick="downloadUserCsvTemplate()">📥 Download CSV Template</button>
                         </div>
                         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-                            Upload a <strong>CSV or JSON file</strong> containing user credentials and reporting lines. Mandatory columns: 
-                            <code>User Name</code>, <code>EMP ID</code>, <code>EMP Name</code>, <code>Role</code>, <code>Designation</code>, <code>Reporting TL</code>, <code>Reporting Manager</code>, <code>Password</code>.
+                            Upload a <strong>CSV or JSON file</strong> containing user credentials and reporting lines.
                         </p>
 
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -766,7 +767,6 @@
                             <span id="bulkUploadStatus" style="font-size: 12px; color: var(--accent-cyan); font-family: var(--font-mono);"></span>
                         </div>
 
-                        <!-- Bulk Preview Staging Table -->
                         <div id="bulkPreviewContainer" style="display: none; margin-top: 14px;">
                             <div class="control-header" style="margin-bottom: 8px;">
                                 <strong style="font-size: 12px; color: var(--text-secondary);">Staged Users Preview</strong>
@@ -970,7 +970,7 @@
                     </div>
                 </div>
 
-                <!-- INDEPENDENT CLOUD & STORAGE HUB TAB (ADMIN INTERFACE ONLY) -->
+                <!-- INDEPENDENT CLOUD & STORAGE HUB TAB -->
                 <div id="cloudStorageTab" class="tab-content hidden">
                     <div class="card" id="cloudDataHubCard">
                         <div class="control-header">
@@ -999,15 +999,12 @@
                         <div id="syncStatusIndicator" style="margin-top: 10px; font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono);"></div>
                     </div>
 
-                    <!-- Local Storage Configuration Panel -->
+                    <!-- Local Storage Diagnostics -->
                     <div class="card" id="localStorageConfigCard">
                         <div class="control-header">
                             <h3>📦 Local Storage Configuration & Diagnostics</h3>
                             <button class="btn btn-secondary btn-sm" onclick="refreshLocalStorageDiagnostics()">🔄 Refresh Metrics</button>
                         </div>
-                        <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
-                            Configure runtime storage keys, enforce quota safeguards, verify stored entity counts, and view key usage breakdowns.
-                        </p>
 
                         <div class="metrics-grid" style="margin-bottom: 14px;">
                             <div class="metric-card">
@@ -1117,7 +1114,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>API Endpoint URL</label>
-                                    <input type="url" id="apiEndpointInput" required placeholder="e.g. https://api.jsonbin.io/v3/b/" value="https://api.jsonbin.io/v3/b/">
+                                    <input type="url" id="apiEndpointInput" required placeholder="e.g. https://api.jsonbin.io/v3/b" value="https://api.jsonbin.io/v3/b">
                                 </div>
                                 <div class="form-group">
                                     <label>Model ID / Resource Path</label>
@@ -1828,73 +1825,6 @@
         </div>
     </div>
 
-    <!-- MODAL: AUDITOR TEAM LEAD REVIEW -->
-    <div id="auditTlReviewModal" class="modal-overlay hidden">
-        <div class="modal-card">
-            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Auditor Team Lead Final Review</h3>
-            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="atlChartId">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Errors:</strong> <span id="atlLoggedErrors">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Coder:</strong> <span id="atlCoderName">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Auditor:</strong> <span id="atlAuditorName">-</span></div>
-                </div>
-                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
-                    <strong style="color: var(--text-muted);">Auditor Justification:</strong>
-                    <p id="atlAuditorRemarks" style="margin-top: 4px; color: var(--text-primary); background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
-                </div>
-            </div>
-
-            <div style="background: var(--bg-surface); border: 1px dashed var(--accent-cyan); padding: 12px; border-radius: var(--radius-md); margin-bottom: 14px;">
-                <label style="color: var(--accent-cyan); font-weight: 700; font-size: 10.5px; text-transform: uppercase;">Errors to remove</label>
-                <div style="display: flex; gap: 8px; margin-top: 6px;">
-                    <input type="number" id="atlDeductErrorCount" min="1" style="flex: 1;">
-                    <button type="button" class="btn btn-success" onclick="handleAuditTlAcceptDeduction()">Accept & Remove Errors</button>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn btn-danger" style="flex: 1;" onclick="handleAuditTlUpholdErrors()">Reject Rebuttal (Upheld)</button>
-                <button type="button" class="btn btn-secondary" onclick="closeAuditTlModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: VIEW AUDIT QUALITY ERROR DETAIL & CODER ACTION -->
-    <div id="viewAuditErrorModal" class="modal-overlay hidden">
-        <div class="modal-card">
-            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Quality Audit Details</h3>
-            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="vChartId">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Quality %:</strong> <span id="vQualityScore">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Project:</strong> <span id="vProject">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Sub-Project:</strong> <span id="vSubProject">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Errors:</strong> <span id="vTotalError">-</span></div>
-                    <div><strong style="color: var(--text-muted);">QA Status:</strong> <span id="vQaStatus">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Parameter:</strong> <span id="vErrorParam">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Location:</strong> <span id="vErrorLocation">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Auditor:</strong> <span id="vAuditorName">-</span></div>
-                    <div><strong style="color: var(--text-muted);">Audit Date:</strong> <span id="vAuditDate">-</span></div>
-                </div>
-                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
-                    <strong style="color: var(--text-muted);">Auditor Comments:</strong>
-                    <p id="vAuditorComment" style="margin-top: 4px; color: var(--text-primary); white-space: pre-wrap; background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
-                </div>
-                <div id="vStageStatusBox" style="margin-top: 8px;">
-                    <strong style="color: var(--text-muted);">Workflow Stage:</strong>
-                    <span id="vWorkflowStage" class="badge badge-pending" style="margin-left: 6px;">-</span>
-                </div>
-            </div>
-
-            <div id="vCoderActionControls" style="display: flex; gap: 8px;">
-                <button type="button" class="btn btn-success" style="flex: 1;" onclick="handleModalCoderAgree()">Agree</button>
-                <button type="button" class="btn btn-danger" style="flex: 1;" onclick="handleModalCoderDisagree()">Disagree / Rebuttal</button>
-                <button type="button" class="btn btn-secondary" onclick="closeViewAuditErrorModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL: EDIT USER DIALOG -->
     <div id="editUserModal" class="modal-overlay hidden">
         <div class="modal-card">
@@ -2066,13 +1996,49 @@
         </div>
     </div>
 
+    <!-- MODAL: VIEW AUDIT QUALITY ERROR DETAIL & CODER ACTION -->
+    <div id="viewAuditErrorModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 4px; color: var(--accent-cyan);">Quality Audit Details</h3>
+            <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-card); font-size: 12px; line-height: 1.7; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <div><strong style="color: var(--text-muted);">Chart ID:</strong> <span id="vChartId">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Quality %:</strong> <span id="vQualityScore">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Project:</strong> <span id="vProject">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Sub-Project:</strong> <span id="vSubProject">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Errors:</strong> <span id="vTotalError">-</span></div>
+                    <div><strong style="color: var(--text-muted);">QA Status:</strong> <span id="vQaStatus">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Parameter:</strong> <span id="vErrorParam">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Location:</strong> <span id="vErrorLocation">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Auditor:</strong> <span id="vAuditorName">-</span></div>
+                    <div><strong style="color: var(--text-muted);">Audit Date:</strong> <span id="vAuditDate">-</span></div>
+                </div>
+                <div style="margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+                    <strong style="color: var(--text-muted);">Auditor Comments:</strong>
+                    <p id="vAuditorComment" style="margin-top: 4px; color: var(--text-primary); white-space: pre-wrap; background: var(--bg-card); padding: 8px 10px; border-radius: var(--radius-sm);">-</p>
+                </div>
+                <div id="vStageStatusBox" style="margin-top: 8px;">
+                    <strong style="color: var(--text-muted);">Workflow Stage:</strong>
+                    <span id="vWorkflowStage" class="badge badge-pending" style="margin-left: 6px;">-</span>
+                </div>
+            </div>
+
+            <div id="vCoderActionControls" style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-success" style="flex: 1;" onclick="handleModalCoderAgree()">Agree</button>
+                <button type="button" class="btn btn-danger" style="flex: 1;" onclick="handleModalCoderDisagree()">Disagree / Rebuttal</button>
+                <button type="button" class="btn btn-secondary" onclick="closeViewAuditErrorModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let MASTER_STORE_KEY = localStorage.getItem('CUSTOM_STORAGE_KEY') || 'ENTERPRISE_SYSTEM_STORE_V1';
         let AUTO_SYNC_ENABLED = localStorage.getItem('AUTO_SYNC_ENABLED') !== 'false';
         let BACKUP_STRATEGY = localStorage.getItem('BACKUP_STRATEGY') || 'Standard';
 
-        let roles = ["Admin"];
-        let designations = ["Admin"];
+        // Default system roles & designations
+        let roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+        let designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
         let projects = [];
         let users = [];
         let apiConfigs = [];
@@ -2087,16 +2053,12 @@
         let selectedAuditChartObj = null;
         let activeViewAuditChartId = null;
         let activeAuditorRebuttalChartId = null;
-        let activeAuditTlChartId = null;
 
         function getActiveApiProvider() {
-            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) {
-                return null;
-            }
+            if (!Array.isArray(apiConfigs) || apiConfigs.length === 0) return null;
             const active = apiConfigs.find(c => c.isActive === true);
             if (active) return active;
             apiConfigs[0].isActive = true;
-            savePersistentData(false);
             return apiConfigs[0];
         }
 
@@ -2108,7 +2070,7 @@
             const counter = document.getElementById('activeProviderCounterBadge');
 
             const active = getActiveApiProvider();
-            if (active) {
+            if (active && active.apiKey) {
                 if (bannerName) bannerName.textContent = active.providerName + (active.isActive ? " (Active)" : "");
                 if (bannerEndpoint) bannerEndpoint.textContent = buildProviderRequestUrl(active);
                 if (btnPush) btnPush.textContent = `☁️ Push to Cloud (${active.providerName})`;
@@ -2119,9 +2081,8 @@
                 if (bannerEndpoint) bannerEndpoint.textContent = "Local-Only Operation";
                 if (btnPush) btnPush.textContent = `☁️ Push to Cloud (Disabled)`;
                 if (btnPull) btnPull.textContent = `🔄 Pull from Cloud (Disabled)`;
-                if (counter) counter.textContent = `0 Active / 0 Total`;
+                if (counter) counter.textContent = `0 Active / ${apiConfigs.length} Total`;
             }
-            
             refreshLocalStorageDiagnostics();
         }
 
@@ -2135,9 +2096,11 @@
             }
 
             if (provider.providerName.toLowerCase().includes('jsonbin') || ep.includes('jsonbin.io')) {
-                if (!ep.endsWith('/')) ep += '/';
-                const bin = resId || '';
-                return isGet ? `${ep}${bin}/latest` : `${ep}${bin}`;
+                let base = ep.replace(/\/+$/, '');
+                if (resId) {
+                    return isGet ? `${base}/${resId}/latest` : `${base}/${resId}`;
+                }
+                return base;
             }
 
             if (provider.providerName.toLowerCase().includes('firebase') || ep.includes('firebaseio.com')) {
@@ -2168,7 +2131,7 @@
                 headers['Authorization'] = `Bearer ${key}`;
                 headers['HTTP-Referer'] = window.location.origin || 'http://localhost';
                 headers['X-Title'] = 'Production Work Flow';
-            } else if (hType === 'X-Master-Key') {
+            } else if (hType === 'X-Master-Key' || provider.providerName.toLowerCase().includes('jsonbin')) {
                 headers['X-Master-Key'] = key;
             } else if (hType === 'x-api-key') {
                 headers['x-api-key'] = key;
@@ -2198,16 +2161,15 @@
                     id: 101,
                     providerName: "JSONBin.io",
                     presetKey: "JSONBin.io",
-                    endpoint: "https://api.jsonbin.io/v3/b/",
+                    endpoint: "https://api.jsonbin.io/v3/b",
                     resourceId: "",
                     apiKey: "",
                     headerType: "X-Master-Key",
                     isActive: true,
-                    lastVerified: new Date().toISOString()
+                    lastVerified: null
                 }];
                 savePersistentData(false);
             }
-            updateCloudBannerInfo();
         }
 
         function initFreshBaseline() {
@@ -2215,27 +2177,27 @@
                 { empId: "EMP101", userName: "admin", empName: "System Administrator", role: "Admin", designation: "Admin", status: "Active", tl: "Self", manager: "Self", password: "admin" }
             ];
             projects = [];
-            roles = ["Admin"];
-            designations = ["Admin"];
+            roles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+            designations = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
             deletedUserNames = [];
             productionLogs = [];
             qualityLogs = [];
-            
             apiConfigs = [{
                 id: 101,
                 providerName: "JSONBin.io",
                 presetKey: "JSONBin.io",
-                endpoint: "https://api.jsonbin.io/v3/b/",
+                endpoint: "https://api.jsonbin.io/v3/b",
                 resourceId: "",
                 apiKey: "",
                 headerType: "X-Master-Key",
                 isActive: true,
-                lastVerified: new Date().toISOString()
+                lastVerified: null
             }];
             savePersistentData(false);
         }
 
         function applyParsedData(data) {
+            if (!data) return;
             deletedUserNames = data.deletedUserNames || [];
             
             const legacyDemoUsers = ['subadmin', 'team_lead', 'manager_user', 'auditor_user', 'coder_alex', 'user_c'];
@@ -2249,20 +2211,14 @@
                 users.push({ empId: "EMP101", userName: "admin", empName: "System Administrator", role: "Admin", designation: "Admin", status: "Active", tl: "Self", manager: "Self", password: "admin" });
             }
 
-            projects = (data.projects || []).filter(p => {
-                const pName = (p.name || '').trim().toLowerCase();
-                const spName = (p.subName || '').trim().toLowerCase();
-                return pName !== 'aetna' && !spName.includes('aetna');
-            });
+            projects = data.projects || [];
+            
+            // Retain custom and core roles
+            const baseRoles = ["Admin", "Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
+            roles = Array.from(new Set([...baseRoles, ...(data.roles || [])]));
 
-            const demoRolesToPurge = ["Sub-Admin", "Coder", "Auditor", "Team Lead", "Manager"];
-            const demoDesigToPurge = ["Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
-
-            roles = (data.roles || ["Admin"]).filter(r => !demoRolesToPurge.includes(r));
-            if (!roles.includes("Admin")) roles.unshift("Admin");
-
-            designations = (data.designations || ["Admin"]).filter(d => !demoDesigToPurge.includes(d));
-            if (!designations.includes("Admin")) designations.unshift("Admin");
+            const baseDesigs = ["Admin", "Sub-Admin", "Senior Coder", "Quality Analyst", "Auditor", "Team Lead", "Manager"];
+            designations = Array.from(new Set([...baseDesigs, ...(data.designations || [])]));
 
             productionLogs = data.productionLogs || [];
             qualityLogs = data.qualityLogs || [];
@@ -2302,59 +2258,48 @@
             if (!raw) return;
 
             const provider = getActiveApiProvider();
-            if (!provider || !provider.apiKey || !provider.resourceId) {
-                if (showAlert) alert(`No active cloud provider with an API key and Resource/Bin ID is configured.`);
+            if (!provider || !provider.apiKey) {
+                if (showAlert) alert(`Configure an API Key in API Configuration first.`);
                 return;
             }
 
             const indicator = document.getElementById('syncStatusIndicator');
-            if (indicator) indicator.textContent = `Syncing with [${provider.providerName}]...`;
+            if (indicator) indicator.textContent = `Pushing data to [${provider.providerName}]...`;
 
             try {
-                let bodyPayload = raw;
-                let method = 'PUT';
+                let url = buildProviderRequestUrl(provider, false);
+                let method = provider.resourceId ? 'PUT' : 'POST';
 
-                if (provider.providerName.toLowerCase().includes('openrouter')) {
-                    method = 'POST';
-                    bodyPayload = JSON.stringify({
-                        model: provider.resourceId || "meta-llama/llama-3-8b-instruct",
-                        messages: [
-                            { role: "system", content: "You are the database sync verification agent for Production Work Flow." },
-                            { role: "user", content: `Sync data ping: ${new Date().toISOString()}` }
-                        ]
-                    });
-                }
-
-                const response = await fetch(buildProviderRequestUrl(provider, false), {
+                const response = await fetch(url, {
                     method: method,
                     headers: buildProviderHeaders(provider),
-                    body: bodyPayload
+                    body: raw
                 });
 
                 if (response.ok) {
+                    const resJson = await response.json();
+                    if (!provider.resourceId && resJson.metadata && resJson.metadata.id) {
+                        provider.resourceId = resJson.metadata.id;
+                    }
                     provider.lastVerified = new Date().toISOString();
+                    savePersistentData(false);
                     if (indicator) indicator.textContent = `Synced with [${provider.providerName}]: ${new Date().toLocaleTimeString()}`;
-                    if (showAlert) alert(`Connected and verified with ${provider.providerName}!`);
+                    if (showAlert) alert(`Synced with ${provider.providerName}!\nBin ID: ${provider.resourceId || 'Active'}`);
                     renderApiConfigs();
                 } else {
-                    const errText = await response.text();
-                    if (indicator) indicator.textContent = `Cloud sync failed. Status ${response.status}`;
-                    if (showAlert) alert(`Sync failed (${response.status}):\n${errText}`);
+                    const err = await response.text();
+                    if (indicator) indicator.textContent = `Sync failed (${response.status})`;
+                    if (showAlert) alert(`Sync failed: ${err}`);
                 }
             } catch (err) {
-                if (indicator) indicator.textContent = `Offline or sync error.`;
-                if (showAlert) alert(`Error syncing: ${err.message}`);
+                if (indicator) indicator.textContent = `Sync error.`;
+                if (showAlert) alert(`Error: ${err.message}`);
             }
         }
 
         async function fetchFromCloud(showAlert = true) {
             const provider = getActiveApiProvider();
             if (!provider || !provider.apiKey || !provider.resourceId) return false;
-
-            if (provider.providerName.toLowerCase().includes('openrouter')) {
-                if (showAlert) alert(`OpenRouter API active and verified.`);
-                return true;
-            }
 
             try {
                 const response = await fetch(buildProviderRequestUrl(provider, true), {
@@ -2376,7 +2321,7 @@
                         renderRoles();
                         renderApiConfigs();
                         updateCloudBannerInfo();
-                        if (showAlert) alert(`Data loaded from ${provider.providerName}`);
+                        if (showAlert) alert(`Cloud database loaded successfully!`);
                         return true;
                     }
                 }
@@ -2390,129 +2335,75 @@
             await pushToCloud(true);
         }
 
-        // --- FIRST TIME BROWSER CLOUD SETUP WIZARD ---
-        function checkFirstTimeBrowserCloud() {
-            const params = new URLSearchParams(window.location.search);
-            const urlBin = params.get('bin');
-            const urlKey = params.get('key');
-            if (urlBin && urlKey) {
-                saveUrlCloudConfig(urlBin, urlKey);
-                return;
-            }
-
+        // --- ON-DEMAND CLOUD SYNC FOR MULTI-BROWSER USE ---
+        function openCloudConnectModal() {
             const active = getActiveApiProvider();
-            const hasCloudConfig = active && active.apiKey && active.resourceId;
-            const setupDone = localStorage.getItem('CLOUD_SYNC_SETUP_COMPLETED') === 'true';
-
-            if (!hasCloudConfig && !setupDone) {
-                openCloudSetupWizard();
+            if (active) {
+                document.getElementById('modalSyncBinId').value = active.resourceId || '';
+                document.getElementById('modalSyncApiKey').value = active.apiKey || '';
             }
+            document.getElementById('modalSyncStatus').textContent = '';
+            document.getElementById('cloudConnectModal').classList.remove('hidden');
         }
 
-        function saveUrlCloudConfig(bin, key) {
+        function closeCloudConnectModal() {
+            document.getElementById('cloudConnectModal').classList.add('hidden');
+        }
+
+        async function handleCloudSyncSubmit(e) {
+            e.preventDefault();
+            const binId = document.getElementById('modalSyncBinId').value.trim();
+            const apiKey = document.getElementById('modalSyncApiKey').value.trim();
+            const statusEl = document.getElementById('modalSyncStatus');
+
+            statusEl.textContent = "Connecting to cloud...";
+
             let active = getActiveApiProvider();
             if (!active) {
                 active = {
                     id: 101,
                     providerName: "JSONBin.io",
                     presetKey: "JSONBin.io",
-                    endpoint: "https://api.jsonbin.io/v3/b/",
-                    resourceId: bin,
-                    apiKey: key,
+                    endpoint: "https://api.jsonbin.io/v3/b",
+                    resourceId: binId,
+                    apiKey: apiKey,
                     headerType: "X-Master-Key",
                     isActive: true
                 };
                 apiConfigs = [active];
             } else {
-                active.resourceId = bin;
-                active.apiKey = key;
-                active.headerType = "X-Master-Key";
-            }
-            localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
-            savePersistentData(false);
-            fetchFromCloud(false);
-        }
-
-        function openCloudSetupWizard() {
-            const active = getActiveApiProvider();
-            if (active) {
-                document.getElementById('wizBinId').value = active.resourceId || '';
-                document.getElementById('wizApiKey').value = active.apiKey || '';
-            }
-            document.getElementById('wizStatusMsg').textContent = '';
-            document.getElementById('setupWizardOverlay').classList.remove('hidden');
-        }
-
-        function closeCloudSetupWizard() {
-            document.getElementById('setupWizardOverlay').classList.add('hidden');
-        }
-
-        function skipWizardCloudSetup() {
-            localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
-            closeCloudSetupWizard();
-        }
-
-        function handleWizardProviderChange() {
-            const p = document.getElementById('wizProviderSelect').value;
-            const bLabel = document.getElementById('wizBinLabel');
-            const kLabel = document.getElementById('wizKeyLabel');
-            if (p === 'JSONBin.io') {
-                bLabel.textContent = 'JSONBin Bin ID';
-                kLabel.textContent = 'Master Key / API Key';
-            } else if (p === 'Firebase Realtime Database') {
-                bLabel.textContent = 'Resource Path (/production_store)';
-                kLabel.textContent = 'Database Secret / Auth (Optional)';
-            } else {
-                bLabel.textContent = 'Resource Path / Endpoint Subpath';
-                kLabel.textContent = 'API Key';
-            }
-        }
-
-        async function handleWizardCloudConnect(e) {
-            e.preventDefault();
-            const pType = document.getElementById('wizProviderSelect').value;
-            const binId = document.getElementById('wizBinId').value.trim();
-            const apiKey = document.getElementById('wizApiKey').value.trim();
-            const statusEl = document.getElementById('wizStatusMsg');
-
-            statusEl.textContent = "Verifying and downloading database...";
-
-            let active = getActiveApiProvider();
-            if (!active) {
-                active = {
-                    id: 101,
-                    providerName: pType,
-                    presetKey: pType,
-                    endpoint: pType === 'JSONBin.io' ? "https://api.jsonbin.io/v3/b/" : "",
-                    resourceId: binId,
-                    apiKey: apiKey,
-                    headerType: pType === 'JSONBin.io' ? "X-Master-Key" : "Bearer",
-                    isActive: true
-                };
-                apiConfigs = [active];
-            } else {
-                active.providerName = pType;
-                active.presetKey = pType;
-                if (pType === 'JSONBin.io') {
-                    active.endpoint = "https://api.jsonbin.io/v3/b/";
-                    active.headerType = "X-Master-Key";
-                }
                 active.resourceId = binId;
                 active.apiKey = apiKey;
+                active.headerType = "X-Master-Key";
             }
 
             savePersistentData(false);
             const success = await fetchFromCloud(false);
 
             if (success) {
-                statusEl.textContent = "Connected successfully!";
-                localStorage.setItem('CLOUD_SYNC_SETUP_COMPLETED', 'true');
+                statusEl.textContent = "Database synced successfully!";
                 setTimeout(() => {
-                    closeCloudSetupWizard();
-                    alert("Database synchronized! You can now sign in with your credentials on this browser.");
-                }, 600);
+                    closeCloudConnectModal();
+                    alert("Synced! You can now sign in using your existing account credentials.");
+                }, 400);
             } else {
-                statusEl.textContent = "Error: Could not retrieve database. Check your Bin ID and API Key.";
+                statusEl.textContent = "Failed to sync. Please verify your Bin ID and Master Key.";
+            }
+        }
+
+        function checkUrlAutoSync() {
+            const params = new URLSearchParams(window.location.search);
+            const bin = params.get('bin');
+            const key = params.get('key');
+            if (bin && key) {
+                let active = getActiveApiProvider();
+                if (active) {
+                    active.resourceId = bin;
+                    active.apiKey = key;
+                    active.headerType = 'X-Master-Key';
+                    savePersistentData(false);
+                    fetchFromCloud(false);
+                }
             }
         }
 
@@ -2544,7 +2435,7 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (!parsed.users) {
-                        alert("Invalid file structure.");
+                        alert("Invalid database structure.");
                         return;
                     }
                     applyParsedData(parsed);
@@ -2555,7 +2446,7 @@
                     renderDesignations();
                     renderRoles();
                     renderApiConfigs();
-                    alert("Database file imported successfully.");
+                    alert("Database imported successfully.");
                 } catch {
                     alert("Error parsing file.");
                 }
@@ -2617,7 +2508,6 @@
             };
 
             const usersList = [];
-
             for (let i = 1; i < lines.length; i++) {
                 const row = parseRow(lines[i]);
                 if (row.length === 0 || !row[0]) continue;
@@ -2626,8 +2516,8 @@
                     userName: row[0] || '',
                     empId: row[1] || '',
                     empName: row[2] || '',
-                    role: row[3] || 'Admin',
-                    designation: row[4] || 'Admin',
+                    role: row[3] || 'Coder',
+                    designation: row[4] || 'Senior Coder',
                     tl: row[5] || 'Nill',
                     manager: row[6] || 'Nill',
                     password: row[7] || 'Temp@123'
@@ -2651,8 +2541,8 @@
                 const uName = (u.userName || u.UserName || '').trim();
                 const eId = (u.empId || u.EmpId || u['EMP ID'] || '').trim();
                 const eName = (u.empName || u.EmpName || u['EMP Name'] || '').trim();
-                const r = (u.role || u.Role || 'Admin').trim();
-                const d = (u.designation || u.Designation || 'Admin').trim();
+                const r = (u.role || u.Role || 'Coder').trim();
+                const d = (u.designation || u.Designation || 'Senior Coder').trim();
                 const tl = (u.tl || u.ReportingTL || u['Reporting TL'] || 'Nill').trim();
                 const mgr = (u.manager || u.ReportingManager || u['Reporting Manager'] || 'Nill').trim();
                 const pass = (u.password || u.Password || 'Temp@123').trim();
@@ -2669,24 +2559,11 @@
                 } else if (users.some(existing => existing.empId.toLowerCase() === eId.toLowerCase())) {
                     isError = true;
                     errMsg = "Duplicate EMP ID";
-                } else if (stagedBulkUsers.some(stg => stg.userName.toLowerCase() === uName.toLowerCase() || stg.empId.toLowerCase() === eId.toLowerCase())) {
-                    isError = true;
-                    errMsg = "Duplicate in Upload";
                 }
 
                 if (!isError) {
                     validCount++;
-                    stagedBulkUsers.push({
-                        userName: uName,
-                        empId: eId,
-                        empName: eName,
-                        role: r,
-                        designation: d,
-                        tl: tl,
-                        manager: mgr,
-                        password: pass,
-                        status: 'Active'
-                    });
+                    stagedBulkUsers.push({ userName: uName, empId: eId, empName: eName, role: r, designation: d, tl, manager: mgr, password: pass, status: 'Active' });
                 }
 
                 return `
@@ -2716,23 +2593,16 @@
             if (!stagedBulkUsers || stagedBulkUsers.length === 0) return;
 
             stagedBulkUsers.forEach(u => {
-                if (!roles.includes(u.role)) {
-                    roles.push(u.role);
-                }
-                if (!designations.includes(u.designation)) {
-                    designations.push(u.designation);
-                }
+                if (!roles.includes(u.role)) roles.push(u.role);
+                if (!designations.includes(u.designation)) designations.push(u.designation);
                 users.push(u);
             });
 
             savePersistentData(true);
             populateDropdowns();
             renderUsers();
-            renderDesignations();
-            renderRoles();
             calculateAdminDashboardMetrics();
-
-            alert(`Successfully onboarded ${stagedBulkUsers.length} new users!`);
+            alert(`Onboarded ${stagedBulkUsers.length} users!`);
             clearBulkUserStaging();
         }
 
@@ -2764,22 +2634,14 @@
                 const size = (k.length + v.length) * 2;
                 totalBytes += size;
 
-                if (k === MASTER_STORE_KEY) {
-                    primaryBytes = size;
-                }
+                if (k === MASTER_STORE_KEY) primaryBytes = size;
 
                 let entryType = "Application Cache";
                 if (k === MASTER_STORE_KEY) entryType = "Primary JSON Database";
                 else if (k.includes('BACKUP')) entryType = "Backup Snapshot";
                 else if (k === 'activeUser' || k === 'isLoggedIn') entryType = "Auth Credentials";
-                else if (k.startsWith('CUSTOM_') || k.startsWith('AUTO_')) entryType = "Storage Config";
 
-                keyRows.push({
-                    key: k,
-                    type: entryType,
-                    sizeKB: (size / 1024).toFixed(2),
-                    bytes: size
-                });
+                keyRows.push({ key: k, type: entryType, sizeKB: (size / 1024).toFixed(2) });
             }
 
             primarySizeElem.textContent = `${(primaryBytes / 1024).toFixed(2)} KB`;
@@ -2787,14 +2649,11 @@
             keyCountElem.textContent = localStorage.length;
 
             const usageKB = totalBytes / 1024;
-            if (usageKB > 4000) {
-                quotaStatusElem.textContent = "Critical (>4MB)";
-                quotaStatusElem.style.color = "var(--accent-danger)";
-            } else if (usageKB > 2500) {
-                quotaStatusElem.textContent = "Warning (>2.5MB)";
+            if (usageKB > 3500) {
+                quotaStatusElem.textContent = "Warning (>3.5MB)";
                 quotaStatusElem.style.color = "var(--accent-warning)";
             } else {
-                quotaStatusElem.textContent = "Normal (<2.5MB)";
+                quotaStatusElem.textContent = "Normal";
                 quotaStatusElem.style.color = "var(--accent-success)";
             }
 
@@ -2811,7 +2670,7 @@
                     <td>
                         ${r.key !== MASTER_STORE_KEY && r.key !== 'isLoggedIn' && r.key !== 'activeUser' ? 
                             `<button class="btn btn-danger btn-sm" onclick="removeSpecificStorageKey('${r.key}')">Remove</button>` : 
-                            `<span style="color:var(--text-muted); font-size:11px;">Protected System Key</span>`
+                            `<span style="color:var(--text-muted); font-size:11px;">Protected</span>`
                         }
                     </td>
                 </tr>
@@ -2824,16 +2683,11 @@
             const autoSync = document.getElementById('cfgAutoSyncSelect').value === 'true';
             const backupStrategy = document.getElementById('cfgBackupStrategy').value;
 
-            if (!newKey) {
-                alert("Master Storage Key cannot be empty.");
-                return;
-            }
+            if (!newKey) return;
 
             if (newKey !== MASTER_STORE_KEY) {
                 const currentData = localStorage.getItem(MASTER_STORE_KEY);
-                if (currentData) {
-                    localStorage.setItem(newKey, currentData);
-                }
+                if (currentData) localStorage.setItem(newKey, currentData);
                 localStorage.removeItem(MASTER_STORE_KEY);
                 MASTER_STORE_KEY = newKey;
                 localStorage.setItem('CUSTOM_STORAGE_KEY', newKey);
@@ -2846,40 +2700,31 @@
 
             savePersistentData(false);
             refreshLocalStorageDiagnostics();
-            alert("Local storage configuration saved successfully!");
+            alert("Storage settings saved!");
         }
 
         function runStorageIntegrityCheck() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
-            if (!raw) {
-                alert("Storage Check Failed: Primary database key is missing or empty.");
-                return;
-            }
+            if (!raw) return alert("Storage is empty.");
             try {
                 const data = JSON.parse(raw);
-                const userCount = Array.isArray(data.users) ? data.users.length : 0;
-                const prodCount = Array.isArray(data.productionLogs) ? data.productionLogs.length : 0;
-                const qualCount = Array.isArray(data.qualityLogs) ? data.qualityLogs.length : 0;
-                alert(`Storage Integrity Verified: OK\n\n• Stored Users: ${userCount}\n• Production Logs: ${prodCount}\n• Quality Review Records: ${qualCount}\n• Saved Timestamp: ${data.savedAt || 'Unknown'}`);
+                alert(`Storage OK:\nUsers: ${data.users?.length || 0}\nProjects: ${data.projects?.length || 0}\nLogs: ${data.productionLogs?.length || 0}`);
             } catch (err) {
-                alert(`Storage Corrupted: Failed to parse JSON payload. Error: ${err.message}`);
+                alert(`Error: ${err.message}`);
             }
         }
 
         function createLocalBackupSnapshot() {
             const raw = localStorage.getItem(MASTER_STORE_KEY);
-            if (!raw) {
-                alert("No active data to snapshot.");
-                return;
-            }
+            if (!raw) return alert("No active data to snapshot.");
             const snapKey = `${MASTER_STORE_KEY}_SNAP_${Date.now()}`;
             localStorage.setItem(snapKey, raw);
             refreshLocalStorageDiagnostics();
-            alert(`Local snapshot created: [${snapKey}]`);
+            alert(`Snapshot created: [${snapKey}]`);
         }
 
         function removeSpecificStorageKey(key) {
-            if (confirm(`Delete storage key "${key}"?`)) {
+            if (confirm(`Remove storage key "${key}"?`)) {
                 localStorage.removeItem(key);
                 refreshLocalStorageDiagnostics();
             }
@@ -2895,12 +2740,9 @@
             URL.revokeObjectURL(url);
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             loadPersistentData();
-            checkFirstTimeBrowserCloud();
-            try {
-                await fetchFromCloud(false);
-            } catch (e) {}
+            checkUrlAutoSync();
             initAppFlow();
         });
 
@@ -2961,13 +2803,10 @@
         async function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('loginSubmitBtn');
-            const origText = btn ? btn.textContent : 'Sign In';
             if (btn) btn.textContent = 'Verifying...';
 
-            try {
-                await fetchFromCloud(false);
-            } catch (err) {}
-
+            // Silently try background cloud pull if credentials exist
+            try { await fetchFromCloud(false); } catch (err) {}
             loadPersistentData();
 
             const uInput = document.getElementById('loginUser').value.trim().toLowerCase();
@@ -2979,7 +2818,7 @@
                 return (uName === uInput || eId === uInput);
             });
 
-            if (btn) btn.textContent = origText;
+            if (btn) btn.textContent = 'Sign In';
 
             if (foundUser) {
                 const activePass = (foundUser.password || '').trim();
@@ -2988,10 +2827,7 @@
                                 (uInput === 'admin' && pInput === 'admin');
 
                 if (isMatch) {
-                    if (foundUser.status === 'Inactive') {
-                        alert('User account is Inactive.');
-                        return;
-                    }
+                    if (foundUser.status === 'Inactive') return alert('User account is Inactive.');
                     if (!foundUser.password) {
                         foundUser.password = pInput;
                         savePersistentData(true);
@@ -3002,12 +2838,11 @@
                     initAppFlow();
                     return;
                 } else {
-                    alert('Invalid Password! Please verify and try again.');
-                    return;
+                    return alert('Invalid Password! Please verify and try again.');
                 }
             }
 
-            alert(`No account found matching "${uInput}".\n\nIf you created this account in another browser, ensure you connect your shared Cloud Database by clicking '☁️ Connect Cloud DB' below.`);
+            alert(`No account found matching "${uInput}".\n\nIf you created this account on another browser, click "☁️ Sync Cloud DB" below to load your shared database.`);
         }
 
         function handleLogout() {
@@ -3040,10 +2875,6 @@
 
         async function handleDirectPasswordReset(e) {
             e.preventDefault();
-            try {
-                await fetchFromCloud(false);
-            } catch (err) {}
-
             loadPersistentData();
 
             const uName = document.getElementById('resetInputUsername').value.trim().toLowerCase();
@@ -3062,7 +2893,7 @@
                 document.getElementById('loginUser').value = targetUser.userName;
                 document.getElementById('loginPass').value = 'Temp@123';
             } else {
-                alert("Account verification failed. No matching username and EMP ID found.");
+                alert("Verification failed. Username and EMP ID did not match.");
             }
         }
 
@@ -3074,7 +2905,7 @@
             document.getElementById('profDesig').textContent = activeAdminUser.designation;
             document.getElementById('profTl').textContent = activeAdminUser.tl;
             document.getElementById('profMgr').textContent = activeAdminUser.manager;
-            document.getElementById('profAvatar').textContent = activeAdminUser.empName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('profAvatar').textContent = (activeAdminUser.empName || 'AD').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         }
 
         function setupNavigation() {
@@ -3171,8 +3002,8 @@
             if (tabId === 'roleMgmt') renderRoles();
             if (tabId === 'coderDashboard') calculateCoderDashboardMetrics();
             if (tabId === 'auditorDashboard') calculateAnalyticsDashboardMetrics();
-            if (tabId === 'reports') { renderAdminReports(); }
-            if (tabId === 'cloudStorageTab') { updateCloudBannerInfo(); }
+            if (tabId === 'reports') renderAdminReports();
+            if (tabId === 'cloudStorageTab') updateCloudBannerInfo();
             if (tabId === 'apiConfigTab') renderApiConfigs();
             if (tabId === 'entryProdTab') setupEntryProductionInterface();
             if (tabId === 'qualityReviewTab') setupAuditorInterface();
@@ -3215,9 +3046,9 @@
             const cp = document.getElementById('confirmPass').value.trim();
 
             if (!activeAdminUser) return;
-            if (op !== activeAdminUser.password) { alert("Incorrect current password."); return; }
-            if (np !== cp) { alert("Passwords do not match."); return; }
-            if (np.length < 4) { alert("Password must be 4+ characters."); return; }
+            if (op !== activeAdminUser.password) return alert("Incorrect current password.");
+            if (np !== cp) return alert("Passwords do not match.");
+            if (np.length < 4) return alert("Password must be 4+ characters.");
 
             activeAdminUser.password = np;
             const uIndex = users.findIndex(u => (u.userName || '').toLowerCase().trim() === activeAdminUser.userName.toLowerCase().trim());
@@ -3225,7 +3056,7 @@
 
             localStorage.setItem('activeUser', JSON.stringify(activeAdminUser));
             savePersistentData(true);
-            alert("Password updated and synced across browsers!");
+            alert("Password updated and saved!");
             closePassChangeModal();
         }
 
@@ -3292,14 +3123,8 @@
             const manager = document.getElementById('uMgr').value;
             const password = document.getElementById('uDefaultPassword').value.trim() || "Temp@123";
 
-            if (users.some(u => u.userName.toLowerCase() === uName.toLowerCase())) {
-                alert(`Username exists.`);
-                return;
-            }
-            if (users.some(u => u.empId.toLowerCase() === empId.toLowerCase())) {
-                alert(`EMP ID registered.`);
-                return;
-            }
+            if (users.some(u => u.userName.toLowerCase() === uName.toLowerCase())) return alert(`Username exists.`);
+            if (users.some(u => u.empId.toLowerCase() === empId.toLowerCase())) return alert(`EMP ID registered.`);
 
             users.push({ empId, userName: uName, empName, role, designation, status: 'Active', tl, manager, password });
             savePersistentData(true);
@@ -3375,14 +3200,8 @@
 
                 if (!newUName || !newEmpId || !newEmpName) return;
 
-                if (users.some((u, i) => i !== idx && (u.userName || '').toLowerCase().trim() === newUName.toLowerCase())) {
-                    alert(`Username taken.`);
-                    return;
-                }
-                if (users.some((u, i) => i !== idx && (u.empId || '').toLowerCase().trim() === newEmpId.toLowerCase())) {
-                    alert(`EMP ID assigned.`);
-                    return;
-                }
+                if (users.some((u, i) => i !== idx && (u.userName || '').toLowerCase().trim() === newUName.toLowerCase())) return alert(`Username taken.`);
+                if (users.some((u, i) => i !== idx && (u.empId || '').toLowerCase().trim() === newEmpId.toLowerCase())) return alert(`EMP ID assigned.`);
 
                 users[idx].userName = newUName;
                 users[idx].empId = newEmpId;
@@ -3479,7 +3298,7 @@
             const tbody = document.getElementById('projectTableBody');
             if (!tbody) return;
             if (projects.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No projects added yet. Add one above.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No projects added yet.</td></tr>`;
                 return;
             }
             tbody.innerHTML = projects.map((p, idx) => `
@@ -3505,10 +3324,7 @@
         }
 
         function deleteDesignation(idx) {
-            if (designations[idx] === "Admin") {
-                alert("The Admin designation is protected and cannot be deleted.");
-                return;
-            }
+            if (designations[idx] === "Admin") return alert("The Admin designation cannot be deleted.");
             designations.splice(idx, 1);
             savePersistentData(true);
             populateDropdowns();
@@ -3524,7 +3340,7 @@
                     <td>
                         ${d !== "Admin" ? 
                             `<button class="btn btn-danger btn-sm" onclick="deleteDesignation(${idx})">Delete</button>` : 
-                            `<span style="color: var(--text-muted); font-size: 11px;">Protected System Role</span>`
+                            `<span style="color: var(--text-muted); font-size: 11px;">Protected</span>`
                         }
                     </td>
                 </tr>
@@ -3544,10 +3360,7 @@
         }
 
         function deleteRole(idx) {
-            if (roles[idx] === "Admin") {
-                alert("The Admin role is protected and cannot be deleted.");
-                return;
-            }
+            if (roles[idx] === "Admin") return alert("The Admin role cannot be deleted.");
             roles.splice(idx, 1);
             savePersistentData(true);
             populateDropdowns();
@@ -3563,7 +3376,7 @@
                     <td>
                         ${r !== "Admin" ? 
                             `<button class="btn btn-danger btn-sm" onclick="deleteRole(${idx})">Delete</button>` : 
-                            `<span style="color: var(--text-muted); font-size: 11px;">Protected System Role</span>`
+                            `<span style="color: var(--text-muted); font-size: 11px;">Protected</span>`
                         }
                     </td>
                 </tr>
@@ -3577,42 +3390,40 @@
             const resInput = document.getElementById('apiResourceIdInput');
             const hTypeSelect = document.getElementById('apiAuthHeaderType');
 
-            const providerPresets = {
-                'OpenAI': { name: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', resource: 'gpt-4o', placeholder: 'e.g. gpt-4o or gpt-4o-mini', header: 'Bearer' },
-                'Anthropic': { name: 'Anthropic', endpoint: 'https://api.anthropic.com/v1/messages', resource: 'claude-3-5-sonnet-20241022', placeholder: 'e.g. claude-3-5-sonnet-20241022', header: 'x-api-key' },
-                'Google Gemini': { name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', resource: 'gemini-1.5-flash', placeholder: 'e.g. gemini-1.5-flash', header: 'Bearer' },
-                'Cohere': { name: 'Cohere', endpoint: 'https://api.cohere.com/v2/chat', resource: 'command-r-plus', placeholder: 'e.g. command-r-plus', header: 'Bearer' },
-                'Mistral AI': { name: 'Mistral AI', endpoint: 'https://api.mistral.ai/v1/chat/completions', resource: 'mistral-large-latest', placeholder: 'e.g. mistral-large-latest', header: 'Bearer' },
-                'Groq': { name: 'Groq', endpoint: 'https://api.groq.com/openai/v1/chat/completions', resource: 'llama-3.3-70b-versatile', placeholder: 'e.g. llama-3.3-70b-versatile', header: 'Bearer' },
-                'Together AI': { name: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', resource: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', placeholder: 'e.g. meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', header: 'Bearer' },
-                'Perplexity': { name: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', resource: 'sonar', placeholder: 'e.g. sonar or sonar-pro', header: 'Bearer' },
-                'Replicate': { name: 'Replicate', endpoint: 'https://api.replicate.com/v1/predictions', resource: 'meta/meta-llama-3-70b-instruct', placeholder: 'e.g. meta/meta-llama-3-70b-instruct', header: 'Bearer' },
-                'Hugging Face': { name: 'Hugging Face', endpoint: 'https://api-inference.huggingface.co/models/', resource: 'meta-llama/Meta-Llama-3-8B-Instruct', placeholder: 'e.g. meta-llama/Meta-Llama-3-8B-Instruct', header: 'Bearer' },
-                'DeepSeek': { name: 'DeepSeek', endpoint: 'https://api.deepseek.com/chat/completions', resource: 'deepseek-chat', placeholder: 'e.g. deepseek-chat or deepseek-reasoner', header: 'Bearer' },
-                'xAI': { name: 'xAI', endpoint: 'https://api.x.ai/v1/chat/completions', resource: 'grok-beta', placeholder: 'e.g. grok-beta', header: 'Bearer' },
-                'Amazon Bedrock': { name: 'Amazon Bedrock', endpoint: 'https://bedrock-runtime.us-east-1.amazonaws.com', resource: 'anthropic.claude-3-sonnet-20240229-v1:0', placeholder: 'e.g. Model ARN or ID', header: 'Bearer' },
-                'Microsoft Azure AI': { name: 'Microsoft Azure AI', endpoint: 'https://your-resource-name.openai.azure.com/openai/deployments/your-deployment-name/chat/completions?api-version=2024-02-15-preview', resource: 'gpt-4o', placeholder: 'e.g. Deployment / Model Name', header: 'Bearer' },
-                'IBM watsonx': { name: 'IBM watsonx', endpoint: 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29', resource: 'ibm/granite-13b-chat-v2', placeholder: 'e.g. ibm/granite-13b-chat-v2', header: 'Bearer' },
-                'NVIDIA NIM': { name: 'NVIDIA NIM', endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions', resource: 'meta/llama-3.1-8b-instruct', placeholder: 'e.g. meta/llama-3.1-8b-instruct', header: 'Bearer' },
-                'AI21 Labs': { name: 'AI21 Labs', endpoint: 'https://api.ai21.com/studio/v1/chat/completions', resource: 'jamba-1.5-mini', placeholder: 'e.g. jamba-1.5-mini', header: 'Bearer' },
-                'Cerebras': { name: 'Cerebras', endpoint: 'https://api.cerebras.ai/v1/chat/completions', resource: 'llama3.1-8b', placeholder: 'e.g. llama3.1-8b', header: 'Bearer' },
-                'JSONBin.io': { name: 'JSONBin.io', endpoint: 'https://api.jsonbin.io/v3/b/', resource: '', placeholder: 'Bin ID (e.g. 660f...)', header: 'X-Master-Key' },
-                'OpenRouter': { name: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', resource: 'meta-llama/llama-3-8b-instruct', placeholder: 'e.g. meta-llama/llama-3-8b-instruct', header: 'Bearer' },
-                'Firebase Realtime Database': { name: 'Firebase Realtime DB', endpoint: 'https://your-project.firebaseio.com', resource: '', placeholder: '/production_store', header: 'None' }
+            const presets = {
+                'OpenAI': { name: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', resource: 'gpt-4o', header: 'Bearer' },
+                'Anthropic': { name: 'Anthropic', endpoint: 'https://api.anthropic.com/v1/messages', resource: 'claude-3-5-sonnet-20241022', header: 'x-api-key' },
+                'Google Gemini': { name: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', resource: 'gemini-1.5-flash', header: 'Bearer' },
+                'Cohere': { name: 'Cohere', endpoint: 'https://api.cohere.com/v2/chat', resource: 'command-r-plus', header: 'Bearer' },
+                'Mistral AI': { name: 'Mistral AI', endpoint: 'https://api.mistral.ai/v1/chat/completions', resource: 'mistral-large-latest', header: 'Bearer' },
+                'Groq': { name: 'Groq', endpoint: 'https://api.groq.com/openai/v1/chat/completions', resource: 'llama-3.3-70b-versatile', header: 'Bearer' },
+                'Together AI': { name: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', resource: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', header: 'Bearer' },
+                'Perplexity': { name: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', resource: 'sonar', header: 'Bearer' },
+                'Replicate': { name: 'Replicate', endpoint: 'https://api.replicate.com/v1/predictions', resource: 'meta/meta-llama-3-70b-instruct', header: 'Bearer' },
+                'Hugging Face': { name: 'Hugging Face', endpoint: 'https://api-inference.huggingface.co/models/', resource: 'meta-llama/Meta-Llama-3-8B-Instruct', header: 'Bearer' },
+                'DeepSeek': { name: 'DeepSeek', endpoint: 'https://api.deepseek.com/chat/completions', resource: 'deepseek-chat', header: 'Bearer' },
+                'xAI': { name: 'xAI', endpoint: 'https://api.x.ai/v1/chat/completions', resource: 'grok-beta', header: 'Bearer' },
+                'Amazon Bedrock': { name: 'Amazon Bedrock', endpoint: 'https://bedrock-runtime.us-east-1.amazonaws.com', resource: 'anthropic.claude-3-sonnet-20240229-v1:0', header: 'Bearer' },
+                'Microsoft Azure AI': { name: 'Microsoft Azure AI', endpoint: 'https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2024-02-15-preview', resource: 'gpt-4o', header: 'Bearer' },
+                'IBM watsonx': { name: 'IBM watsonx', endpoint: 'https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29', resource: 'ibm/granite-13b-chat-v2', header: 'Bearer' },
+                'NVIDIA NIM': { name: 'NVIDIA NIM', endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions', resource: 'meta/llama-3.1-8b-instruct', header: 'Bearer' },
+                'AI21 Labs': { name: 'AI21 Labs', endpoint: 'https://api.ai21.com/studio/v1/chat/completions', resource: 'jamba-1.5-mini', header: 'Bearer' },
+                'Cerebras': { name: 'Cerebras', endpoint: 'https://api.cerebras.ai/v1/chat/completions', resource: 'llama3.1-8b', header: 'Bearer' },
+                'JSONBin.io': { name: 'JSONBin.io', endpoint: 'https://api.jsonbin.io/v3/b', resource: '', header: 'X-Master-Key' },
+                'OpenRouter': { name: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', resource: 'meta-llama/llama-3-8b-instruct', header: 'Bearer' },
+                'Firebase Realtime Database': { name: 'Firebase Realtime DB', endpoint: 'https://your-project.firebaseio.com', resource: '', header: 'None' }
             };
 
-            const config = providerPresets[preset];
-            if (config) {
-                nameInput.value = config.name;
-                epInput.value = config.endpoint;
-                resInput.value = config.resource;
-                resInput.placeholder = config.placeholder;
-                hTypeSelect.value = config.header;
+            const cfg = presets[preset];
+            if (cfg) {
+                nameInput.value = cfg.name;
+                epInput.value = cfg.endpoint;
+                resInput.value = cfg.resource;
+                hTypeSelect.value = cfg.header;
             } else {
                 nameInput.value = '';
                 epInput.value = '';
                 resInput.value = '';
-                resInput.placeholder = 'Model ID or Resource Path';
                 hTypeSelect.value = 'Bearer';
             }
         }
@@ -3654,7 +3465,6 @@
                 });
             }
 
-            localStorage.setItem('API_CONFIG_INITIALIZED', 'true');
             savePersistentData(true);
             resetApiConfigForm();
             renderApiConfigs();
@@ -3677,26 +3487,16 @@
             document.getElementById('apiResourceIdInput').value = config.resourceId || '';
             document.getElementById('apiKeyInput').value = config.apiKey || '';
             document.getElementById('apiAuthHeaderType').value = config.headerType || 'Bearer';
-            if (config.presetKey) {
-                document.getElementById('apiProviderPresetSelect').value = config.presetKey;
-            }
+            if (config.presetKey) document.getElementById('apiProviderPresetSelect').value = config.presetKey;
             document.getElementById('apiConfigSubmitBtn').textContent = 'Update Provider';
             document.getElementById('apiConfigCancelBtn').classList.remove('hidden');
         }
 
         function deleteApiConfig(id) {
-            const configToDelete = apiConfigs.find(c => c.id === id);
-            if (!configToDelete) return;
-
-            if (confirm(`Are you sure you want to permanently delete "${configToDelete.providerName}"?`)) {
-                const wasActive = configToDelete.isActive;
+            if (confirm("Delete this provider configuration?")) {
+                const wasActive = apiConfigs.find(c => c.id === id)?.isActive;
                 apiConfigs = apiConfigs.filter(c => c.id !== id);
-                
-                if (wasActive && apiConfigs.length > 0) {
-                    apiConfigs[0].isActive = true;
-                }
-
-                localStorage.setItem('API_CONFIG_INITIALIZED', 'true');
+                if (wasActive && apiConfigs.length > 0) apiConfigs[0].isActive = true;
                 savePersistentData(true);
                 renderApiConfigs();
                 updateCloudBannerInfo();
@@ -3707,7 +3507,7 @@
             const tbody = document.getElementById('apiConfigTableBody');
             if (!tbody) return;
             if (apiConfigs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 16px;">No API providers configured. Add one above.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:16px;">No providers configured.</td></tr>`;
                 return;
             }
             tbody.innerHTML = apiConfigs.map((c, idx) => `
@@ -3828,8 +3628,7 @@
             e.preventDefault();
             const chartIdInput = document.getElementById('entryChartId').value.trim();
             if (productionLogs.some(p => p.chartId.toLowerCase() === chartIdInput.toLowerCase())) {
-                alert(`Chart ID exists.`);
-                return;
+                return alert(`Chart ID already exists.`);
             }
 
             productionLogs.push({
@@ -3850,7 +3649,7 @@
             });
 
             savePersistentData(true);
-            alert("Entry submitted.");
+            alert("Entry submitted successfully.");
             switchTab('prodReportTab');
         }
 
@@ -3885,7 +3684,7 @@
 
         function handleAuditorAddAuditEntry(e) {
             e.preventDefault();
-            if (!selectedAuditChartObj) return;
+            if (!selectedAuditChartObj) return alert("Select a completed chart first.");
 
             const totalAudited = parseInt(document.getElementById('audAuditTotalAudited').value) || 1;
             const totalErrors = parseInt(document.getElementById('audAuditTotalError').value) || 0;
@@ -3918,7 +3717,7 @@
             });
 
             savePersistentData(true);
-            alert("Audit saved.");
+            alert("Audit record saved.");
             switchTab('auditReportTab');
         }
 
@@ -3985,23 +3784,6 @@
             const cid = activeAuditorRebuttalChartId;
             closeAuditorRebuttalModal();
             openDisagreeModal(cid, 'LEVEL3_AUDITOR_REJECT');
-        }
-
-        function openAuditTlReviewModal(chartId) {
-            activeAuditTlChartId = chartId;
-            document.getElementById('auditTlReviewModal').classList.remove('hidden');
-        }
-
-        function closeAuditTlModal() {
-            document.getElementById('auditTlReviewModal').classList.add('hidden');
-        }
-
-        function handleAuditTlAcceptDeduction() {
-            closeAuditTlModal();
-        }
-
-        function handleAuditTlUpholdErrors() {
-            closeAuditTlModal();
         }
 
         function exportAuditReportToCSV() {
