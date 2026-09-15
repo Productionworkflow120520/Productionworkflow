@@ -1005,6 +1005,35 @@
                 <div id="apiConfigTab" class="tab-content hidden">
                     <div class="card">
                         <div class="control-header">
+                                                        <h3>⚡ Cloud & LocalStorage Data Hub</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="switchTab('apiConfigTab')">⚙️ Manage API Providers</button>
+                        </div>
+
+                        <!-- Active Provider Visual Callout -->
+                        <div class="active-provider-callout" id="activeProviderBanner">
+                            <div>
+                                <span style="color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; display: block;">Current Active Cloud Provider</span>
+                                <strong id="bannerProviderName" style="color: #6ee7b7; font-size: 13px;">JSONBin.io (Default)</strong>
+                                <span id="bannerProviderEndpoint" style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 11px; margin-left: 8px;">https://api.jsonbin.io/v3/b/6aa76837ffd5d16053035d34</span>
+                            </div>
+                            <span class="badge badge-active">Active Cloud Provider</span>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-success btn-sm" id="btnPushCloud" onclick="pushToCloud(true)">☁️ Push to Cloud</button>
+                            <button class="btn btn-sm" id="btnPullCloud" onclick="fetchFromCloud(true)">🔄 Pull from Cloud</button>
+                            <button class="btn btn-export btn-sm" onclick="exportDatabaseFile()">💾 Export JSON File</button>
+                            <label class="btn btn-warning btn-sm" style="cursor: pointer; margin-bottom: 0;">
+                                📂 Import JSON File
+                                <input type="file" id="dbFileInput" accept=".json" style="display: none;" onchange="importDatabaseFile(event)">
+                            </label>
+                            <button class="btn btn-secondary btn-sm" onclick="checkLocalStorageStatus()">🔍 Storage Status</button>
+                            <button class="btn btn-danger btn-sm" onclick="executeLocalStorageClear()">🧹 Reset All Data</button>
+                        </div>
+                        <div id="syncStatusIndicator" style="margin-top: 10px; font-size: 11.5px; color: var(--accent-cyan); font-family: var(--font-mono);"></div>
+                    </div>
+
+
                             <h3 id="apiConfigFormTitle">Add API Provider</h3>
                             <span class="badge badge-status" id="activeProviderCounterBadge">1 Active</span>
                         </div>
