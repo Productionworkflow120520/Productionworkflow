@@ -1207,18 +1207,17 @@
                     </div>
                 </div>
 
-                <!-- QUALITY REVIEW -->
-                <div id="qualityReviewTab" class="tab-content hidden">
+                <!-- Auditor Entry -->
+                <div id="AuditorEntryTab" class="tab-content hidden">
                     <div class="card">
-                        <h3>Quality Review Entry (Completed Charts Only)</h3>
+                        <h3>Auditor Entry</h3>
                         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
-                            Enter a Completed Chart ID. The system will automatically identify and display matching production metadata.
                         </p>
 
                         <div class="form-grid">
                             <div class="form-group form-group-full">
-                                <label>Enter Chart ID Directly</label>
-                                <input type="text" id="audManualChartInput" placeholder="e.g. 1234 or CHART-1001" oninput="handleManualChartLookup(this.value)">
+                                <label>Chart ID</label>
+                                <input type="text" id="audManualChartInput" placeholder oninput="handleManualChartLookup(this.value)">
                             </div>
                         </div>
 
@@ -1275,8 +1274,8 @@
                                     </select>
                                 </div>
                                 <div class="form-group form-group-full">
-                                    <label>Auditor Quality Comments & Observation</label>
-                                    <textarea id="audAuditComment" required placeholder="Provide your detailed quality audit comment and observations..."></textarea>
+                                    <label>Auditor Comment</label>
+                                    <textarea id="audAuditComment" required placeholder></textarea>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-success" style="margin-top: 6px;">+ Submit Quality Audit</button>
