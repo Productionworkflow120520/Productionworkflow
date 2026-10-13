@@ -1,0 +1,777 @@
+// Prisma Schema for PayMatrix B2B Fintech Portal
+// All monetary amounts use Decimal (fixed-precision)
+// All timestamps stored in UTC, displayed in Asia/Kolkata
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  MASTER_ADMIN
+  ADMIN
+  SUPER_DISTRIBUTOR
+  MASTER_DISTRIBUTOR
+  DISTRIBUTOR
+  RETAILER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_APPROVAL
+  REJECTED
+}
+
+enum KycStatus {
+  NOT_SUBMITTED
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum TransactionStatus {
+  INITIATED
+  PROCESSING
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSAL_PENDING
+  REFUNDED
+  UNDER_REVIEW
+}
+
+enum TransactionType {
+  MOBILE_RECHARGE
+  DTH_RECHARGE
+  BBPS_PAYMENT
+  AEPS_WITHDRAWAL
+  AEPS_BALANCE
+  AEPS_MINI_STATEMENT
+  AEPS_AADHAAR_PAY
+  WALLET_TOPUP
+  WALLET_TRANSFER
+  WALLET_ADJUSTMENT
+  COMMISSION_CREDIT
+  REFUND_CREDIT
+  DMT_TRANSFER
+  DMT_PENNY_DROP
+}
+
+enum WalletRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum WalletRequestType {
+  TOPUP
+  CREDIT_ADJUSTMENT
+  DEBIT_ADJUSTMENT
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  ACCOUNT
+  KYC
+  WALLET
+  TRANSACTION
+  REFUND
+  SECURITY
+  SYSTEM
+  SUPPORT
+}
+
+enum ProviderEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum CommissionType {
+  FIXED
+  PERCENTAGE
+}
+
+// ─── USERS & AUTH ────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  userId        String     @unique // e.g., PM-MA-0001
+  username      String     @unique
+  email         String     @unique
+  mobile        String     @unique
+  passwordHash  String
+  fullName      String
+  role          UserRole
+  status        UserStatus @default(PENDING_APPROVAL)
+  kycStatus     KycStatus  @default(NOT_SUBMITTED)
+
+  // Hierarchy
+  parentId            String?
+  parent              User?      @relation("UserHierarchy", fields: [parentId], references: [id])
+  children            User[]     @relation("UserHierarchy")
+  distributorId       String?    @unique
+  parentDistributorId String?
+
+  // Profile
+  businessName  String?
+  address       String?
+  city          String?
+  state         String?
+  pincode       String?
+  panNumber     String?
+  aadhaarHash   String?    // Store only hash, never raw
+
+  // Settings
+  maxDailyLimit    Decimal  @default(100000) @db.Decimal(15, 2)
+  maxPerTxnLimit   Decimal  @default(10000)  @db.Decimal(15, 2)
+  servicesAllowed  String[] @default([])
+  mfaEnabled       Boolean  @default(false)
+  mfaSecret        String?
+
+  // Metadata
+  lastLoginAt   DateTime?
+  lastLoginIp   String?
+  loginCount    Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // Relations
+  walletAccount    WalletAccount?
+  sessions         UserSession[]
+  transactions     Transaction[]
+  kycApplications  KycApplication[]
+  supportTickets   SupportTicket[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  walletRequests   WalletRequest[]       @relation("WalletRequestUser")
+  approvedWallets  WalletRequest[]       @relation("WalletRequestApprover")
+  commissionEntries CommissionEntry[]
+  ledgerEntries    LedgerEntry[]
+
+  @@index([role, status])
+  @@index([parentId])
+  @@index([mobile])
+  @@map("users")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  @@index([userId, isActive])
+  @@index([token])
+  @@map("user_sessions")
+}
+
+// ─── KYC ─────────────────────────────────────────────────────
+
+model KycApplication {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  documentType    String    // PAN, AADHAAR, BUSINESS_REG, etc.
+  documentNumber  String    // Masked in responses
+  documentFront   String?   // File path (stored securely)
+  documentBack    String?
+  selfie          String?
+  status          KycStatus @default(SUBMITTED)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  expiresAt       DateTime?
+  verificationRef String?   // Provider verification reference
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@map("kyc_applications")
+}
+
+// ─── SERVICE PROVIDERS ───────────────────────────────────────
+
+model ServiceProvider {
+  id              String              @id @default(cuid())
+  name            String
+  code            String              @unique // e.g., "paysprint", "eko"
+  description     String?
+  environment     ProviderEnvironment @default(SANDBOX)
+  isActive        Boolean             @default(false)
+  baseUrl         String?
+  webhookUrl      String?
+  webhookSecret   String?             // Stored encrypted
+  maxRetries      Int                 @default(0)
+  timeoutMs       Int                 @default(30000)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  credentials     ProviderCredential[]
+  services        ProviderService[]
+  transactions    Transaction[]
+  webhookEvents   WebhookEvent[]
+
+  @@map("service_providers")
+}
+
+model ProviderCredential {
+  id          String          @id @default(cuid())
+  providerId  String
+  provider    ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  key         String          // e.g., "api_key", "secret_key", "partner_id"
+  value       String          // Encrypted at application level
+  environment ProviderEnvironment @default(SANDBOX)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([providerId, key, environment])
+  @@map("provider_credentials")
+}
+
+model ProviderService {
+  id              String          @id @default(cuid())
+  providerId      String
+  provider        ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  serviceType     TransactionType
+  isActive        Boolean         @default(false)
+  endpoint        String?
+  minAmount       Decimal         @default(1)    @db.Decimal(15, 2)
+  maxAmount       Decimal         @default(50000) @db.Decimal(15, 2)
+  commissionRate  Decimal         @default(0)    @db.Decimal(10, 4)
+  configuration   Json?           // Service-specific config
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([providerId, serviceType])
+  @@map("provider_services")
+}
+
+// ─── TRANSACTIONS ────────────────────────────────────────────
+
+model Transaction {
+  id                String            @id @default(cuid())
+  txnId             String            @unique // Internal reference: TXN-YYYYMMDD-XXXXX
+  idempotencyKey    String            @unique
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  providerId        String?
+  provider          ServiceProvider?  @relation(fields: [providerId], references: [id])
+
+  type              TransactionType
+  status            TransactionStatus @default(INITIATED)
+  amount            Decimal           @db.Decimal(15, 2)
+  amountPaise       BigInt            @default(0)
+  providerFee       Decimal           @default(0) @db.Decimal(15, 2)
+  commission        Decimal           @default(0) @db.Decimal(15, 2)
+  netAmount         Decimal           @default(0) @db.Decimal(15, 2) // amount - providerFee
+
+  // Service-specific fields
+  serviceNumber     String?           // Mobile number, DTH ID, consumer no.
+  operator          String?
+  circle            String?
+  planDetails       Json?
+
+  // DMT-specific remittance fields
+  dmtSenderId       String?
+  dmtSender         DmtSender?        @relation(fields: [dmtSenderId], references: [id])
+  dmtBeneficiaryName String?
+  dmtAccountNo      String?
+  dmtIfsc           String?
+  dmtTransferMode   String?           // IMPS, NEFT
+  dmtBankRrn        String?           // Bank UTR / RRN
+
+  // Provider tracking
+  providerRefId     String?
+  providerStatus    String?
+  providerResponse  Json?             // Redacted sensitive data
+  requestPayload    Json?             // Redacted
+  responsePayload   Json?             // Redacted
+
+  // Hierarchy snapshot (for reporting)
+  superDistributorId  String?
+  masterDistributorId String?
+  distributorId       String?
+  adminId             String?
+  retailerId          String?
+
+  // Status tracking
+  failureReason     String?
+  refundStatus      String?
+  reconStatus       String?           // MATCHED, MISMATCHED, PENDING
+
+  // Commission snapshot
+  commissionRuleId  String?
+  commissionRule    CommissionRule?    @relation(fields: [commissionRuleId], references: [id])
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  completedAt       DateTime?
+
+  events            TransactionEvent[]
+  refunds           Refund[]
+  commissionEntries CommissionEntry[]
+  ledgerEntries     LedgerEntry[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([type, createdAt])
+  @@index([txnId])
+  @@index([providerRefId])
+  @@map("transactions")
+}
+
+model TransactionEvent {
+  id            String            @id @default(cuid())
+  transactionId String
+  transaction   Transaction       @relation(fields: [transactionId], references: [id])
+  fromStatus    TransactionStatus
+  toStatus      TransactionStatus
+  reason        String?
+  actor         String?           // User ID or "SYSTEM"
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+
+  @@index([transactionId, createdAt])
+  @@map("transaction_events")
+}
+
+// ─── WALLET & LEDGER ─────────────────────────────────────────
+
+model WalletAccount {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  balance         Decimal  @default(0) @db.Decimal(15, 2)
+  balancePaise    BigInt   @default(0)
+  reservedBalance Decimal  @default(0) @db.Decimal(15, 2)
+  reservedPaise   BigInt   @default(0)
+  currency        String   @default("INR")
+  isActive        Boolean  @default(true)
+  lastTxnAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ledgerEntries   LedgerEntry[]
+
+  @@map("wallet_accounts")
+}
+
+model LedgerEntry {
+  id                 String          @id @default(cuid())
+  walletId           String
+  wallet             WalletAccount   @relation(fields: [walletId], references: [id])
+  userId             String
+  user               User            @relation(fields: [userId], references: [id])
+  transactionId      String?
+  transaction        Transaction?    @relation(fields: [transactionId], references: [id])
+  referenceId        String          @unique // Unique dedup key
+  type               LedgerEntryType
+  amount             Decimal         @db.Decimal(15, 2)
+  amountPaise        BigInt          @default(0)
+  balanceBefore      Decimal         @db.Decimal(15, 2)
+  balanceBeforePaise BigInt          @default(0)
+  balanceAfter       Decimal         @db.Decimal(15, 2)
+  balanceAfterPaise  BigInt          @default(0)
+  description        String
+  category           String          // RECHARGE, COMMISSION, TOPUP, REFUND, ADJUSTMENT, DMT
+  actor              String?         // Who initiated
+  reason             String?
+  metadata           Json?
+  createdAt          DateTime        @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([transactionId])
+  @@map("ledger_entries")
+}
+
+model WalletRequest {
+  id            String              @id @default(cuid())
+  requestId     String              @unique // WR-YYYYMMDD-XXXXX
+  userId        String
+  user          User                @relation("WalletRequestUser", fields: [userId], references: [id])
+  type          WalletRequestType
+  amount        Decimal             @db.Decimal(15, 2)
+  status        WalletRequestStatus @default(PENDING)
+  paymentMethod String?             // NEFT, IMPS, UPI, etc.
+  paymentRef    String?             // UTR number
+  bankName      String?
+  remarks       String?
+  approvedBy    String?
+  approver      User?               @relation("WalletRequestApprover", fields: [approvedBy], references: [id])
+  approvedAt    DateTime?
+  rejectionReason String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("wallet_requests")
+}
+
+// ─── COMMISSIONS ─────────────────────────────────────────────
+
+model CommissionRule {
+  id              String         @id @default(cuid())
+  name            String
+  serviceType     TransactionType
+  operator        String?        // Specific operator or null for all
+  commissionType  CommissionType
+  masterAdminRate       Decimal        @default(0) @db.Decimal(10, 4)
+  adminRate             Decimal        @default(0) @db.Decimal(10, 4)
+  superDistributorRate  Decimal        @default(0) @db.Decimal(10, 4)
+  masterDistributorRate Decimal        @default(0) @db.Decimal(10, 4)
+  distributorRate       Decimal        @default(0) @db.Decimal(10, 4)
+  retailerRate          Decimal        @default(0) @db.Decimal(10, 4)
+  serviceCharge   Decimal        @default(0) @db.Decimal(10, 4)
+  minAmount       Decimal        @default(1)    @db.Decimal(15, 2)
+  maxAmount       Decimal        @default(100000) @db.Decimal(15, 2)
+  isActive        Boolean        @default(true)
+  priority        Int            @default(0)
+  effectiveFrom   DateTime       @default(now())
+  effectiveTo     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  transactions    Transaction[]
+  entries         CommissionEntry[]
+
+  @@index([serviceType, isActive])
+  @@map("commission_rules")
+}
+
+model CommissionEntry {
+  id              String         @id @default(cuid())
+  transactionId   String
+  transaction     Transaction    @relation(fields: [transactionId], references: [id])
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  ruleId          String
+  rule            CommissionRule @relation(fields: [ruleId], references: [id])
+  role            UserRole
+  commissionType  CommissionType
+  rate            Decimal        @db.Decimal(10, 4)
+  baseAmount      Decimal        @db.Decimal(15, 2) // Transaction amount
+  commissionAmount Decimal       @db.Decimal(15, 2) // Earned commission
+  taxAmount       Decimal        @default(0) @db.Decimal(15, 2)
+  netAmount       Decimal        @db.Decimal(15, 2) // After tax
+  status          String         @default("PENDING") // PENDING, CREDITED, REVERSED
+  creditedAt      DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@index([transactionId])
+  @@index([userId, createdAt])
+  @@map("commission_entries")
+}
+
+// ─── REFUNDS & SETTLEMENTS ──────────────────────────────────
+
+model Refund {
+  id              String            @id @default(cuid())
+  refundId        String            @unique // REF-YYYYMMDD-XXXXX
+  transactionId   String
+  transaction     Transaction       @relation(fields: [transactionId], references: [id])
+  amount          Decimal           @db.Decimal(15, 2)
+  status          String            @default("INITIATED") // INITIATED, PROCESSING, COMPLETED, FAILED
+  providerRefId   String?
+  reason          String?
+  initiatedBy     String?
+  approvedBy      String?
+  completedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([transactionId])
+  @@map("refunds")
+}
+
+model Settlement {
+  id              String   @id @default(cuid())
+  settlementId    String   @unique
+  providerId      String
+  periodFrom      DateTime
+  periodTo        DateTime
+  totalAmount     Decimal  @db.Decimal(15, 2)
+  settledAmount   Decimal  @db.Decimal(15, 2)
+  differenceAmount Decimal @default(0) @db.Decimal(15, 2)
+  status          String   @default("PENDING")
+  remarks         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("settlements")
+}
+
+model ReconciliationRecord {
+  id              String   @id @default(cuid())
+  transactionId   String
+  providerId      String
+  internalStatus  String
+  providerStatus  String
+  internalAmount  Decimal  @db.Decimal(15, 2)
+  providerAmount  Decimal  @db.Decimal(15, 2)
+  isMatched       Boolean  @default(false)
+  discrepancy     String?
+  resolvedBy      String?
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([isMatched])
+  @@map("reconciliation_records")
+}
+
+// ─── WEBHOOKS ────────────────────────────────────────────────
+
+model WebhookEvent {
+  id            String          @id @default(cuid())
+  providerId    String
+  provider      ServiceProvider @relation(fields: [providerId], references: [id])
+  eventType     String
+  payload       Json
+  signature     String?
+  isVerified    Boolean         @default(false)
+  isProcessed   Boolean         @default(false)
+  processedAt   DateTime?
+  error         String?
+  retryCount    Int             @default(0)
+  createdAt     DateTime        @default(now())
+
+  @@index([providerId, isProcessed])
+  @@map("webhook_events")
+}
+
+// ─── SUPPORT ─────────────────────────────────────────────────
+
+model SupportTicket {
+  id            String         @id @default(cuid())
+  ticketId      String         @unique // TKT-YYYYMMDD-XXXXX
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  category      String
+  subject       String
+  priority      TicketPriority @default(MEDIUM)
+  status        TicketStatus   @default(OPEN)
+  assignedTo    String?
+  transactionId String?        // Linked transaction
+  resolvedAt    DateTime?
+  resolution    String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  messages      SupportMessage[]
+
+  @@index([userId, status])
+  @@index([status, priority])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId    String
+  senderRole  UserRole
+  message     String
+  isInternal  Boolean       @default(false) // Internal note
+  attachments String[]      @default([])
+  createdAt   DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+// ─── AUDIT & SYSTEM ──────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  action       String   // e.g., "USER_CREATED", "WALLET_ADJUSTED"
+  entity       String   // e.g., "User", "Transaction"
+  entityId     String?
+  previousValue Json?   // Old values (redacted secrets)
+  newValue     Json?    // New values (redacted secrets)
+  ipAddress    String?
+  userAgent    String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String   // branding, limits, features, security
+  label     String   // Human-readable label
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("system_settings")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, warning, critical
+  isActive  Boolean  @default(true)
+  targetRoles UserRole[]
+  expiresAt DateTime?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+// ─── DOMESTIC MONEY TRANSFER (DMT) ───────────────────────────
+
+model DmtSender {
+  id                 String           @id @default(cuid())
+  senderId           String           @unique // SMR-YYYYMMDD-XXXXX
+  mobile             String           @unique
+  name               String
+  address            String?
+  city               String?
+  state              String?
+  pincode            String?
+  isKycVerified      Boolean          @default(false)
+  monthlyLimitPaise  BigInt           @default(2500000) // Default ₹25,000 in paise (Non-KYC)
+  usedLimitPaise     BigInt           @default(0)
+  lastResetDate      DateTime         @default(now())
+  otpSecret          String?
+  otpExpiresAt       DateTime?
+  status             String           @default("ACTIVE") // ACTIVE, BLOCKED
+  registeredByUserId String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  beneficiaries      DmtBeneficiary[]
+  transfers          Transaction[]
+
+  @@index([mobile])
+  @@map("dmt_senders")
+}
+
+model DmtBeneficiary {
+  id             String     @id @default(cuid())
+  beneficiaryId  String     @unique // BEN-YYYYMMDD-XXXXX
+  senderId       String
+  sender         DmtSender  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  accountNumber  String
+  ifsc           String
+  bankName       String
+  recipientName  String
+  mobile         String?
+  relation       String?
+  isVerified     Boolean    @default(false)
+  pennyDropRef   String?
+  status         String     @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([senderId, accountNumber, ifsc])
+  @@index([senderId])
+  @@map("dmt_beneficiaries")
+}
+
+// ─── BRANDING CONFIGURATION & AUDIT LOG ────────────────────────
+model BrandingSettings {
+  id                   String   @id @default("default-branding")
+  appName              String   @default("Recharge Pro")
+  tagline              String   @default("All Recharge • Bill Payments • Digital Services")
+  logoUrl              String   @default("/images/rechargepro-logo.png")
+  mobileLogoUrl        String   @default("/images/rechargepro-logo.png")
+  faviconUrl           String   @default("/images/rechargepro-logo.png")
+  loginBannerText      String   @default("India's Premier Digital Recharge & Utility Payment Platform")
+  supportEmail         String   @default("support@rechargepro.in")
+  supportPhone         String   @default("+91 98000 12345")
+  primaryColor         String   @default("#0f172a") // Dark Navy
+  accentColor          String   @default("#2563eb") // Blue
+  secondaryAccent      String   @default("#10b981") // Green
+  version              Int      @default(1)
+  updatedAt            DateTime @updatedAt
+  updatedByUserId      String?
+  updatedByRole        String?
+
+  @@map("branding_settings")
+}
+
+model BrandingAuditLog {
+  id             String   @id @default(cuid())
+  action         String   // UPDATE, RESTORE_DEFAULT, LOGO_UPLOAD
+  adminId        String
+  adminEmail     String
+  adminRole      String
+  fieldChanged   String
+  previousValue  String?  @db.Text
+  newValue       String?  @db.Text
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminId])
+  @@map("branding_audit_logs")
+}
+

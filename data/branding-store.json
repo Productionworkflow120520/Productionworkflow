@@ -1,0 +1,19 @@
+{
+  "appName": "Recharge Pro",
+  "tagline": "Premier High-Speed Recharge Switch",
+  "logoUrl": "/images/rechargepro-logo.png",
+  "mobileLogoUrl": "/images/rechargepro-logo.png",
+  "faviconUrl": "/images/rechargepro-logo.png",
+  "loginBannerText": "India's Premier Digital Recharge & Utility Payment Platform",
+  "supportEmail": "support@rechargepro.in",
+  "supportPhone": "+91 98000 12345",
+  "primaryColor": "#0f172a",
+  "accentColor": "#2563eb",
+  "secondaryAccent": "#10b981",
+  "version": 35,
+  "updatedAt": "2026-10-13T05:52:49.399Z",
+  "updatedByUserId": "demo-user-admin-1",
+  "updatedByRole": "ADMIN",
+  "updatedByEmail": "admin1@paymatrix.in",
+  "cacheBuster": "1791870761076"
+}
