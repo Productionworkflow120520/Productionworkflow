@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Recharge Pro - Mobile Gateway</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b0f19 0%, #0f172a 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 24px) 20px env(safe-area-inset-bottom, 24px) 20px;
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+    .logo-container {
+      width: 88px;
+      height: 88px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 32px rgba(37, 99, 235, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .logo-container img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+    }
+    .app-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .app-tagline {
+      font-size: 13px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+    .card-content {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      margin: 20px 0;
+    }
+    .spinner-ring {
+      display: inline-block;
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(37, 99, 235, 0.2);
+      border-radius: 50%;
+      border-top-color: #3b82f6;
+      border-right-color: #60a5fa;
+      animation: spin 0.9s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+    }
+    .substatus-text {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+    .url-input-group {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: left;
+    }
+    .url-input-group label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+    }
+    .url-input-group input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #f8fafc;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .url-input-group input:focus {
+      border-color: #3b82f6;
+    }
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      margin-top: 14px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+    .footer {
+      font-size: 11px;
+      color: #475569;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      color: #4ade80;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+      <img src="images/rechargepro-logo.png" alt="Recharge Pro Logo" onerror="this.src='uploads/default-logo.png'" />
+    </div>
+    <h1 class="app-title">Recharge Pro</h1>
+    <p class="app-tagline">Multi-Recharge & Utility Payments Platform</p>
+    <div class="badge">● Native Mobile App</div>
+  </div>
+
+  <div class="card-content">
+    <div class="spinner-ring" id="loader"></div>
+    <div class="status-text" id="status-title">Connecting to Server...</div>
+    <div class="substatus-text" id="status-desc">Initializing secure communication gateway</div>
+
+    <div class="url-input-group" id="config-area" style="display: none;">
+      <label for="server-url">Backend Server URL</label>
+      <input type="url" id="server-url" placeholder="https://your-domain.vercel.app" />
+      <button class="btn-primary" onclick="connectToServer()">
+        Connect & Launch App
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Recharge Pro Mobile v1.0.0 • Protected by 256-bit Encryption
+  </div>
+
+  <script>
+    const DEFAULT_SERVER = window.location.origin.includes('localhost') || window.location.origin.includes('http')
+      ? window.location.origin
+      : 'https://productionworkflow.vercel.app';
+
+    const savedUrl = localStorage.getItem('RECHARGE_PRO_SERVER_URL') || DEFAULT_SERVER;
+
+    function setStatus(title, desc, showConfig = false) {
+      document.getElementById('status-title').textContent = title;
+      document.getElementById('status-desc').textContent = desc;
+      if (showConfig) {
+        document.getElementById('config-area').style.display = 'flex';
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('server-url').value = savedUrl;
+      }
+    }
+
+    async function tryConnect(targetUrl) {
+      try {
+        setStatus('Connecting...', 'Checking connection to ' + targetUrl);
+        const res = await fetch(targetUrl + '/api/branding', { method: 'GET', cache: 'no-cache' });
+        if (res.ok || res.status === 200 || res.status === 304) {
+          localStorage.setItem('RECHARGE_PRO_SERVER_URL', targetUrl);
+          setStatus('Connected!', 'Launching Recharge Pro...');
+          setTimeout(() => {
+            window.location.href = targetUrl;
+          }, 400);
+          return true;
+        }
+      } catch (e) {
+        console.warn('Direct connection failed:', e);
+      }
+      return false;
+    }
+
+    async function init() {
+      // If we are already running on a remote server inside WebView, redirect to home
+      if (window.location.protocol.startsWith('http') && !window.location.host.includes('localhost') && !window.location.host.includes('127.0.0.1')) {
+        window.location.href = window.location.origin + '/home';
+        return;
+      }
+
+      // Try saved URL
+      const connected = await tryConnect(savedUrl);
+      if (!connected) {
+        // Fallback: Show URL config panel
+        setStatus('Connection Required', 'Could not reach server automatically. Please confirm your server URL below.', true);
+      }
+    }
+
+    function connectToServer() {
+      let url = document.getElementById('server-url').value.trim();
+      if (!url) return;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      url = url.replace(/\/+$/, '');
+      localStorage.setItem('RECHARGE_PRO_SERVER_URL', url);
+      window.location.href = url;
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
